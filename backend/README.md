@@ -23,7 +23,59 @@
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository with **Drizzle ORM**, **MySQL**, and **JWT Authentication** integration.
+
+## ✨ Features
+
+- 🔐 **JWT Authentication** - Username/password authentication with secure token generation
+- 🗄️ **Drizzle ORM** - Type-safe database operations with MySQL
+- ✅ **Input Validation** - Request validation using class-validator
+- 🔒 **Password Hashing** - Secure bcrypt password hashing
+- 🎯 **SOLID Principles** - Clean, maintainable code architecture
+- 📝 **TypeScript** - Full type safety throughout the application
+
+## 📚 Documentation
+
+- [Authentication Guide](./docs/AUTHENTICATION.md) - Complete authentication implementation details
+- [Testing Auth](./docs/TESTING_AUTH.md) - Testing guide with examples
+- [Drizzle ORM Setup](./docs/DRIZZLE_ORM.md) - Database setup and usage
+
+## 🚀 Quick Start with Drizzle ORM
+
+This project is configured with Drizzle ORM for type-safe database operations. See [DRIZZLE_SETUP.md](./DRIZZLE_SETUP.md) for detailed documentation.
+
+### Database Setup
+
+1. **Configure environment variables:**
+
+   ```bash
+   cp .env.example .env
+   # Update .env with your MySQL credentials
+   ```
+
+2. **Create MySQL database:**
+
+   ```sql
+   CREATE DATABASE fullstack_db;
+   ```
+
+3. **Push schema to database:**
+
+   ```bash
+   npm run db:push
+   ```
+
+4. **Start the application:**
+   ```bash
+   npm run start:dev
+   ```
+
+### Available Database Commands
+
+- `npm run db:generate` - Generate migration files
+- `npm run db:push` - Push schema to database (development)
+- `npm run db:migrate` - Run migrations (production)
+- `npm run db:studio` - Open Drizzle Studio
 
 ## Project setup
 
