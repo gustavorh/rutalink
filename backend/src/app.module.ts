@@ -7,6 +7,7 @@ import { DatabaseModule } from './database/database.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { AuditModule } from './audit/audit.module';
+import { DriversModule } from './drivers/drivers.module';
 import { AuditInterceptor } from './auth/interceptors/audit.interceptor';
 
 @Module({
@@ -19,6 +20,7 @@ import { AuditInterceptor } from './auth/interceptors/audit.interceptor';
     UsersModule,
     AuthModule,
     AuditModule,
+    DriversModule,
   ],
   controllers: [AppController],
   providers: [
