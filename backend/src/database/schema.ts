@@ -356,6 +356,7 @@ export const vehiclesRelations = relations(vehicles, ({ one, many }) => ({
   }),
   driverAssignments: many(driverVehicles),
   operations: many(operations),
+  documents: many(vehicleDocuments),
 }));
 
 // ============================================================================
@@ -397,6 +398,52 @@ export const driverVehiclesRelations = relations(driverVehicles, ({ one }) => ({
     references: [vehicles.id],
   }),
 }));
+
+// ============================================================================
+// VEHICLE_DOCUMENTS TABLE (Documentación de Vehículos)
+// ============================================================================
+export const vehicleDocuments = mysqlTable(
+  'vehicle_documents',
+  {
+    id: int('id').primaryKey().autoincrement(),
+    vehicleId: int('vehicle_id')
+      .notNull()
+      .references(() => vehicles.id, { onDelete: 'cascade' }),
+    documentType: varchar('document_type', { length: 50 }).notNull(), // circulation_permit, technical_review, insurance, ownership, etc.
+    documentName: varchar('document_name', { length: 255 }).notNull(),
+    fileName: varchar('file_name', { length: 255 }),
+    filePath: varchar('file_path', { length: 500 }),
+    fileSize: int('file_size'), // bytes
+    mimeType: varchar('mime_type', { length: 100 }),
+    issueDate: timestamp('issue_date'),
+    expirationDate: timestamp('expiration_date'),
+    insuranceCompany: varchar('insurance_company', { length: 255 }), // para documentos de seguro
+    policyNumber: varchar('policy_number', { length: 100 }), // número de póliza
+    coverageAmount: int('coverage_amount'), // monto de cobertura
+    notes: varchar('notes', { length: 500 }),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow().onUpdateNow(),
+    createdBy: int('created_by'),
+    updatedBy: int('updated_by'),
+  },
+  (table) => ({
+    vehicleIdIdx: index('vehicle_document_vehicle_id_idx').on(table.vehicleId),
+    expirationDateIdx: index('vehicle_document_expiration_idx').on(
+      table.expirationDate,
+    ),
+    documentTypeIdx: index('vehicle_document_type_idx').on(table.documentType),
+  }),
+);
+
+export const vehicleDocumentsRelations = relations(
+  vehicleDocuments,
+  ({ one }) => ({
+    vehicle: one(vehicles, {
+      fields: [vehicleDocuments.vehicleId],
+      references: [vehicles.id],
+    }),
+  }),
+);
 
 // ============================================================================
 // OPERATIONS TABLE (Operaciones/Viajes)
@@ -497,3 +544,6 @@ export type NewDriverVehicle = typeof driverVehicles.$inferInsert;
 
 export type Operation = typeof operations.$inferSelect;
 export type NewOperation = typeof operations.$inferInsert;
+
+export type VehicleDocument = typeof vehicleDocuments.$inferSelect;
+export type NewVehicleDocument = typeof vehicleDocuments.$inferInsert;

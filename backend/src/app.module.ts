@@ -8,6 +8,7 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { AuditModule } from './audit/audit.module';
 import { DriversModule } from './drivers/drivers.module';
+import { TrucksModule } from './trucks/trucks.module';
 import { AuditInterceptor } from './auth/interceptors/audit.interceptor';
 
 @Module({
@@ -21,6 +22,7 @@ import { AuditInterceptor } from './auth/interceptors/audit.interceptor';
     AuthModule,
     AuditModule,
     DriversModule,
+    TrucksModule,
   ],
   controllers: [AppController],
   providers: [

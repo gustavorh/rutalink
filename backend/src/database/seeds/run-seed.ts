@@ -13,6 +13,7 @@ import { drizzle } from 'drizzle-orm/mysql2';
 import mysql from 'mysql2/promise';
 import * as dotenv from 'dotenv';
 import { seedPermissions } from './permissions.seed';
+import { seedTrucksPermissions } from './trucks-permissions.seed';
 
 dotenv.config();
 
@@ -34,6 +35,7 @@ async function main() {
 
   try {
     await seedPermissions(db);
+    await seedTrucksPermissions(db);
     console.log('\n🎉 All seeds completed successfully!');
   } catch (error) {
     console.error('\n❌ Seed failed:', error);
