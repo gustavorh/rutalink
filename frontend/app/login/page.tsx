@@ -5,23 +5,18 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { login, ApiError } from "@/lib/api";
 import { storeAuth } from "@/lib/auth";
+import Link from "next/dist/client/link";
 
 // Form validation schema
 const loginSchema = z.object({
-  username: z.string().min(1, "Username is required"),
-  password: z.string().min(1, "Password is required"),
+  username: z.string().min(1, "El nombre de usuario es requerido"),
+  password: z.string().min(1, "La contraseña es requerida"),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -54,14 +49,18 @@ export default function LoginPage() {
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.status === 401) {
-          setError("Invalid username or password");
+          setError("Usuario o contraseña inválidos");
         } else if (err.status === 0) {
-          setError("Unable to connect to server. Please try again later.");
+          setError(
+            "No se puede conectar al servidor. Por favor intenta más tarde."
+          );
         } else {
-          setError(err.message || "An error occurred during login");
+          setError(
+            err.message || "Ocurrió un error durante el inicio de sesión"
+          );
         }
       } else {
-        setError("An unexpected error occurred");
+        setError("Ocurrió un error inesperado");
       }
     } finally {
       setIsLoading(false);
@@ -69,27 +68,99 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">
-            Welcome back
-          </CardTitle>
-          <CardDescription className="text-center">
-            Enter your credentials to access your account
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <div className="min-h-screen flex">
+      {/* Left Side - Image/Branding */}
+      <div className="hidden lg:flex lg:w-1/2 relative bg-gradient-to-br from-slate-800 via-slate-700 to-slate-900">
+        <div
+          className="absolute inset-0 bg-[url('/api/placeholder/800/1200')] bg-cover bg-center opacity-20"
+          style={{
+            backgroundImage:
+              "linear-gradient(135deg, #1e293b 0%, #334155 50%, #1e293b 100%)",
+          }}
+        ></div>
+        <div className="relative z-10 flex flex-col justify-between p-12 text-white">
+          <div className="flex items-center gap-3">
+            <Image
+              src="/logo-bilix.png"
+              alt="RutaLink Logo"
+              width={40}
+              height={40}
+              className="brightness-0 invert"
+            />
+            <span className="text-2xl font-bold">RutaLink</span>
+          </div>
+          <div className="space-y-4">
+            <h1 className="text-4xl font-bold leading-tight">
+              Gestiona tu flota
+              <br />
+              con confianza
+            </h1>
+            <p className="text-slate-300 text-lg">
+              Plataforma completa de logística para transporte moderno
+            </p>
+          </div>
+          <div className="text-sm text-slate-400 text-center">
+            ©{" "}
+            <Link
+              href="https://www.bilix.cl/"
+              className="font-bold text-slate-300 underline hover:text-white transition-colors"
+            >
+              Bilix Ingeniería
+            </Link>{" "}
+            | {new Date().getFullYear()}
+          </div>
+        </div>
+      </div>
+
+      {/* Right Side - Login Form */}
+      <div className="flex-1 flex items-center justify-center bg-white p-8">
+        <div className="w-full max-w-md space-y-8">
+          {/* Mobile Logo */}
+          <div className="lg:hidden flex items-center justify-center gap-3 mb-8">
+            <Image
+              src="/logo-bilix.png"
+              alt="RutaLink Logo"
+              width={40}
+              height={40}
+            />
+            <span className="text-2xl font-bold text-slate-900">RutaLink</span>
+          </div>
+
+          {/* Header */}
+          <div className="space-y-2">
+            <p className="text-sm text-slate-600 uppercase tracking-wide">
+              RutaLink
+            </p>
+            <p className="text-xs text-slate-500">
+              Plataforma de Gestión de Flotas
+            </p>
+          </div>
+
+          {/* Title */}
+          <div className="space-y-2">
+            <h2 className="text-4xl font-normal text-slate-900">
+              Bienvenido, inicia sesión
+            </h2>
+            <h2 className="text-4xl font-normal text-slate-900">
+              en tu cuenta.
+            </h2>
+          </div>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="username" className="text-sm text-slate-700">
+                Nombre de Usuario o Correo Electrónico:
+              </Label>
               <Input
                 id="username"
                 type="text"
-                placeholder="Enter your username"
+                placeholder="nombre@dominio.com"
                 disabled={isLoading}
                 {...register("username")}
-                className={errors.username ? "border-red-500" : ""}
+                className={`h-12 bg-slate-50 border-slate-200 rounded-full px-6 placeholder:text-slate-400 ${
+                  errors.username ? "border-red-500" : ""
+                }`}
               />
               {errors.username && (
                 <p className="text-sm text-red-500">
@@ -99,14 +170,18 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-sm text-slate-700">
+                Contraseña:
+              </Label>
               <Input
                 id="password"
                 type="password"
-                placeholder="Enter your password"
+                placeholder="Ingresa tu contraseña"
                 disabled={isLoading}
                 {...register("password")}
-                className={errors.password ? "border-red-500" : ""}
+                className={`h-12 bg-slate-50 border-slate-200 rounded-full px-6 placeholder:text-slate-400 ${
+                  errors.password ? "border-red-500" : ""
+                }`}
               />
               {errors.password && (
                 <p className="text-sm text-red-500">
@@ -116,29 +191,35 @@ export default function LoginPage() {
             </div>
 
             {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
                 <p className="text-sm text-red-600">{error}</p>
               </div>
             )}
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Signing in..." : "Sign in"}
-            </Button>
+            <div className="flex items-center justify-between pt-2">
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="h-12 px-8 bg-slate-900 hover:bg-slate-800 text-white rounded-full font-medium"
+              >
+                {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
+              </Button>
+              <a
+                href="/forgot-password"
+                className="text-sm text-slate-600 hover:text-slate-900 underline"
+              >
+                ¿Olvidaste tu contraseña?
+              </a>
+            </div>
           </form>
 
-          <div className="mt-6 text-center text-sm text-slate-600">
-            <p>
-              Don&apos;t have an account?{" "}
-              <a
-                href="/register"
-                className="font-medium text-blue-600 hover:text-blue-500"
-              >
-                Register here
-              </a>
-            </p>
+          {/* Footer Link 
+          <div className="pt-6 text-center text-sm text-slate-500">
+            www.rutalink.com
           </div>
-        </CardContent>
-      </Card>
+          */}
+        </div>
+      </div>
     </div>
   );
 }
