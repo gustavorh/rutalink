@@ -116,8 +116,11 @@ export class AuthService {
     return user;
   }
 
-  login(user: UserWithRelations): AuthResponseDto {
+  async login(user: UserWithRelations): Promise<AuthResponseDto> {
     const token = this.generateToken(user);
+
+    // Update lastActivityAt on login to initialize session
+    await this.usersService.updateLastActivity(user.id);
 
     return {
       access_token: token,

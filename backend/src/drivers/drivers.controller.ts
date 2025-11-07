@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { DriversService } from './drivers.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { PermissionsGuard } from '../auth/guards/permissions.guard';
 import { RequirePermission } from '../auth/decorators/require-permission.decorator';
 import {
   CreateDriverDto,
@@ -42,7 +43,7 @@ interface RequestWithUser extends Request {
 }
 
 @Controller('drivers')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class DriversController {
   constructor(private readonly driversService: DriversService) {}
 

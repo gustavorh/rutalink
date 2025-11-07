@@ -56,22 +56,28 @@ export function DashboardSidebar({ currentPath, onNavigate }: SidebarProps) {
             </svg>
           </button>
           <div className="ml-4 mt-1 space-y-1">
-            <div className="px-3 py-2 text-xs text-white bg-[#2a2d3a] rounded cursor-pointer">
+            <div
+              onClick={() => onNavigate("/dashboard")}
+              className="px-3 py-2 text-xs text-white bg-[#2a2d3a] rounded cursor-pointer hover:bg-[#353845]"
+            >
               Vista en Tiempo Real
             </div>
-            <div className="px-3 py-2 text-xs text-slate-400 hover:text-slate-300 cursor-pointer">
+            <div
+              onClick={() => onNavigate("/dashboard")}
+              className="px-3 py-2 text-xs text-slate-400 hover:text-slate-300 cursor-pointer"
+            >
               Programación de Traslados
             </div>
-            <div className="px-3 py-2 text-xs text-slate-400 hover:text-slate-300 cursor-pointer">
+            <div
+              onClick={() => onNavigate("/dashboard")}
+              className="px-3 py-2 text-xs text-slate-400 hover:text-slate-300 cursor-pointer"
+            >
               Reportes Automáticos
             </div>
           </div>
         </div>
 
-        <button
-          onClick={() => onNavigate("/dashboard/drivers")}
-          className="w-full flex items-center gap-2 px-3 py-2 text-slate-300 hover:bg-[#2a2d3a] rounded text-sm"
-        >
+        <button className="w-full flex items-center gap-2 px-3 py-2 text-slate-300 hover:bg-[#2a2d3a] rounded text-sm">
           <svg
             className="w-4 h-4"
             fill="none"
@@ -101,7 +107,10 @@ export function DashboardSidebar({ currentPath, onNavigate }: SidebarProps) {
           </svg>
         </button>
 
-        <button className="w-full flex items-center gap-2 px-3 py-2 text-slate-300 hover:bg-[#2a2d3a] rounded text-sm">
+        <button
+          onClick={() => onNavigate("/dashboard/drivers")}
+          className="w-full flex items-center gap-2 px-3 py-2 text-slate-300 hover:bg-[#2a2d3a] rounded text-sm"
+        >
           <svg
             className="w-4 h-4"
             fill="none"

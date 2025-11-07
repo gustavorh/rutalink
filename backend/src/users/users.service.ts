@@ -267,4 +267,14 @@ export class UsersService {
 
     await this.db.delete(users).where(conditions);
   }
+
+  /**
+   * Update user's last activity timestamp
+   */
+  async updateLastActivity(userId: number): Promise<void> {
+    await this.db
+      .update(users)
+      .set({ lastActivityAt: new Date() })
+      .where(eq(users.id, userId));
+  }
 }

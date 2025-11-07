@@ -24,7 +24,9 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  login(@Request() req: { user: UserWithRelations }): AuthResponseDto {
+  async login(
+    @Request() req: { user: UserWithRelations },
+  ): Promise<AuthResponseDto> {
     return this.authService.login(req.user);
   }
 }
