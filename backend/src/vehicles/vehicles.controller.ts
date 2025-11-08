@@ -13,17 +13,17 @@ import {
   ParseIntPipe,
   Request,
 } from '@nestjs/common';
-import { TrucksService } from './trucks.service';
+import { VehiclesService } from './vehicles.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../auth/guards/permissions.guard';
 import { RequirePermission } from '../auth/decorators/require-permission.decorator';
 import {
-  CreateTruckDto,
-  UpdateTruckDto,
+  CreateVehicleDto,
+  UpdateVehicleDto,
   CreateVehicleDocumentDto,
   UpdateVehicleDocumentDto,
-  TruckQueryDto,
-} from './dto/truck.dto';
+  VehicleQueryDto,
+} from './dto/vehicle.dto';
 
 interface RequestWithUser extends Request {
   user: {
@@ -36,26 +36,26 @@ interface RequestWithUser extends Request {
   };
 }
 
-@Controller('trucks')
+@Controller('vehicles')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
-export class TrucksController {
-  constructor(private readonly trucksService: TrucksService) {}
+export class VehiclesController {
+  constructor(private readonly vehiclesService: VehiclesService) {}
 
   // ============================================================================
   // TRUCKS CRUD ENDPOINTS
   // ============================================================================
 
   /**
-   * POST /trucks
-   * Crear un nuevo camión
+   * POST /vehicles
+   * Crear un nuevo vehículo
    */
   @Post()
-  @RequirePermission('trucks', 'create')
+  @RequirePermission('vehicles', 'create')
   async create(
-    @Body() createTruckDto: CreateTruckDto,
+    @Body() createTruckDto: CreateVehicleDto,
     @Request() req: RequestWithUser,
   ) {
-    return this.trucksService.create(
+    return this.vehiclesService.create(
       req.user.operatorId,
       createTruckDto,
       req.user.userId,
@@ -63,45 +63,45 @@ export class TrucksController {
   }
 
   /**
-   * GET /trucks
-   * Obtener todos los camiones con filtros y paginación
+   * GET /vehicles
+   * Obtener todos los vehículos con filtros y paginación
    */
   @Get()
-  @RequirePermission('trucks', 'read')
+  @RequirePermission('vehicles', 'read')
   async findAll(
-    @Query() query: TruckQueryDto,
+    @Query() query: VehicleQueryDto,
     @Request() req: RequestWithUser,
   ) {
-    return this.trucksService.findAll(req.user.operatorId, query);
+    return this.vehiclesService.findAll(req.user.operatorId, query);
   }
 
   /**
-   * GET /trucks/:id
-   * Obtener un camión por ID
+   * GET /vehicles/:id
+   * Obtener un vehículo por ID
    */
   @Get(':id')
-  @RequirePermission('trucks', 'read')
+  @RequirePermission('vehicles', 'read')
   async findOne(
     @Param('id', ParseIntPipe) id: number,
     @Query('includeRelations') includeRelations: string,
     @Request() req: RequestWithUser,
   ) {
     const include = includeRelations === 'true';
-    return this.trucksService.findOne(req.user.operatorId, id, include);
+    return this.vehiclesService.findOne(req.user.operatorId, id, include);
   }
 
   /**
-   * PUT /trucks/:id
-   * Actualizar un camión
+   * PUT /vehicles/:id
+   * Actualizar un vehículo
    */
   @Put(':id')
-  @RequirePermission('trucks', 'update')
+  @RequirePermission('vehicles', 'update')
   async update(
     @Param('id', ParseIntPipe) id: number,
-    @Body() updateTruckDto: UpdateTruckDto,
+    @Body() updateTruckDto: UpdateVehicleDto,
     @Request() req: RequestWithUser,
   ) {
-    return this.trucksService.update(
+    return this.vehiclesService.update(
       req.user.operatorId,
       id,
       updateTruckDto,
@@ -110,17 +110,17 @@ export class TrucksController {
   }
 
   /**
-   * DELETE /trucks/:id
-   * Eliminar un camión
+   * DELETE /vehicles/:id
+   * Eliminar un vehículo
    */
   @Delete(':id')
-  @RequirePermission('trucks', 'delete')
+  @RequirePermission('vehicles', 'delete')
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(
     @Param('id', ParseIntPipe) id: number,
     @Request() req: RequestWithUser,
   ) {
-    await this.trucksService.remove(req.user.operatorId, id);
+    await this.vehiclesService.remove(req.user.operatorId, id);
   }
 
   // ============================================================================
@@ -128,16 +128,16 @@ export class TrucksController {
   // ============================================================================
 
   /**
-   * POST /trucks/documents
-   * Agregar un documento a un camión
+   * POST /vehicles/documents
+   * Agregar un documento a un vehículo
    */
   @Post('documents')
-  @RequirePermission('trucks', 'update')
+  @RequirePermission('vehicles', 'update')
   async addDocument(
     @Body() createDocumentDto: CreateVehicleDocumentDto,
     @Request() req: RequestWithUser,
   ) {
-    return this.trucksService.addDocument(
+    return this.vehiclesService.addDocument(
       req.user.operatorId,
       createDocumentDto,
       req.user.userId,
@@ -145,30 +145,30 @@ export class TrucksController {
   }
 
   /**
-   * GET /trucks/:id/documents
-   * Obtener todos los documentos de un camión
+   * GET /vehicles/:id/documents
+   * Obtener todos los documentos de un vehículo
    */
   @Get(':id/documents')
-  @RequirePermission('trucks', 'read')
+  @RequirePermission('vehicles', 'read')
   async getDocuments(
     @Param('id', ParseIntPipe) id: number,
     @Request() req: RequestWithUser,
   ) {
-    return this.trucksService.getDocuments(req.user.operatorId, id);
+    return this.vehiclesService.getDocuments(req.user.operatorId, id);
   }
 
   /**
-   * PUT /trucks/documents/:documentId
+   * PUT /vehicles/documents/:documentId
    * Actualizar un documento
    */
   @Put('documents/:documentId')
-  @RequirePermission('trucks', 'update')
+  @RequirePermission('vehicles', 'update')
   async updateDocument(
     @Param('documentId', ParseIntPipe) documentId: number,
     @Body() updateDocumentDto: UpdateVehicleDocumentDto,
     @Request() req: RequestWithUser,
   ) {
-    return this.trucksService.updateDocument(
+    return this.vehiclesService.updateDocument(
       req.user.operatorId,
       documentId,
       updateDocumentDto,
@@ -177,30 +177,30 @@ export class TrucksController {
   }
 
   /**
-   * DELETE /trucks/documents/:documentId
+   * DELETE /vehicles/documents/:documentId
    * Eliminar un documento
    */
   @Delete('documents/:documentId')
-  @RequirePermission('trucks', 'delete')
+  @RequirePermission('vehicles', 'delete')
   @HttpCode(HttpStatus.NO_CONTENT)
   async removeDocument(
     @Param('documentId', ParseIntPipe) documentId: number,
     @Request() req: RequestWithUser,
   ) {
-    await this.trucksService.removeDocument(req.user.operatorId, documentId);
+    await this.vehiclesService.removeDocument(req.user.operatorId, documentId);
   }
 
   /**
-   * GET /trucks/documents/expiring
+   * GET /vehicles/documents/expiring
    * Obtener documentos próximos a vencer
    */
   @Get('documents/expiring')
-  @RequirePermission('trucks', 'read')
+  @RequirePermission('vehicles', 'read')
   async getExpiringDocuments(
     @Query('days', ParseIntPipe) days: number = 30,
     @Request() req: RequestWithUser,
   ) {
-    return this.trucksService.getExpiringDocuments(req.user.operatorId, days);
+    return this.vehiclesService.getExpiringDocuments(req.user.operatorId, days);
   }
 
   // ============================================================================
@@ -208,16 +208,16 @@ export class TrucksController {
   // ============================================================================
 
   /**
-   * GET /trucks/:id/operational-status
-   * Obtener estado operativo de un camión
+   * GET /vehicles/:id/operational-status
+   * Obtener estado operativo de un vehículo
    */
   @Get(':id/operational-status')
-  @RequirePermission('trucks', 'read')
+  @RequirePermission('vehicles', 'read')
   async getOperationalStatus(
     @Param('id', ParseIntPipe) id: number,
     @Request() req: RequestWithUser,
   ) {
-    const status = await this.trucksService.getOperationalStatus(
+    const status = await this.vehiclesService.getOperationalStatus(
       req.user.operatorId,
       id,
     );
@@ -229,17 +229,17 @@ export class TrucksController {
   // ============================================================================
 
   /**
-   * GET /trucks/:id/operations/history
-   * Obtener historial de operaciones de un camión
+   * GET /vehicles/:id/operations/history
+   * Obtener historial de operaciones de un vehículo
    */
   @Get(':id/operations/history')
-  @RequirePermission('trucks', 'read')
+  @RequirePermission('vehicles', 'read')
   async getOperationHistory(
     @Param('id', ParseIntPipe) id: number,
     @Query('limit', ParseIntPipe) limit: number = 10,
     @Request() req: RequestWithUser,
   ) {
-    return this.trucksService.getOperationHistory(
+    return this.vehiclesService.getOperationHistory(
       req.user.operatorId,
       id,
       limit,
@@ -247,16 +247,16 @@ export class TrucksController {
   }
 
   /**
-   * GET /trucks/:id/operations/upcoming
-   * Obtener próximas operaciones de un camión
+   * GET /vehicles/:id/operations/upcoming
+   * Obtener próximas operaciones de un vehículo
    */
   @Get(':id/operations/upcoming')
-  @RequirePermission('trucks', 'read')
+  @RequirePermission('vehicles', 'read')
   async getUpcomingOperations(
     @Param('id', ParseIntPipe) id: number,
     @Request() req: RequestWithUser,
   ) {
-    return this.trucksService.getUpcomingOperations(req.user.operatorId, id);
+    return this.vehiclesService.getUpcomingOperations(req.user.operatorId, id);
   }
 
   // ============================================================================
@@ -264,11 +264,11 @@ export class TrucksController {
   // ============================================================================
 
   /**
-   * GET /trucks/stats/overview
+   * GET /vehicles/stats/overview
    * Obtener estadísticas generales de la flota
    */
   @Get('stats/overview')
-  @RequirePermission('trucks', 'read')
+  @RequirePermission('vehicles', 'read')
   getFleetOverview(@Request() req: RequestWithUser) {
     // Este método se puede implementar más adelante
     return {

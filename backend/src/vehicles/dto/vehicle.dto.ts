@@ -49,9 +49,9 @@ export enum DocumentType {
 }
 
 // ============================================================================
-// CREATE TRUCK DTO
+// CREATE VEHICLE DTO
 // ============================================================================
-export class CreateTruckDto {
+export class CreateVehicleDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(20)
@@ -106,9 +106,9 @@ export class CreateTruckDto {
 }
 
 // ============================================================================
-// UPDATE TRUCK DTO
+// UPDATE VEHICLE DTO
 // ============================================================================
-export class UpdateTruckDto {
+export class UpdateVehicleDto {
   @IsString()
   @IsOptional()
   @MaxLength(20)
@@ -316,7 +316,7 @@ export class VehicleDocumentResponseDto {
   daysUntilExpiration?: number;
 }
 
-export class TruckResponseDto {
+export class VehicleResponseDto {
   id: number;
   operatorId: number;
   plateNumber: string;
@@ -353,7 +353,7 @@ export class TruckResponseDto {
 // ============================================================================
 // QUERY DTOs
 // ============================================================================
-export class TruckQueryDto {
+export class VehicleQueryDto {
   @IsOptional()
   @Type(() => Number)
   @IsInt()

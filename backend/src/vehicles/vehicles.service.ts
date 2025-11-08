@@ -17,32 +17,32 @@ import {
   VehicleDocument,
 } from '../database/schema';
 import {
-  CreateTruckDto,
-  UpdateTruckDto,
+  CreateVehicleDto,
+  UpdateVehicleDto,
   CreateVehicleDocumentDto,
   UpdateVehicleDocumentDto,
-  TruckQueryDto,
-  TruckResponseDto,
+  VehicleQueryDto,
+  VehicleResponseDto,
   VehicleDocumentResponseDto,
   OperationalStatus,
-} from './dto/truck.dto';
+} from './dto/vehicle.dto';
 
 @Injectable()
-export class TrucksService {
+export class VehiclesService {
   constructor(@Inject(DATABASE) private readonly db: MySql2Database<any>) {}
 
   // ============================================================================
-  // CRUD OPERATIONS - TRUCKS
+  // CRUD OPERATIONS - VEHICLES
   // ============================================================================
 
   /**
-   * Crear un nuevo camión
+   * Crear un nuevo vehículo
    */
   async create(
     operatorId: number,
-    createTruckDto: CreateTruckDto,
+    createTruckDto: CreateVehicleDto,
     userId: number,
-  ): Promise<TruckResponseDto> {
+  ): Promise<VehicleResponseDto> {
     // Verificar si ya existe un vehículo con la misma patente para este operador
     const existingVehicle = await this.db
       .select()
@@ -57,7 +57,7 @@ export class TrucksService {
 
     if (existingVehicle.length > 0) {
       throw new ConflictException(
-        `Ya existe un camión con la patente ${createTruckDto.plateNumber}`,
+        `Ya existe un vehículo con la patente ${createTruckDto.plateNumber}`,
       );
     }
 
@@ -85,13 +85,13 @@ export class TrucksService {
   }
 
   /**
-   * Obtener todos los camiones con filtros y paginación
+   * Obtener todos los vehículos con filtros y paginación
    */
   async findAll(
     operatorId: number,
-    query: TruckQueryDto,
+    query: VehicleQueryDto,
   ): Promise<{
-    data: TruckResponseDto[];
+    data: VehicleResponseDto[];
     pagination: {
       page: number;
       limit: number;
@@ -175,13 +175,13 @@ export class TrucksService {
   }
 
   /**
-   * Obtener un camión por ID
+   * Obtener un vehículo por ID
    */
   async findOne(
     operatorId: number,
     id: number,
     includeRelations: boolean = false,
-  ): Promise<TruckResponseDto> {
+  ): Promise<VehicleResponseDto> {
     const [vehicle] = await this.db
       .select()
       .from(vehicles)
@@ -196,14 +196,14 @@ export class TrucksService {
   }
 
   /**
-   * Actualizar un camión
+   * Actualizar un vehículo
    */
   async update(
     operatorId: number,
     id: number,
-    updateTruckDto: UpdateTruckDto,
+    updateTruckDto: UpdateVehicleDto,
     userId: number,
-  ): Promise<TruckResponseDto> {
+  ): Promise<VehicleResponseDto> {
     await this.findOne(operatorId, id);
 
     // Si se actualiza la patente, verificar que no exista otra con el mismo número
@@ -222,7 +222,7 @@ export class TrucksService {
 
       if (existing.length > 0) {
         throw new ConflictException(
-          `Ya existe otro camión con la patente ${updateTruckDto.plateNumber}`,
+          `Ya existe otro vehículo con la patente ${updateTruckDto.plateNumber}`,
         );
       }
     }
@@ -239,7 +239,7 @@ export class TrucksService {
   }
 
   /**
-   * Eliminar un camión
+   * Eliminar un vehículo
    */
   async remove(operatorId: number, id: number): Promise<void> {
     await this.findOne(operatorId, id);
@@ -261,7 +261,7 @@ export class TrucksService {
 
     if (activeOperations.length > 0) {
       throw new BadRequestException(
-        'No se puede eliminar el camión porque tiene operaciones activas',
+        'No se puede eliminar el vehículo porque tiene operaciones activas',
       );
     }
 
@@ -275,7 +275,7 @@ export class TrucksService {
   // ============================================================================
 
   /**
-   * Agregar documento a un camión
+   * Agregar documento a un vehículo
    */
   async addDocument(
     operatorId: number,
@@ -304,7 +304,7 @@ export class TrucksService {
   }
 
   /**
-   * Obtener documentos de un camión
+   * Obtener documentos de un vehículo
    */
   async getDocuments(
     operatorId: number,
@@ -415,7 +415,7 @@ export class TrucksService {
   // ============================================================================
 
   /**
-   * Obtener estado operativo de un camión
+   * Obtener estado operativo de un vehículo
    */
   async getOperationalStatus(
     operatorId: number,
@@ -463,7 +463,7 @@ export class TrucksService {
   }
 
   /**
-   * Obtener historial de operaciones de un camión
+   * Obtener historial de operaciones de un vehículo
    */
   async getOperationHistory(
     operatorId: number,
@@ -486,7 +486,7 @@ export class TrucksService {
   }
 
   /**
-   * Obtener próximas operaciones de un camión
+   * Obtener próximas operaciones de un vehículo
    */
   async getUpcomingOperations(operatorId: number, vehicleId: number) {
     await this.findOne(operatorId, vehicleId);
@@ -518,8 +518,8 @@ export class TrucksService {
     vehicle: Vehicle,
     includeDocuments: boolean = false,
     includeStats: boolean = false,
-  ): Promise<TruckResponseDto> {
-    const response: TruckResponseDto = {
+  ): Promise<VehicleResponseDto> {
+    const response: VehicleResponseDto = {
       id: vehicle.id,
       operatorId: vehicle.operatorId,
       plateNumber: vehicle.plateNumber,

@@ -8,7 +8,11 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { AuditModule } from './audit/audit.module';
 import { DriversModule } from './drivers/drivers.module';
-import { TrucksModule } from './trucks/trucks.module';
+import { VehiclesModule } from './vehicles/vehicles.module';
+import { ClientsModule } from './clients/clients.module';
+import { ProvidersModule } from './providers/providers.module';
+import { RoutesModule } from './routes/routes.module';
+import { OperationsModule } from './operations/operations.module';
 import { AuditInterceptor } from './auth/interceptors/audit.interceptor';
 
 @Module({
@@ -22,7 +26,11 @@ import { AuditInterceptor } from './auth/interceptors/audit.interceptor';
     AuthModule,
     AuditModule,
     DriversModule,
-    TrucksModule,
+    VehiclesModule,
+    ClientsModule,
+    ProvidersModule,
+    RoutesModule,
+    OperationsModule,
   ],
   controllers: [AppController],
   providers: [

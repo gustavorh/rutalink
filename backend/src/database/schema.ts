@@ -446,6 +446,145 @@ export const vehicleDocumentsRelations = relations(
 );
 
 // ============================================================================
+// CLIENTS TABLE (Clientes)
+// ============================================================================
+export const clients = mysqlTable(
+  'clients',
+  {
+    id: int('id').primaryKey().autoincrement(),
+    operatorId: int('operator_id')
+      .notNull()
+      .references(() => operators.id, { onDelete: 'cascade' }),
+    businessName: varchar('business_name', { length: 255 }).notNull(), // razón social
+    taxId: varchar('tax_id', { length: 20 }), // RUT de la empresa
+    contactName: varchar('contact_name', { length: 200 }), // nombre de contacto
+    contactEmail: varchar('contact_email', { length: 255 }),
+    contactPhone: varchar('contact_phone', { length: 20 }),
+    address: varchar('address', { length: 500 }),
+    city: varchar('city', { length: 100 }),
+    region: varchar('region', { length: 100 }),
+    country: varchar('country', { length: 100 }).default('Chile'),
+    industry: varchar('industry', { length: 100 }), // minería, construcción, industrial, agricultura, etc.
+    status: boolean('status').notNull().default(true), // active/inactive
+    observations: varchar('observations', { length: 1000 }), // observaciones generales
+    notes: varchar('notes', { length: 1000 }),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow().onUpdateNow(),
+    createdBy: int('created_by'),
+    updatedBy: int('updated_by'),
+  },
+  (table) => ({
+    operatorIdIdx: index('client_operator_id_idx').on(table.operatorId),
+    businessNameIdx: index('client_business_name_idx').on(table.businessName),
+    taxIdIdx: index('client_tax_id_idx').on(table.operatorId, table.taxId),
+    industryIdx: index('client_industry_idx').on(table.industry),
+    statusIdx: index('client_status_idx').on(table.status),
+  }),
+);
+
+export const clientsRelations = relations(clients, ({ one, many }) => ({
+  operator: one(operators, {
+    fields: [clients.operatorId],
+    references: [operators.id],
+  }),
+  operations: many(operations),
+}));
+
+// ============================================================================
+// PROVIDERS TABLE (Proveedores de Transporte)
+// ============================================================================
+export const providers = mysqlTable(
+  'providers',
+  {
+    id: int('id').primaryKey().autoincrement(),
+    operatorId: int('operator_id')
+      .notNull()
+      .references(() => operators.id, { onDelete: 'cascade' }),
+    businessName: varchar('business_name', { length: 255 }).notNull(), // razón social
+    taxId: varchar('tax_id', { length: 20 }), // RUT de la empresa
+    contactName: varchar('contact_name', { length: 200 }), // nombre de contacto
+    contactEmail: varchar('contact_email', { length: 255 }),
+    contactPhone: varchar('contact_phone', { length: 20 }),
+    address: varchar('address', { length: 500 }),
+    city: varchar('city', { length: 100 }),
+    region: varchar('region', { length: 100 }),
+    country: varchar('country', { length: 100 }).default('Chile'),
+    businessType: varchar('business_type', { length: 100 }), // tipo de servicio: transporte, logística, operador logístico, etc.
+    serviceTypes: varchar('service_types', { length: 500 }), // tipos de servicios que ofrece (separados por coma)
+    fleetSize: int('fleet_size'), // tamaño de flota
+    status: boolean('status').notNull().default(true), // active/inactive
+    rating: int('rating'), // calificación del proveedor (1-5)
+    observations: varchar('observations', { length: 1000 }),
+    notes: varchar('notes', { length: 1000 }),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow().onUpdateNow(),
+    createdBy: int('created_by'),
+    updatedBy: int('updated_by'),
+  },
+  (table) => ({
+    operatorIdIdx: index('provider_operator_id_idx').on(table.operatorId),
+    businessNameIdx: index('provider_business_name_idx').on(table.businessName),
+    taxIdIdx: index('provider_tax_id_idx').on(table.operatorId, table.taxId),
+    businessTypeIdx: index('provider_business_type_idx').on(table.businessType),
+    statusIdx: index('provider_status_idx').on(table.status),
+  }),
+);
+
+export const providersRelations = relations(providers, ({ one, many }) => ({
+  operator: one(operators, {
+    fields: [providers.operatorId],
+    references: [operators.id],
+  }),
+  operations: many(operations),
+}));
+
+// ============================================================================
+// ROUTES TABLE (Tramos/Rutas)
+// ============================================================================
+export const routes = mysqlTable(
+  'routes',
+  {
+    id: int('id').primaryKey().autoincrement(),
+    operatorId: int('operator_id')
+      .notNull()
+      .references(() => operators.id, { onDelete: 'cascade' }),
+    name: varchar('name', { length: 255 }).notNull(), // nombre descriptivo del tramo
+    code: varchar('code', { length: 50 }), // código interno del tramo
+    origin: varchar('origin', { length: 500 }).notNull(),
+    destination: varchar('destination', { length: 500 }).notNull(),
+    distance: int('distance'), // km
+    estimatedDuration: int('estimated_duration'), // minutos
+    routeType: varchar('route_type', { length: 50 }), // urbana, interurbana, minera, rural, etc.
+    difficulty: varchar('difficulty', { length: 20 }), // fácil, moderada, difícil
+    roadConditions: varchar('road_conditions', { length: 500 }), // condiciones de la ruta
+    tollsRequired: boolean('tolls_required').default(false), // si requiere peajes
+    estimatedTollCost: int('estimated_toll_cost'), // costo estimado de peajes
+    status: boolean('status').notNull().default(true), // active/inactive
+    observations: varchar('observations', { length: 1000 }),
+    notes: varchar('notes', { length: 1000 }),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow().onUpdateNow(),
+    createdBy: int('created_by'),
+    updatedBy: int('updated_by'),
+  },
+  (table) => ({
+    operatorIdIdx: index('route_operator_id_idx').on(table.operatorId),
+    nameIdx: index('route_name_idx').on(table.name),
+    codeIdx: index('route_code_idx').on(table.operatorId, table.code),
+    routeTypeIdx: index('route_type_idx').on(table.routeType),
+    statusIdx: index('route_status_idx').on(table.status),
+  }),
+);
+
+export const routesRelations = relations(routes, ({ one, many }) => ({
+  operator: one(operators, {
+    fields: [routes.operatorId],
+    references: [operators.id],
+  }),
+  operations: many(operations),
+}));
+
+// ============================================================================
 // OPERATIONS TABLE (Operaciones/Viajes)
 // ============================================================================
 export const operations = mysqlTable(
@@ -455,6 +594,15 @@ export const operations = mysqlTable(
     operatorId: int('operator_id')
       .notNull()
       .references(() => operators.id, { onDelete: 'cascade' }),
+    clientId: int('client_id').references(() => clients.id, {
+      onDelete: 'restrict',
+    }), // cliente asociado (opcional)
+    providerId: int('provider_id').references(() => providers.id, {
+      onDelete: 'restrict',
+    }), // proveedor de transporte (opcional)
+    routeId: int('route_id').references(() => routes.id, {
+      onDelete: 'restrict',
+    }), // tramo/ruta asociada (opcional)
     driverId: int('driver_id')
       .notNull()
       .references(() => drivers.id, { onDelete: 'restrict' }),
@@ -481,6 +629,9 @@ export const operations = mysqlTable(
   },
   (table) => ({
     operatorIdIdx: index('operation_operator_id_idx').on(table.operatorId),
+    clientIdIdx: index('operation_client_id_idx').on(table.clientId),
+    providerIdIdx: index('operation_provider_id_idx').on(table.providerId),
+    routeIdIdx: index('operation_route_id_idx').on(table.routeId),
     driverIdIdx: index('operation_driver_id_idx').on(table.driverId),
     vehicleIdIdx: index('operation_vehicle_id_idx').on(table.vehicleId),
     operationNumberIdx: uniqueIndex('operation_number_idx').on(
@@ -498,6 +649,18 @@ export const operationsRelations = relations(operations, ({ one }) => ({
   operator: one(operators, {
     fields: [operations.operatorId],
     references: [operators.id],
+  }),
+  client: one(clients, {
+    fields: [operations.clientId],
+    references: [clients.id],
+  }),
+  provider: one(providers, {
+    fields: [operations.providerId],
+    references: [providers.id],
+  }),
+  route: one(routes, {
+    fields: [operations.routeId],
+    references: [routes.id],
   }),
   driver: one(drivers, {
     fields: [operations.driverId],
@@ -547,3 +710,12 @@ export type NewOperation = typeof operations.$inferInsert;
 
 export type VehicleDocument = typeof vehicleDocuments.$inferSelect;
 export type NewVehicleDocument = typeof vehicleDocuments.$inferInsert;
+
+export type Client = typeof clients.$inferSelect;
+export type NewClient = typeof clients.$inferInsert;
+
+export type Provider = typeof providers.$inferSelect;
+export type NewProvider = typeof providers.$inferInsert;
+
+export type Route = typeof routes.$inferSelect;
+export type NewRoute = typeof routes.$inferInsert;
