@@ -12,6 +12,7 @@ export function DashboardSidebar({
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [isMaestrosOpen, setIsMaestrosOpen] = useState(false);
   const [isAdministrationOpen, setIsAdministrationOpen] = useState(false);
   const isActive = (path: string) => currentPath === path;
   const isParentActive = (basePath: string) => currentPath.startsWith(basePath);
@@ -152,225 +153,177 @@ export function DashboardSidebar({
           )}
         </div>
 
-        <button
-          onClick={() => onNavigate("/trucks")}
-          className={`w-full flex items-center ${
-            isCollapsed ? "justify-center" : "gap-2"
-          } px-3 py-2 rounded text-sm transition-colors ${
-            isParentActive("/trucks")
-              ? "bg-primary text-primary-foreground font-medium"
-              : "text-foreground hover:bg-ui-surface-elevated hover:text-foreground"
-          }`}
-          title={isCollapsed ? "Camiones" : ""}
-        >
-          <svg
-            className="w-4 h-4 flex-shrink-0"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
+        {/* Maestros Section */}
+        <div className={isCollapsed ? "" : "mb-4"}>
+          <button
+            onClick={() => setIsMaestrosOpen(!isMaestrosOpen)}
+            className={`w-full flex items-center ${
+              isCollapsed ? "justify-center" : "gap-2"
+            } px-3 py-2 rounded text-sm transition-colors ${
+              isParentActive("/trucks") ||
+              isParentActive("/drivers") ||
+              isParentActive("/clients") ||
+              isParentActive("/providers") ||
+              isParentActive("/routes")
+                ? "bg-primary text-primary-foreground font-medium"
+                : "text-foreground hover:bg-ui-surface-elevated hover:text-foreground"
+            }`}
+            title={isCollapsed ? "Maestros" : ""}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m-4 0v-1m4 1v-1m6 0a2 2 0 104 0m-4 0a2 2 0 114 0m-4 0v-1m4 1v-1"
-            />
-          </svg>
-          {!isCollapsed && (
-            <>
-              <span>Camiones</span>
-              <svg
-                className="w-4 h-4 ml-auto"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+            <svg
+              className="w-4 h-4 flex-shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"
+              />
+            </svg>
+            {!isCollapsed && (
+              <>
+                <span>Maestros</span>
+                <svg
+                  className={`w-4 h-4 ml-auto transition-transform duration-200 ${
+                    isMaestrosOpen ? "rotate-180" : ""
+                  }`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </>
+            )}
+          </button>
+          {!isCollapsed && isMaestrosOpen && (
+            <div className="ml-4 mt-1 space-y-1">
+              <div
+                onClick={() => onNavigate("/trucks")}
+                className={`flex items-center gap-2 px-3 py-2 text-xs cursor-pointer rounded transition-colors ${
+                  isParentActive("/trucks")
+                    ? "bg-primary/20 text-primary border-l-2 border-primary font-medium"
+                    : "text-muted-foreground hover:text-foreground hover:bg-ui-surface-hover"
+                }`}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </>
-          )}
-        </button>
-
-        <button
-          onClick={() => onNavigate("/drivers")}
-          className={`w-full flex items-center ${
-            isCollapsed ? "justify-center" : "gap-2"
-          } px-3 py-2 rounded text-sm transition-colors ${
-            isParentActive("/drivers")
-              ? "bg-primary text-primary-foreground font-medium"
-              : "text-foreground hover:bg-ui-surface-elevated hover:text-foreground"
-          }`}
-          title={isCollapsed ? "Choferes" : ""}
-        >
-          <svg
-            className="w-4 h-4 flex-shrink-0"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-            />
-          </svg>
-          {!isCollapsed && (
-            <>
-              <span>Choferes</span>
-              <svg
-                className="w-4 h-4 ml-auto"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+                <svg
+                  className="w-3.5 h-3.5 flex-shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m-4 0v-1m4 1v-1m6 0a2 2 0 104 0m-4 0a2 2 0 114 0m-4 0v-1m4 1v-1"
+                  />
+                </svg>
+                <span>Camiones</span>
+              </div>
+              <div
+                onClick={() => onNavigate("/drivers")}
+                className={`flex items-center gap-2 px-3 py-2 text-xs cursor-pointer rounded transition-colors ${
+                  isParentActive("/drivers")
+                    ? "bg-primary/20 text-primary border-l-2 border-primary font-medium"
+                    : "text-muted-foreground hover:text-foreground hover:bg-ui-surface-hover"
+                }`}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </>
-          )}
-        </button>
-
-        <button
-          onClick={() => onNavigate("/clients")}
-          className={`w-full flex items-center ${
-            isCollapsed ? "justify-center" : "gap-2"
-          } px-3 py-2 rounded text-sm transition-colors ${
-            isParentActive("/clients")
-              ? "bg-primary text-primary-foreground font-medium"
-              : "text-foreground hover:bg-ui-surface-elevated hover:text-foreground"
-          }`}
-          title={isCollapsed ? "Clientes" : ""}
-        >
-          <svg
-            className="w-4 h-4 flex-shrink-0"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-            />
-          </svg>
-          {!isCollapsed && (
-            <>
-              <span>Clientes</span>
-              <svg
-                className="w-4 h-4 ml-auto"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+                <svg
+                  className="w-3.5 h-3.5 flex-shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  />
+                </svg>
+                <span>Choferes</span>
+              </div>
+              <div
+                onClick={() => onNavigate("/clients")}
+                className={`flex items-center gap-2 px-3 py-2 text-xs cursor-pointer rounded transition-colors ${
+                  isParentActive("/clients")
+                    ? "bg-primary/20 text-primary border-l-2 border-primary font-medium"
+                    : "text-muted-foreground hover:text-foreground hover:bg-ui-surface-hover"
+                }`}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </>
-          )}
-        </button>
-
-        <button
-          onClick={() => onNavigate("/providers")}
-          className={`w-full flex items-center ${
-            isCollapsed ? "justify-center" : "gap-2"
-          } px-3 py-2 rounded text-sm transition-colors ${
-            isParentActive("/providers")
-              ? "bg-primary text-primary-foreground font-medium"
-              : "text-foreground hover:bg-ui-surface-elevated hover:text-foreground"
-          }`}
-          title={isCollapsed ? "Proveedores" : ""}
-        >
-          <svg
-            className="w-4 h-4 flex-shrink-0"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            />
-          </svg>
-          {!isCollapsed && (
-            <>
-              <span>Proveedores</span>
-              <svg
-                className="w-4 h-4 ml-auto"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+                <svg
+                  className="w-3.5 h-3.5 flex-shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                  />
+                </svg>
+                <span>Clientes</span>
+              </div>
+              <div
+                onClick={() => onNavigate("/providers")}
+                className={`flex items-center gap-2 px-3 py-2 text-xs cursor-pointer rounded transition-colors ${
+                  isParentActive("/providers")
+                    ? "bg-primary/20 text-primary border-l-2 border-primary font-medium"
+                    : "text-muted-foreground hover:text-foreground hover:bg-ui-surface-hover"
+                }`}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </>
-          )}
-        </button>
-
-        <button
-          onClick={() => onNavigate("/routes")}
-          className={`w-full flex items-center ${
-            isCollapsed ? "justify-center" : "gap-2"
-          } px-3 py-2 rounded text-sm transition-colors ${
-            isParentActive("/routes")
-              ? "bg-primary text-primary-foreground font-medium"
-              : "text-foreground hover:bg-ui-surface-elevated hover:text-foreground"
-          }`}
-          title={isCollapsed ? "Tramos y Rutas" : ""}
-        >
-          <svg
-            className="w-4 h-4 flex-shrink-0"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
-            />
-          </svg>
-          {!isCollapsed && (
-            <>
-              <span>Tramos y Rutas</span>
-              <svg
-                className="w-4 h-4 ml-auto"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+                <svg
+                  className="w-3.5 h-3.5 flex-shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                <span>Proveedores</span>
+              </div>
+              <div
+                onClick={() => onNavigate("/routes")}
+                className={`flex items-center gap-2 px-3 py-2 text-xs cursor-pointer rounded transition-colors ${
+                  isParentActive("/routes")
+                    ? "bg-primary/20 text-primary border-l-2 border-primary font-medium"
+                    : "text-muted-foreground hover:text-foreground hover:bg-ui-surface-hover"
+                }`}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </>
+                <svg
+                  className="w-3.5 h-3.5 flex-shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+                  />
+                </svg>
+                <span>Tramos y Rutas</span>
+              </div>
+            </div>
           )}
-        </button>
+        </div>
 
         <button
           onClick={() => onNavigate("/dashboard/analytics")}
