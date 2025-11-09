@@ -788,7 +788,9 @@ export default function OperationsPage() {
             {loading ? (
               <div className="text-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto"></div>
-                <p className="text-muted-foreground mt-4">Cargando operaciones...</p>
+                <p className="text-muted-foreground mt-4">
+                  Cargando operaciones...
+                </p>
               </div>
             ) : error ? (
               <div className="text-center py-12">
@@ -798,7 +800,9 @@ export default function OperationsPage() {
             ) : operations.length === 0 ? (
               <div className="text-center py-12">
                 <Calendar className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                <p className="text-muted-foreground">No se encontraron operaciones</p>
+                <p className="text-muted-foreground">
+                  No se encontraron operaciones
+                </p>
                 <Button
                   onClick={handleCreateClick}
                   className="mt-4 bg-purple-600 hover:bg-purple-700"
@@ -816,7 +820,9 @@ export default function OperationsPage() {
                         <TableHead className="text-muted-foreground">
                           Nº Operación
                         </TableHead>
-                        <TableHead className="text-muted-foreground">Tipo</TableHead>
+                        <TableHead className="text-muted-foreground">
+                          Tipo
+                        </TableHead>
                         <TableHead className="text-muted-foreground">
                           Origen → Destino
                         </TableHead>
@@ -829,7 +835,9 @@ export default function OperationsPage() {
                         <TableHead className="text-muted-foreground">
                           Fecha Programada
                         </TableHead>
-                        <TableHead className="text-muted-foreground">Estado</TableHead>
+                        <TableHead className="text-muted-foreground">
+                          Estado
+                        </TableHead>
                         <TableHead className="text-right text-muted-foreground">
                           Acciones
                         </TableHead>
@@ -934,9 +942,7 @@ export default function OperationsPage() {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() =>
-                                  router.push(
-                                    `/dashboard/operations/${op.operation.id}`
-                                  )
+                                  router.push(`/operations/${op.operation.id}`)
                                 }
                                 className="text-muted-foreground hover:text-primary hover:bg-primary/10"
                                 title="Ver detalles"
@@ -994,7 +1000,9 @@ export default function OperationsPage() {
                       .map((p, index, array) => (
                         <div key={p} className="flex items-center">
                           {index > 0 && array[index - 1] !== p - 1 && (
-                            <span className="text-muted-foreground px-2">...</span>
+                            <span className="text-muted-foreground px-2">
+                              ...
+                            </span>
                           )}
                           <Button
                             variant={p === page ? "default" : "outline"}
@@ -1105,7 +1113,10 @@ export default function OperationsPage() {
               <div className="grid grid-cols-2 gap-4">
                 {!editDialogOpen && (
                   <div className="col-span-2">
-                    <Label htmlFor="operationNumber" className="text-foreground">
+                    <Label
+                      htmlFor="operationNumber"
+                      className="text-foreground"
+                    >
                       Número de Operación *
                     </Label>
                     <Input

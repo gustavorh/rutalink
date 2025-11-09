@@ -4,12 +4,13 @@ import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getUser, isAuthenticated, getToken } from "@/lib/auth";
-import { OperationDetailModal } from "@/components/dashboard/OperationDetailModal";
+import { EditOperationModal } from "@/components/dashboard/EditOperationModal";
 import {
   getOperations,
   getClients,
   getProviders,
   getVehicles,
+  getRoutes,
 } from "@/lib/api";
 import type {
   DashboardFilters,
@@ -56,9 +57,9 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const loadingRef = useRef(false); // Track loading state to prevent concurrent requests
   const [operations, setOperations] = useState<LiveOperation[]>([]);
-  const [selectedOperation, setSelectedOperation] =
+  const [editingOperation, setEditingOperation] =
     useState<LiveOperation | null>(null);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const lastFetchTimeRef = useRef<number>(Date.now());
   const [filterOptionsLoaded, setFilterOptionsLoaded] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -158,7 +159,7 @@ export default function DashboardPage() {
       const params: Record<string, unknown> = {
         operatorId: user.operatorId,
         page: 1,
-        limit: 100,
+        limit: 1000, // Fetch up to 1000 operations (all operations)
       };
 
       // Apply filters from ref to get latest values
@@ -252,22 +253,27 @@ export default function DashboardPage() {
 
     const loadFilterOptions = async () => {
       try {
-        const [clientsRes, providersRes, vehiclesRes] = await Promise.all([
-          getClients(token, {
-            operatorId: user.operatorId,
-            status: true,
-            limit: 1000,
-          }),
-          getProviders(token, {
-            operatorId: user.operatorId,
-            status: true,
-            limit: 1000,
-          }),
-          getVehicles(token, {
-            status: true,
-            limit: 1000,
-          }),
-        ]);
+        const [clientsRes, providersRes, vehiclesRes, routesRes] =
+          await Promise.all([
+            getClients(token, {
+              operatorId: user.operatorId,
+              status: true,
+              limit: 1000,
+            }),
+            getProviders(token, {
+              operatorId: user.operatorId,
+              status: true,
+              limit: 1000,
+            }),
+            getVehicles(token, {
+              status: true,
+              limit: 1000,
+            }),
+            getRoutes(token, {
+              status: true,
+              limit: 1000,
+            }),
+          ]);
 
         if (!isMounted) return;
 
@@ -289,6 +295,17 @@ export default function DashboardPage() {
             (v: { id: number; plateNumber: string }) => ({
               value: v.id,
               label: v.plateNumber,
+            })
+          ),
+          routes: routesRes.data.map(
+            (r: {
+              id: number;
+              name: string;
+              origin: string;
+              destination: string;
+            }) => ({
+              value: r.id,
+              label: `${r.name} (${r.origin} → ${r.destination})`,
             })
           ),
         }));
@@ -323,10 +340,27 @@ export default function DashboardPage() {
     filters.endDate,
   ]);
 
-  const handleOperationClick = useCallback((operation: LiveOperation) => {
-    setSelectedOperation(operation);
-    setIsDetailModalOpen(true);
-  }, []);
+  const handleOperationClick = useCallback(
+    (operation: LiveOperation) => {
+      router.push(`/operations/${operation.operation.id}`);
+    },
+    [router]
+  );
+
+  const handleEditClick = useCallback(
+    (operation: LiveOperation, e: React.MouseEvent) => {
+      e.stopPropagation();
+      setEditingOperation(operation);
+      setIsEditModalOpen(true);
+    },
+    []
+  );
+
+  const handleEditSuccess = useCallback(() => {
+    refreshOperations();
+    setIsEditModalOpen(false);
+    setEditingOperation(null);
+  }, [refreshOperations]);
 
   const handleFilterChange = (
     key: keyof DashboardFilters,
@@ -962,34 +996,55 @@ export default function DashboardPage() {
 
                           {/* Actions */}
                           <td className="py-4">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleOperationClick(operation);
-                              }}
-                              className="p-2 hover:bg-ui-surface-elevated rounded-lg text-muted-foreground hover:text-primary transition-colors"
-                              title="Ver detalles"
-                            >
-                              <svg
-                                className="w-5 h-5"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOperationClick(operation);
+                                }}
+                                className="p-2 hover:bg-ui-surface-elevated rounded-lg text-muted-foreground hover:text-primary transition-colors"
+                                title="Ver detalles"
                               >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                                />
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                                />
-                              </svg>
-                            </button>
+                                <svg
+                                  className="w-5 h-5"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                  />
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                                  />
+                                </svg>
+                              </button>
+                              <button
+                                onClick={(e) => handleEditClick(operation, e)}
+                                className="p-2 hover:bg-ui-surface-elevated rounded-lg text-muted-foreground hover:text-blue-500 transition-colors"
+                                title="Editar asignaciones"
+                              >
+                                <svg
+                                  className="w-5 h-5"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                  />
+                                </svg>
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -1002,17 +1057,19 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Operation Detail Modal */}
-      <OperationDetailModal
-        operation={selectedOperation}
-        isOpen={isDetailModalOpen}
+      {/* Edit Operation Modal */}
+      <EditOperationModal
+        operation={editingOperation}
+        isOpen={isEditModalOpen}
         onClose={() => {
-          setIsDetailModalOpen(false);
-          setSelectedOperation(null);
+          setIsEditModalOpen(false);
+          setEditingOperation(null);
         }}
-        onRefresh={() => {
-          refreshOperations();
-        }}
+        onSuccess={handleEditSuccess}
+        clients={filterOptions.clients}
+        providers={filterOptions.providers}
+        routes={filterOptions.routes}
+        vehicles={filterOptions.vehicles}
       />
     </main>
   );
