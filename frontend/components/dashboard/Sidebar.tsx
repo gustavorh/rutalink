@@ -11,6 +11,8 @@ export function DashboardSidebar({
   onNavigate,
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [isAdministrationOpen, setIsAdministrationOpen] = useState(false);
   const isActive = (path: string) => currentPath === path;
   const isParentActive = (basePath: string) => currentPath.startsWith(basePath);
 
@@ -68,10 +70,13 @@ export function DashboardSidebar({
       <nav className={`flex-1 ${isCollapsed ? "space-y-4" : "space-y-1"}`}>
         <div className={isCollapsed ? "" : "mb-4"}>
           <button
+            onClick={() => setIsPanelOpen(!isPanelOpen)}
             className={`w-full flex items-center ${
               isCollapsed ? "justify-center" : "gap-2"
             } px-3 py-2 rounded text-sm transition-colors ${
-              isActive("/dashboard")
+              isActive("/dashboard") ||
+              isActive("/operations") ||
+              isActive("/dashboard/reports")
                 ? "bg-primary text-primary-foreground font-medium"
                 : "text-foreground hover:bg-ui-surface-elevated hover:text-foreground"
             }`}
@@ -94,7 +99,9 @@ export function DashboardSidebar({
               <>
                 <span>Panel de Control</span>
                 <svg
-                  className="w-4 h-4 ml-auto"
+                  className={`w-4 h-4 ml-auto transition-transform duration-200 ${
+                    isPanelOpen ? "rotate-180" : ""
+                  }`}
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -109,7 +116,7 @@ export function DashboardSidebar({
               </>
             )}
           </button>
-          {!isCollapsed && (
+          {!isCollapsed && isPanelOpen && (
             <div className="ml-4 mt-1 space-y-1">
               <div
                 onClick={() => onNavigate("/dashboard")}
@@ -404,6 +411,7 @@ export function DashboardSidebar({
         {/* Administration Section */}
         <div className={isCollapsed ? "" : "mb-4"}>
           <button
+            onClick={() => setIsAdministrationOpen(!isAdministrationOpen)}
             className={`w-full flex items-center ${
               isCollapsed ? "justify-center" : "gap-2"
             } px-3 py-2 rounded text-sm transition-colors ${
@@ -436,7 +444,9 @@ export function DashboardSidebar({
               <>
                 <span>Administración</span>
                 <svg
-                  className="w-4 h-4 ml-auto"
+                  className={`w-4 h-4 ml-auto transition-transform duration-200 ${
+                    isAdministrationOpen ? "rotate-180" : ""
+                  }`}
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -451,7 +461,7 @@ export function DashboardSidebar({
               </>
             )}
           </button>
-          {!isCollapsed && (
+          {!isCollapsed && isAdministrationOpen && (
             <div className="ml-4 mt-1 space-y-1">
               <div
                 onClick={() => onNavigate("/administration/operators")}
