@@ -791,6 +791,227 @@ export async function getTopClientsByOperations(
 }
 
 // ============================================================================
+// ROUTES API
+// ============================================================================
+
+import type {
+  Route,
+  CreateRouteInput,
+  UpdateRouteInput,
+  RouteQueryParams,
+  PaginatedRoutes,
+  RouteStatistics,
+} from "@/types/routes";
+
+/**
+ * Get all routes with filtering and pagination
+ */
+export async function getRoutes(
+  token: string,
+  params?: RouteQueryParams
+): Promise<PaginatedRoutes> {
+  const queryParams = new URLSearchParams();
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        queryParams.append(key, value.toString());
+      }
+    });
+  }
+  const queryString = queryParams.toString();
+  return authenticatedRequest<PaginatedRoutes>(
+    `/api/routes${queryString ? `?${queryString}` : ""}`,
+    token
+  );
+}
+
+/**
+ * Get a single route by ID
+ */
+export async function getRouteById(token: string, id: number): Promise<Route> {
+  return authenticatedRequest<Route>(`/api/routes/${id}`, token);
+}
+
+/**
+ * Create a new route
+ */
+export async function createRoute(
+  token: string,
+  data: CreateRouteInput
+): Promise<Route> {
+  return authenticatedRequest<Route>("/api/routes", token, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Update an existing route
+ */
+export async function updateRoute(
+  token: string,
+  id: number,
+  data: UpdateRouteInput
+): Promise<Route> {
+  return authenticatedRequest<Route>(`/api/routes/${id}`, token, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Delete a route
+ */
+export async function deleteRoute(
+  token: string,
+  id: number
+): Promise<{ message: string; route: Route }> {
+  return authenticatedRequest<{ message: string; route: Route }>(
+    `/api/routes/${id}`,
+    token,
+    {
+      method: "DELETE",
+    }
+  );
+}
+
+/**
+ * Get route statistics
+ */
+export async function getRouteStatistics(
+  token: string,
+  routeId: number
+): Promise<RouteStatistics> {
+  return authenticatedRequest<RouteStatistics>(
+    `/api/routes/${routeId}/statistics`,
+    token
+  );
+}
+
+// ============================================================================
+// PROVIDERS API
+// ============================================================================
+
+import type {
+  Provider,
+  CreateProviderInput,
+  UpdateProviderInput,
+  ProviderQueryParams,
+  PaginatedProviders,
+  ProviderStatistics,
+  PaginatedProviderOperations,
+} from "@/types/providers";
+
+/**
+ * Get all providers with filtering and pagination
+ */
+export async function getProviders(
+  token: string,
+  params?: ProviderQueryParams
+): Promise<PaginatedProviders> {
+  const queryParams = new URLSearchParams();
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        queryParams.append(key, value.toString());
+      }
+    });
+  }
+  const queryString = queryParams.toString();
+  return authenticatedRequest<PaginatedProviders>(
+    `/api/providers${queryString ? `?${queryString}` : ""}`,
+    token
+  );
+}
+
+/**
+ * Get a single provider by ID
+ */
+export async function getProviderById(
+  token: string,
+  id: number
+): Promise<Provider> {
+  return authenticatedRequest<Provider>(`/api/providers/${id}`, token);
+}
+
+/**
+ * Create a new provider
+ */
+export async function createProvider(
+  token: string,
+  data: CreateProviderInput
+): Promise<Provider> {
+  return authenticatedRequest<Provider>("/api/providers", token, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Update an existing provider
+ */
+export async function updateProvider(
+  token: string,
+  id: number,
+  data: UpdateProviderInput
+): Promise<Provider> {
+  return authenticatedRequest<Provider>(`/api/providers/${id}`, token, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Delete a provider
+ */
+export async function deleteProvider(
+  token: string,
+  id: number
+): Promise<{ message: string }> {
+  return authenticatedRequest<{ message: string }>(
+    `/api/providers/${id}`,
+    token,
+    {
+      method: "DELETE",
+    }
+  );
+}
+
+/**
+ * Get provider statistics
+ */
+export async function getProviderStatistics(
+  token: string,
+  providerId: number
+): Promise<ProviderStatistics> {
+  return authenticatedRequest<ProviderStatistics>(
+    `/api/providers/${providerId}/statistics`,
+    token
+  );
+}
+
+/**
+ * Get provider operations
+ */
+export async function getProviderOperations(
+  token: string,
+  providerId: number,
+  page?: number,
+  limit?: number
+): Promise<PaginatedProviderOperations> {
+  const queryParams = new URLSearchParams();
+  if (page) queryParams.append("page", page.toString());
+  if (limit) queryParams.append("limit", limit.toString());
+  const queryString = queryParams.toString();
+  return authenticatedRequest<PaginatedProviderOperations>(
+    `/api/providers/${providerId}/operations${
+      queryString ? `?${queryString}` : ""
+    }`,
+    token
+  );
+}
+
+// ============================================================================
 // TRUCKS API
 // ============================================================================
 

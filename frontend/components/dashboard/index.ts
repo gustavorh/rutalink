@@ -6,3 +6,4 @@ export { ReportItem } from "./ReportItem";
 export { TransferTableRow } from "./TransferTableRow";
 export { DashboardSidebar } from "./Sidebar";
 export { DashboardHeader } from "./Header";
+export { DashboardFooter } from "./Footer";

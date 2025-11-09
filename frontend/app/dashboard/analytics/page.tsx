@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { isAuthenticated, getUser, logout } from "@/lib/auth";
-import { DashboardSidebar, DashboardHeader } from "@/components/dashboard";
+import { isAuthenticated, getUser } from "@/lib/auth";
 
 export default function AnalyticsPage() {
   const router = useRouter();
@@ -14,12 +13,8 @@ export default function AnalyticsPage() {
       router.push("/login");
       return;
     }
-    setMounted(true);
+    setMounted(true); // eslint-disable-line
   }, [router]);
-
-  const handleLogout = () => {
-    logout();
-  };
 
   if (!mounted) {
     return (
@@ -35,26 +30,11 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#2a2d3a]">
-      {/* Sidebar */}
-      <DashboardSidebar
-        currentPath="/dashboard/analytics"
-        onNavigate={(path) => router.push(path)}
-      />
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <DashboardHeader user={user} onLogout={handleLogout} />
-
-        {/* Dashboard Content */}
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-[1400px] mx-auto space-y-6">
-            <h1 className="text-2xl font-bold text-slate-100">Analíticas</h1>
-            <p className="text-slate-400">Página en construcción...</p>
-          </div>
-        </main>
+    <main className="flex-1 overflow-y-auto p-6">
+      <div className="max-w-[1400px] mx-auto space-y-6">
+        <h1 className="text-2xl font-bold text-slate-100">Analíticas</h1>
+        <p className="text-slate-400">Página en construcción...</p>
       </div>
-    </div>
+    </main>
   );
 }

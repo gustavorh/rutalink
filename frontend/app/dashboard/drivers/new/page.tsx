@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { getToken, isAuthenticated, getUser, logout } from "@/lib/auth";
+import { getToken, isAuthenticated, getUser } from "@/lib/auth";
 import { createDriver, updateDriver, getDriverById } from "@/lib/api";
 import type { CreateDriverInput, UpdateDriverInput } from "@/types/drivers";
 import { LICENSE_TYPES } from "@/types/drivers";
@@ -25,7 +25,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ArrowLeft, Save, AlertCircle, UserPlus } from "lucide-react";
-import { DashboardSidebar, DashboardHeader } from "@/components/dashboard";
 
 export default function DriverFormPage() {
   const router = useRouter();
@@ -179,10 +178,6 @@ export default function DriverFormPage() {
     }
   };
 
-  const handleLogout = () => {
-    logout();
-  };
-
   if (!mounted) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#2a2d3a]">
@@ -197,422 +192,400 @@ export default function DriverFormPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#2a2d3a]">
-      {/* Sidebar */}
-      <DashboardSidebar
-        currentPath="/dashboard/drivers"
-        onNavigate={(path) => router.push(path)}
-      />
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <DashboardHeader user={user} onLogout={handleLogout} />
-
-        {/* Dashboard Content */}
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-5xl mx-auto space-y-6">
-            {/* Page Header */}
-            <div className="flex items-center gap-4">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => router.push("/dashboard/drivers")}
-                className="border-slate-600 text-slate-300 hover:bg-[#23262f]"
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-              <div>
-                <h1 className="text-2xl font-bold text-slate-100 flex items-center gap-2">
-                  <UserPlus className="w-6 h-6 text-purple-400" />
-                  {isEdit ? "Editar Chofer" : "Nuevo Chofer"}
-                </h1>
-                <p className="text-slate-400 mt-1">
-                  {isEdit
-                    ? "Actualiza la información del chofer"
-                    : "Registra un nuevo chofer en el sistema"}
-                </p>
-              </div>
-            </div>
-
-            {error && (
-              <Card className="bg-red-500/10 border-red-500/50">
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-2">
-                    <AlertCircle className="h-5 w-5 text-red-400" />
-                    <p className="text-red-400">{error}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Personal Information */}
-              <Card className="bg-[#23262f] border-slate-700">
-                <CardHeader>
-                  <CardTitle className="text-slate-100">
-                    Información Personal
-                  </CardTitle>
-                  <CardDescription className="text-slate-400">
-                    Datos básicos del chofer
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="rut" className="text-slate-300">
-                        RUT *
-                      </Label>
-                      <Input
-                        id="rut"
-                        value={formData.rut}
-                        onChange={(e) => handleChange("rut", e.target.value)}
-                        placeholder="12.345.678-9"
-                        required
-                        disabled={isEdit}
-                        className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="firstName" className="text-slate-300">
-                        Nombre *
-                      </Label>
-                      <Input
-                        id="firstName"
-                        value={formData.firstName}
-                        onChange={(e) =>
-                          handleChange("firstName", e.target.value)
-                        }
-                        required
-                        className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="lastName" className="text-slate-300">
-                        Apellido *
-                      </Label>
-                      <Input
-                        id="lastName"
-                        value={formData.lastName}
-                        onChange={(e) =>
-                          handleChange("lastName", e.target.value)
-                        }
-                        required
-                        className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="dateOfBirth" className="text-slate-300">
-                        Fecha de Nacimiento
-                      </Label>
-                      <Input
-                        id="dateOfBirth"
-                        type="date"
-                        value={formData.dateOfBirth}
-                        onChange={(e) =>
-                          handleChange("dateOfBirth", e.target.value)
-                        }
-                        className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="email" className="text-slate-300">
-                        Email
-                      </Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={formData.email}
-                        onChange={(e) => handleChange("email", e.target.value)}
-                        className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="phone" className="text-slate-300">
-                        Teléfono
-                      </Label>
-                      <Input
-                        id="phone"
-                        value={formData.phone}
-                        onChange={(e) => handleChange("phone", e.target.value)}
-                        className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="address" className="text-slate-300">
-                      Dirección
-                    </Label>
-                    <Input
-                      id="address"
-                      value={formData.address}
-                      onChange={(e) => handleChange("address", e.target.value)}
-                      className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="city" className="text-slate-300">
-                        Ciudad
-                      </Label>
-                      <Input
-                        id="city"
-                        value={formData.city}
-                        onChange={(e) => handleChange("city", e.target.value)}
-                        className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="region" className="text-slate-300">
-                        Región
-                      </Label>
-                      <Input
-                        id="region"
-                        value={formData.region}
-                        onChange={(e) => handleChange("region", e.target.value)}
-                        className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* License Information */}
-              <Card className="bg-[#23262f] border-slate-700">
-                <CardHeader>
-                  <CardTitle className="text-slate-100">
-                    Información de Licencia
-                  </CardTitle>
-                  <CardDescription className="text-slate-400">
-                    Datos de la licencia de conducir
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="licenseType" className="text-slate-300">
-                        Tipo de Licencia *
-                      </Label>
-                      <Select
-                        value={formData.licenseType}
-                        onValueChange={(value) =>
-                          handleChange("licenseType", value)
-                        }
-                      >
-                        <SelectTrigger className="bg-[#2a2d3a] border-slate-600 text-slate-300">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {LICENSE_TYPES.map((type) => (
-                            <SelectItem key={type.value} value={type.value}>
-                              {type.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="licenseNumber" className="text-slate-300">
-                        Número de Licencia *
-                      </Label>
-                      <Input
-                        id="licenseNumber"
-                        value={formData.licenseNumber}
-                        onChange={(e) =>
-                          handleChange("licenseNumber", e.target.value)
-                        }
-                        required
-                        className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label
-                        htmlFor="licenseExpirationDate"
-                        className="text-slate-300"
-                      >
-                        Fecha de Vencimiento *
-                      </Label>
-                      <Input
-                        id="licenseExpirationDate"
-                        type="date"
-                        value={formData.licenseExpirationDate}
-                        onChange={(e) =>
-                          handleChange("licenseExpirationDate", e.target.value)
-                        }
-                        required
-                        className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Emergency Contact */}
-              <Card className="bg-[#23262f] border-slate-700">
-                <CardHeader>
-                  <CardTitle className="text-slate-100">
-                    Contacto de Emergencia
-                  </CardTitle>
-                  <CardDescription className="text-slate-400">
-                    Información del contacto en caso de emergencia
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label
-                        htmlFor="emergencyContactName"
-                        className="text-slate-300"
-                      >
-                        Nombre
-                      </Label>
-                      <Input
-                        id="emergencyContactName"
-                        value={formData.emergencyContactName}
-                        onChange={(e) =>
-                          handleChange("emergencyContactName", e.target.value)
-                        }
-                        className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label
-                        htmlFor="emergencyContactPhone"
-                        className="text-slate-300"
-                      >
-                        Teléfono
-                      </Label>
-                      <Input
-                        id="emergencyContactPhone"
-                        value={formData.emergencyContactPhone}
-                        onChange={(e) =>
-                          handleChange("emergencyContactPhone", e.target.value)
-                        }
-                        className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Additional Information */}
-              <Card className="bg-[#23262f] border-slate-700">
-                <CardHeader>
-                  <CardTitle className="text-slate-100">
-                    Información Adicional
-                  </CardTitle>
-                  <CardDescription className="text-slate-400">
-                    Estado y clasificación del chofer
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="status" className="text-slate-300">
-                        Estado
-                      </Label>
-                      <Select
-                        value={formData.status ? "active" : "inactive"}
-                        onValueChange={(value) =>
-                          handleChange("status", value === "active")
-                        }
-                      >
-                        <SelectTrigger className="bg-[#2a2d3a] border-slate-600 text-slate-300">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="active">Activo</SelectItem>
-                          <SelectItem value="inactive">Inactivo</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="isExternal" className="text-slate-300">
-                        Tipo de Chofer
-                      </Label>
-                      <Select
-                        value={formData.isExternal ? "external" : "internal"}
-                        onValueChange={(value) =>
-                          handleChange("isExternal", value === "external")
-                        }
-                      >
-                        <SelectTrigger className="bg-[#2a2d3a] border-slate-600 text-slate-300">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="internal">Interno</SelectItem>
-                          <SelectItem value="external">Externo</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  {formData.isExternal && (
-                    <div className="space-y-2">
-                      <Label
-                        htmlFor="externalCompany"
-                        className="text-slate-300"
-                      >
-                        Empresa Externa
-                      </Label>
-                      <Input
-                        id="externalCompany"
-                        value={formData.externalCompany}
-                        onChange={(e) =>
-                          handleChange("externalCompany", e.target.value)
-                        }
-                        placeholder="Nombre de la empresa"
-                        className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
-                      />
-                    </div>
-                  )}
-
-                  <div className="space-y-2">
-                    <Label htmlFor="notes" className="text-slate-300">
-                      Notas
-                    </Label>
-                    <Textarea
-                      id="notes"
-                      value={formData.notes}
-                      onChange={(e) => handleChange("notes", e.target.value)}
-                      rows={3}
-                      placeholder="Información adicional sobre el chofer"
-                      className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Actions */}
-              <div className="flex justify-end gap-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => router.push("/dashboard/drivers")}
-                  disabled={loading}
-                  className="border-slate-600 text-slate-300 hover:bg-[#23262f]"
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="bg-purple-600 hover:bg-purple-700"
-                >
-                  <Save className="mr-2 h-4 w-4" />
-                  {loading
-                    ? "Guardando..."
-                    : isEdit
-                    ? "Actualizar Chofer"
-                    : "Crear Chofer"}
-                </Button>
-              </div>
-            </form>
+    <main className="flex-1 overflow-y-auto p-6">
+      <div className="max-w-5xl mx-auto space-y-6">
+        {/* Page Header */}
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => router.push("/dashboard/drivers")}
+            className="border-slate-600 text-slate-300 hover:bg-[#23262f]"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-100 flex items-center gap-2">
+              <UserPlus className="w-6 h-6 text-purple-400" />
+              {isEdit ? "Editar Chofer" : "Nuevo Chofer"}
+            </h1>
+            <p className="text-slate-400 mt-1">
+              {isEdit
+                ? "Actualiza la información del chofer"
+                : "Registra un nuevo chofer en el sistema"}
+            </p>
           </div>
-        </main>
+        </div>
+
+        {error && (
+          <Card className="bg-red-500/10 border-red-500/50">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 text-red-400" />
+                <p className="text-red-400">{error}</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Personal Information */}
+          <Card className="bg-[#23262f] border-slate-700">
+            <CardHeader>
+              <CardTitle className="text-slate-100">
+                Información Personal
+              </CardTitle>
+              <CardDescription className="text-slate-400">
+                Datos básicos del chofer
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="rut" className="text-slate-300">
+                    RUT *
+                  </Label>
+                  <Input
+                    id="rut"
+                    value={formData.rut}
+                    onChange={(e) => handleChange("rut", e.target.value)}
+                    placeholder="12.345.678-9"
+                    required
+                    disabled={isEdit}
+                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="firstName" className="text-slate-300">
+                    Nombre *
+                  </Label>
+                  <Input
+                    id="firstName"
+                    value={formData.firstName}
+                    onChange={(e) => handleChange("firstName", e.target.value)}
+                    required
+                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName" className="text-slate-300">
+                    Apellido *
+                  </Label>
+                  <Input
+                    id="lastName"
+                    value={formData.lastName}
+                    onChange={(e) => handleChange("lastName", e.target.value)}
+                    required
+                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="dateOfBirth" className="text-slate-300">
+                    Fecha de Nacimiento
+                  </Label>
+                  <Input
+                    id="dateOfBirth"
+                    type="date"
+                    value={formData.dateOfBirth}
+                    onChange={(e) =>
+                      handleChange("dateOfBirth", e.target.value)
+                    }
+                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-slate-300">
+                    Email
+                  </Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => handleChange("email", e.target.value)}
+                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phone" className="text-slate-300">
+                    Teléfono
+                  </Label>
+                  <Input
+                    id="phone"
+                    value={formData.phone}
+                    onChange={(e) => handleChange("phone", e.target.value)}
+                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="address" className="text-slate-300">
+                  Dirección
+                </Label>
+                <Input
+                  id="address"
+                  value={formData.address}
+                  onChange={(e) => handleChange("address", e.target.value)}
+                  className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="city" className="text-slate-300">
+                    Ciudad
+                  </Label>
+                  <Input
+                    id="city"
+                    value={formData.city}
+                    onChange={(e) => handleChange("city", e.target.value)}
+                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="region" className="text-slate-300">
+                    Región
+                  </Label>
+                  <Input
+                    id="region"
+                    value={formData.region}
+                    onChange={(e) => handleChange("region", e.target.value)}
+                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* License Information */}
+          <Card className="bg-[#23262f] border-slate-700">
+            <CardHeader>
+              <CardTitle className="text-slate-100">
+                Información de Licencia
+              </CardTitle>
+              <CardDescription className="text-slate-400">
+                Datos de la licencia de conducir
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="licenseType" className="text-slate-300">
+                    Tipo de Licencia *
+                  </Label>
+                  <Select
+                    value={formData.licenseType}
+                    onValueChange={(value) =>
+                      handleChange("licenseType", value)
+                    }
+                  >
+                    <SelectTrigger className="bg-[#2a2d3a] border-slate-600 text-slate-300">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {LICENSE_TYPES.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          {type.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="licenseNumber" className="text-slate-300">
+                    Número de Licencia *
+                  </Label>
+                  <Input
+                    id="licenseNumber"
+                    value={formData.licenseNumber}
+                    onChange={(e) =>
+                      handleChange("licenseNumber", e.target.value)
+                    }
+                    required
+                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="licenseExpirationDate"
+                    className="text-slate-300"
+                  >
+                    Fecha de Vencimiento *
+                  </Label>
+                  <Input
+                    id="licenseExpirationDate"
+                    type="date"
+                    value={formData.licenseExpirationDate}
+                    onChange={(e) =>
+                      handleChange("licenseExpirationDate", e.target.value)
+                    }
+                    required
+                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Emergency Contact */}
+          <Card className="bg-[#23262f] border-slate-700">
+            <CardHeader>
+              <CardTitle className="text-slate-100">
+                Contacto de Emergencia
+              </CardTitle>
+              <CardDescription className="text-slate-400">
+                Información del contacto en caso de emergencia
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="emergencyContactName"
+                    className="text-slate-300"
+                  >
+                    Nombre
+                  </Label>
+                  <Input
+                    id="emergencyContactName"
+                    value={formData.emergencyContactName}
+                    onChange={(e) =>
+                      handleChange("emergencyContactName", e.target.value)
+                    }
+                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="emergencyContactPhone"
+                    className="text-slate-300"
+                  >
+                    Teléfono
+                  </Label>
+                  <Input
+                    id="emergencyContactPhone"
+                    value={formData.emergencyContactPhone}
+                    onChange={(e) =>
+                      handleChange("emergencyContactPhone", e.target.value)
+                    }
+                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Additional Information */}
+          <Card className="bg-[#23262f] border-slate-700">
+            <CardHeader>
+              <CardTitle className="text-slate-100">
+                Información Adicional
+              </CardTitle>
+              <CardDescription className="text-slate-400">
+                Estado y clasificación del chofer
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="status" className="text-slate-300">
+                    Estado
+                  </Label>
+                  <Select
+                    value={formData.status ? "active" : "inactive"}
+                    onValueChange={(value) =>
+                      handleChange("status", value === "active")
+                    }
+                  >
+                    <SelectTrigger className="bg-[#2a2d3a] border-slate-600 text-slate-300">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Activo</SelectItem>
+                      <SelectItem value="inactive">Inactivo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="isExternal" className="text-slate-300">
+                    Tipo de Chofer
+                  </Label>
+                  <Select
+                    value={formData.isExternal ? "external" : "internal"}
+                    onValueChange={(value) =>
+                      handleChange("isExternal", value === "external")
+                    }
+                  >
+                    <SelectTrigger className="bg-[#2a2d3a] border-slate-600 text-slate-300">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="internal">Interno</SelectItem>
+                      <SelectItem value="external">Externo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {formData.isExternal && (
+                <div className="space-y-2">
+                  <Label htmlFor="externalCompany" className="text-slate-300">
+                    Empresa Externa
+                  </Label>
+                  <Input
+                    id="externalCompany"
+                    value={formData.externalCompany}
+                    onChange={(e) =>
+                      handleChange("externalCompany", e.target.value)
+                    }
+                    placeholder="Nombre de la empresa"
+                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
+                  />
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="notes" className="text-slate-300">
+                  Notas
+                </Label>
+                <Textarea
+                  id="notes"
+                  value={formData.notes}
+                  onChange={(e) => handleChange("notes", e.target.value)}
+                  rows={3}
+                  placeholder="Información adicional sobre el chofer"
+                  className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Actions */}
+          <div className="flex justify-end gap-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push("/dashboard/drivers")}
+              disabled={loading}
+              className="border-slate-600 text-slate-300 hover:bg-[#23262f]"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              disabled={loading}
+              className="bg-purple-600 hover:bg-purple-700"
+            >
+              <Save className="mr-2 h-4 w-4" />
+              {loading
+                ? "Guardando..."
+                : isEdit
+                ? "Actualizar Chofer"
+                : "Crear Chofer"}
+            </Button>
+          </div>
+        </form>
       </div>
-    </div>
+    </main>
   );
 }
