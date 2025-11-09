@@ -1418,3 +1418,310 @@ export async function getTrucksStatsOverview(
     token
   );
 }
+
+// ==========================================
+// OPERATORS API
+// ==========================================
+
+import type {
+  Operator,
+  CreateOperatorInput,
+  UpdateOperatorInput,
+  OperatorQueryParams,
+  PaginatedOperators,
+  OperatorStatistics,
+} from "@/types/operators";
+
+/**
+ * Get all operators with filtering and pagination
+ */
+export async function getOperators(
+  token: string,
+  params?: OperatorQueryParams
+): Promise<PaginatedOperators> {
+  const queryParams = new URLSearchParams();
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        queryParams.append(key, value.toString());
+      }
+    });
+  }
+  const queryString = queryParams.toString();
+  return authenticatedRequest<PaginatedOperators>(
+    `/api/operators${queryString ? `?${queryString}` : ""}`,
+    token
+  );
+}
+
+/**
+ * Get a single operator by ID
+ */
+export async function getOperatorById(
+  token: string,
+  id: number
+): Promise<Operator> {
+  return authenticatedRequest<Operator>(`/api/operators/${id}`, token);
+}
+
+/**
+ * Create a new operator
+ */
+export async function createOperator(
+  token: string,
+  data: CreateOperatorInput
+): Promise<Operator> {
+  return authenticatedRequest<Operator>("/api/operators", token, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Update an existing operator
+ */
+export async function updateOperator(
+  token: string,
+  id: number,
+  data: UpdateOperatorInput
+): Promise<Operator> {
+  return authenticatedRequest<Operator>(`/api/operators/${id}`, token, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Delete an operator (soft delete)
+ */
+export async function deleteOperator(
+  token: string,
+  id: number
+): Promise<{ message: string }> {
+  return authenticatedRequest<{ message: string }>(
+    `/api/operators/${id}`,
+    token,
+    {
+      method: "DELETE",
+    }
+  );
+}
+
+/**
+ * Get operator statistics
+ */
+export async function getOperatorStatistics(
+  token: string,
+  id: number
+): Promise<OperatorStatistics> {
+  return authenticatedRequest<OperatorStatistics>(
+    `/api/operators/${id}/statistics`,
+    token
+  );
+}
+
+// ==========================================
+// ROLES API
+// ==========================================
+
+import type {
+  Role,
+  CreateRoleInput,
+  UpdateRoleInput,
+  RoleQueryParams,
+  PaginatedRoles,
+} from "@/types/roles";
+
+/**
+ * Get all roles with filtering and pagination
+ */
+export async function getRoles(
+  token: string,
+  params?: RoleQueryParams
+): Promise<PaginatedRoles> {
+  const queryParams = new URLSearchParams();
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        queryParams.append(key, value.toString());
+      }
+    });
+  }
+  const queryString = queryParams.toString();
+  return authenticatedRequest<PaginatedRoles>(
+    `/api/roles${queryString ? `?${queryString}` : ""}`,
+    token
+  );
+}
+
+/**
+ * Get a single role by ID
+ */
+export async function getRoleById(token: string, id: number): Promise<Role> {
+  return authenticatedRequest<Role>(`/api/roles/${id}`, token);
+}
+
+/**
+ * Create a new role
+ */
+export async function createRole(
+  token: string,
+  data: CreateRoleInput
+): Promise<Role> {
+  return authenticatedRequest<Role>("/api/roles", token, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Update an existing role
+ */
+export async function updateRole(
+  token: string,
+  id: number,
+  data: UpdateRoleInput
+): Promise<Role> {
+  return authenticatedRequest<Role>(`/api/roles/${id}`, token, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Delete a role
+ */
+export async function deleteRole(
+  token: string,
+  id: number
+): Promise<{ message: string }> {
+  return authenticatedRequest<{ message: string }>(`/api/roles/${id}`, token, {
+    method: "DELETE",
+  });
+}
+
+// ==========================================
+// USERS API
+// ==========================================
+
+import type {
+  User,
+  CreateUserInput,
+  UpdateUserInput,
+  UserQueryParams,
+  PaginatedUsers,
+  UserWithStats,
+  UserActivity,
+  UserActivityQueryParams,
+} from "@/types/users";
+
+/**
+ * Get all users with filtering and pagination
+ */
+export async function getUsers(
+  token: string,
+  params?: UserQueryParams
+): Promise<PaginatedUsers> {
+  const queryParams = new URLSearchParams();
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        queryParams.append(key, value.toString());
+      }
+    });
+  }
+  const queryString = queryParams.toString();
+  return authenticatedRequest<PaginatedUsers>(
+    `/api/users${queryString ? `?${queryString}` : ""}`,
+    token
+  );
+}
+
+/**
+ * Get a single user by ID
+ */
+export async function getUserById(token: string, id: number): Promise<User> {
+  return authenticatedRequest<User>(`/api/users/${id}`, token);
+}
+
+/**
+ * Get a user with statistics
+ */
+export async function getUserWithStats(
+  token: string,
+  id: number
+): Promise<UserWithStats> {
+  return authenticatedRequest<UserWithStats>(`/api/users/${id}/stats`, token);
+}
+
+/**
+ * Create a new user
+ */
+export async function createUser(
+  token: string,
+  data: CreateUserInput
+): Promise<User> {
+  return authenticatedRequest<User>("/api/users", token, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Update an existing user
+ */
+export async function updateUser(
+  token: string,
+  id: number,
+  data: UpdateUserInput
+): Promise<User> {
+  return authenticatedRequest<User>(`/api/users/${id}`, token, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Delete a user (soft delete)
+ */
+export async function deleteUser(
+  token: string,
+  id: number
+): Promise<{ message: string }> {
+  return authenticatedRequest<{ message: string }>(`/api/users/${id}`, token, {
+    method: "DELETE",
+  });
+}
+
+/**
+ * Get user activity logs
+ */
+export async function getUserActivity(
+  token: string,
+  params: UserActivityQueryParams
+): Promise<{
+  data: UserActivity[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}> {
+  const queryParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      queryParams.append(key, value.toString());
+    }
+  });
+  const queryString = queryParams.toString();
+  return authenticatedRequest<{
+    data: UserActivity[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
+  }>(`/api/users/activity${queryString ? `?${queryString}` : ""}`, token);
+}

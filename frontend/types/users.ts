@@ -1,0 +1,123 @@
+/**
+ * User Types and Interfaces
+ * User management within operators
+ */
+
+// User status types
+export const USER_STATUSES = [
+  { value: "active", label: "Activo" },
+  { value: "inactive", label: "Inactivo" },
+  { value: "suspended", label: "Suspendido" },
+  { value: "pending", label: "Pendiente" },
+] as const;
+
+export type UserStatusType = (typeof USER_STATUSES)[number]["value"];
+
+// User interface
+export interface User {
+  id: number;
+  operatorId: number;
+  roleId: number;
+  username: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone?: string | null;
+  position?: string | null;
+  department?: string | null;
+  status: boolean;
+  lastLogin?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  operator?: {
+    id: number;
+    name: string;
+  };
+  role?: {
+    id: number;
+    name: string;
+    permissions: string[];
+  };
+}
+
+// Create user input
+export interface CreateUserInput {
+  operatorId: number;
+  roleId: number;
+  username: string;
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  phone?: string;
+  position?: string;
+  department?: string;
+  status?: boolean;
+}
+
+// Update user input
+export interface UpdateUserInput {
+  roleId?: number;
+  username?: string;
+  email?: string;
+  password?: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  position?: string;
+  department?: string;
+  status?: boolean;
+}
+
+// User query parameters
+export interface UserQueryParams {
+  operatorId?: number;
+  roleId?: number;
+  search?: string;
+  status?: boolean;
+  department?: string;
+  page?: number;
+  limit?: number;
+}
+
+// Paginated users response
+export interface PaginatedUsers {
+  data: User[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+// User with statistics
+export interface UserWithStats extends User {
+  statistics?: {
+    totalOperations: number;
+    completedOperations: number;
+    activeOperations: number;
+    loginCount: number;
+  };
+}
+
+// User activity log
+export interface UserActivity {
+  id: number;
+  userId: number;
+  action: string;
+  description: string;
+  ipAddress?: string;
+  userAgent?: string;
+  createdAt: string;
+}
+
+// User activity query
+export interface UserActivityQueryParams {
+  userId: number;
+  action?: string;
+  startDate?: string;
+  endDate?: string;
+  page?: number;
+  limit?: number;
+}
