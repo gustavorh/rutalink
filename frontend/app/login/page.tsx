@@ -163,7 +163,7 @@ export default function LoginPage() {
                 }`}
               />
               {errors.username && (
-                <p className="text-sm text-red-500">
+                <p className="text-sm text-destructive">
                   {errors.username.message}
                 </p>
               )}
@@ -184,15 +184,15 @@ export default function LoginPage() {
                 }`}
               />
               {errors.password && (
-                <p className="text-sm text-red-500">
+                <p className="text-sm text-destructive">
                   {errors.password.message}
                 </p>
               )}
             </div>
 
             {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-sm text-red-600">{error}</p>
+              <div className="p-3 bg-destructive/10 border border-destructive/50 rounded-lg">
+                <p className="text-sm text-destructive">{error}</p>
               </div>
             )}
 

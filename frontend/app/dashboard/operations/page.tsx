@@ -405,11 +405,11 @@ export default function OperationsPage() {
   const getStatusBadge = (status: string) => {
     const statusConfig = OperationStatuses.find((s) => s.value === status);
     const colorMap: Record<string, string> = {
-      blue: "bg-blue-500/10 text-blue-400 border-blue-500/50",
+      blue: "bg-primary/10 text-primary border-primary/50",
       cyan: "bg-cyan-500/10 text-cyan-400 border-cyan-500/50",
-      yellow: "bg-yellow-500/10 text-yellow-400 border-yellow-500/50",
-      green: "bg-green-500/10 text-green-400 border-green-500/50",
-      red: "bg-red-500/10 text-red-400 border-red-500/50",
+      yellow: "bg-warning/10 text-warning border-yellow-500/50",
+      green: "bg-success/10 text-success border-success/50",
+      red: "bg-destructive/10 text-destructive border-destructive/50",
       orange: "bg-orange-500/10 text-orange-400 border-orange-500/50",
     };
 
@@ -439,8 +439,8 @@ export default function OperationsPage() {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#2a2d3a]">
-        <p className="text-slate-300">Cargando...</p>
+      <div className="min-h-screen flex items-center justify-center bg-ui-surface-elevated">
+        <p className="text-foreground">Cargando...</p>
       </div>
     );
   }
@@ -467,11 +467,11 @@ export default function OperationsPage() {
         {/* Page Header with Stats */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-slate-100 flex items-center gap-2">
-              <Calendar className="w-6 h-6 text-purple-400" />
+            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+              <Calendar className="w-6 h-6 text-secondary" />
               Programación de Operaciones
             </h1>
-            <p className="text-slate-400 mt-1">
+            <p className="text-muted-foreground mt-1">
               Coordinación y gestión de traslados y operaciones logísticas
             </p>
           </div>
@@ -481,7 +481,7 @@ export default function OperationsPage() {
               onClick={() =>
                 setViewMode(viewMode === "list" ? "calendar" : "list")
               }
-              className="border-slate-600 text-slate-300 hover:bg-[#2a2d3a]"
+              className="border-border text-foreground hover:bg-ui-surface-elevated"
             >
               {viewMode === "list" ? (
                 <>
@@ -507,73 +507,73 @@ export default function OperationsPage() {
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-[#23262f] border-slate-700">
+          <Card className="bg-card border-border">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-slate-400">
+                  <p className="text-xs font-medium text-muted-foreground">
                     Total Operaciones
                   </p>
-                  <p className="text-2xl font-bold text-slate-100 mt-1">
+                  <p className="text-2xl font-bold text-foreground mt-1">
                     {total}
                   </p>
                 </div>
-                <div className="w-12 h-12 bg-purple-500/10 rounded-lg flex items-center justify-center">
-                  <Calendar className="w-6 h-6 text-purple-400" />
+                <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center">
+                  <Calendar className="w-6 h-6 text-secondary" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-[#23262f] border-slate-700">
+          <Card className="bg-card border-border">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-slate-400">
+                  <p className="text-xs font-medium text-muted-foreground">
                     Programadas
                   </p>
-                  <p className="text-2xl font-bold text-slate-100 mt-1">
+                  <p className="text-2xl font-bold text-foreground mt-1">
                     {totalScheduled}
                   </p>
                 </div>
-                <div className="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center">
-                  <Clock className="w-6 h-6 text-blue-400" />
+                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                  <Clock className="w-6 h-6 text-primary" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-[#23262f] border-slate-700">
+          <Card className="bg-card border-border">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-slate-400">
+                  <p className="text-xs font-medium text-muted-foreground">
                     En Progreso
                   </p>
-                  <p className="text-2xl font-bold text-slate-100 mt-1">
+                  <p className="text-2xl font-bold text-foreground mt-1">
                     {totalInProgress}
                   </p>
                 </div>
-                <div className="w-12 h-12 bg-yellow-500/10 rounded-lg flex items-center justify-center">
-                  <Truck className="w-6 h-6 text-yellow-400" />
+                <div className="w-12 h-12 bg-warning/10 rounded-lg flex items-center justify-center">
+                  <Truck className="w-6 h-6 text-warning" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-[#23262f] border-slate-700">
+          <Card className="bg-card border-border">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-slate-400">
+                  <p className="text-xs font-medium text-muted-foreground">
                     Completadas
                   </p>
-                  <p className="text-2xl font-bold text-slate-100 mt-1">
+                  <p className="text-2xl font-bold text-foreground mt-1">
                     {totalCompleted}
                   </p>
                 </div>
-                <div className="w-12 h-12 bg-green-500/10 rounded-lg flex items-center justify-center">
-                  <CheckCircle className="w-6 h-6 text-green-400" />
+                <div className="w-12 h-12 bg-success/10 rounded-lg flex items-center justify-center">
+                  <CheckCircle className="w-6 h-6 text-success" />
                 </div>
               </div>
             </CardContent>
@@ -581,14 +581,14 @@ export default function OperationsPage() {
         </div>
 
         {/* Filters Card */}
-        <Card className="bg-[#23262f] border-slate-700">
+        <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle className="text-slate-100 flex items-center gap-2">
-                <Filter className="w-5 h-5 text-purple-400" />
+              <CardTitle className="text-foreground flex items-center gap-2">
+                <Filter className="w-5 h-5 text-secondary" />
                 Filtros de Búsqueda
               </CardTitle>
-              <CardDescription className="text-slate-400">
+              <CardDescription className="text-muted-foreground">
                 Filtra operaciones según tus criterios
               </CardDescription>
             </div>
@@ -596,7 +596,7 @@ export default function OperationsPage() {
               variant="outline"
               size="sm"
               onClick={() => setShowFilters(!showFilters)}
-              className="border-slate-600 text-slate-300 hover:bg-[#2a2d3a]"
+              className="border-border text-foreground hover:bg-ui-surface-elevated"
             >
               {showFilters ? "Ocultar" : "Mostrar"} Filtros
             </Button>
@@ -606,13 +606,13 @@ export default function OperationsPage() {
               {/* Search Bar - Always Visible */}
               <div className="flex gap-2">
                 <div className="relative flex-1">
-                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Buscar por número de operación, origen, destino..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                    className="pl-10 bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
+                    className="pl-10 bg-ui-surface-elevated border-border text-foreground placeholder-muted-foreground focus:border-purple-500"
                   />
                 </div>
                 <Button
@@ -625,16 +625,16 @@ export default function OperationsPage() {
 
               {/* Additional Filters */}
               {showFilters && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t border-slate-700">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t border-border">
                   <div>
-                    <label className="text-xs font-medium text-slate-400 mb-2 block">
+                    <label className="text-xs font-medium text-muted-foreground mb-2 block">
                       Estado
                     </label>
                     <Select
                       value={statusFilter}
                       onValueChange={setStatusFilter}
                     >
-                      <SelectTrigger className="bg-[#2a2d3a] border-slate-600 text-slate-300">
+                      <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground">
                         <SelectValue placeholder="Estado" />
                       </SelectTrigger>
                       <SelectContent>
@@ -649,11 +649,11 @@ export default function OperationsPage() {
                   </div>
 
                   <div>
-                    <label className="text-xs font-medium text-slate-400 mb-2 block">
+                    <label className="text-xs font-medium text-muted-foreground mb-2 block">
                       Tipo de Operación
                     </label>
                     <Select value={typeFilter} onValueChange={setTypeFilter}>
-                      <SelectTrigger className="bg-[#2a2d3a] border-slate-600 text-slate-300">
+                      <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground">
                         <SelectValue placeholder="Tipo" />
                       </SelectTrigger>
                       <SelectContent>
@@ -668,14 +668,14 @@ export default function OperationsPage() {
                   </div>
 
                   <div>
-                    <label className="text-xs font-medium text-slate-400 mb-2 block">
+                    <label className="text-xs font-medium text-muted-foreground mb-2 block">
                       Cliente
                     </label>
                     <Select
                       value={clientFilter}
                       onValueChange={setClientFilter}
                     >
-                      <SelectTrigger className="bg-[#2a2d3a] border-slate-600 text-slate-300">
+                      <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground">
                         <SelectValue placeholder="Cliente" />
                       </SelectTrigger>
                       <SelectContent>
@@ -693,14 +693,14 @@ export default function OperationsPage() {
                   </div>
 
                   <div>
-                    <label className="text-xs font-medium text-slate-400 mb-2 block">
+                    <label className="text-xs font-medium text-muted-foreground mb-2 block">
                       Proveedor
                     </label>
                     <Select
                       value={providerFilter}
                       onValueChange={setProviderFilter}
                     >
-                      <SelectTrigger className="bg-[#2a2d3a] border-slate-600 text-slate-300">
+                      <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground">
                         <SelectValue placeholder="Proveedor" />
                       </SelectTrigger>
                       <SelectContent>
@@ -720,7 +720,7 @@ export default function OperationsPage() {
                   </div>
 
                   <div>
-                    <label className="text-xs font-medium text-slate-400 mb-2 block">
+                    <label className="text-xs font-medium text-muted-foreground mb-2 block">
                       Fecha Inicio
                     </label>
                     <Input
@@ -732,12 +732,12 @@ export default function OperationsPage() {
                           start: e.target.value,
                         })
                       }
-                      className="bg-[#2a2d3a] border-slate-600 text-slate-300"
+                      className="bg-ui-surface-elevated border-border text-foreground"
                     />
                   </div>
 
                   <div>
-                    <label className="text-xs font-medium text-slate-400 mb-2 block">
+                    <label className="text-xs font-medium text-muted-foreground mb-2 block">
                       Fecha Fin
                     </label>
                     <Input
@@ -749,7 +749,7 @@ export default function OperationsPage() {
                           end: e.target.value,
                         })
                       }
-                      className="bg-[#2a2d3a] border-slate-600 text-slate-300"
+                      className="bg-ui-surface-elevated border-border text-foreground"
                     />
                   </div>
                 </div>
@@ -759,14 +759,14 @@ export default function OperationsPage() {
         </Card>
 
         {/* Operations Table */}
-        <Card className="bg-[#23262f] border-slate-700">
+        <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle className="text-slate-100 flex items-center gap-2">
-                <Package className="w-5 h-5 text-purple-400" />
+              <CardTitle className="text-foreground flex items-center gap-2">
+                <Package className="w-5 h-5 text-secondary" />
                 Listado de Operaciones
               </CardTitle>
-              <CardDescription className="text-slate-400">
+              <CardDescription className="text-muted-foreground">
                 Total de {total} operaciones registradas
               </CardDescription>
             </div>
@@ -774,7 +774,7 @@ export default function OperationsPage() {
               <Button
                 variant="outline"
                 size="sm"
-                className="border-slate-600 text-slate-300 hover:bg-[#2a2d3a]"
+                className="border-border text-foreground hover:bg-ui-surface-elevated"
                 onClick={() => {
                   /* TODO: Implement export functionality */
                 }}
@@ -788,17 +788,17 @@ export default function OperationsPage() {
             {loading ? (
               <div className="text-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto"></div>
-                <p className="text-slate-400 mt-4">Cargando operaciones...</p>
+                <p className="text-muted-foreground mt-4">Cargando operaciones...</p>
               </div>
             ) : error ? (
               <div className="text-center py-12">
-                <AlertTriangle className="w-12 h-12 text-red-400 mx-auto mb-4" />
-                <p className="text-red-400">{error}</p>
+                <AlertTriangle className="w-12 h-12 text-destructive mx-auto mb-4" />
+                <p className="text-destructive">{error}</p>
               </div>
             ) : operations.length === 0 ? (
               <div className="text-center py-12">
                 <Calendar className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                <p className="text-slate-500">No se encontraron operaciones</p>
+                <p className="text-muted-foreground">No se encontraron operaciones</p>
                 <Button
                   onClick={handleCreateClick}
                   className="mt-4 bg-purple-600 hover:bg-purple-700"
@@ -812,25 +812,25 @@ export default function OperationsPage() {
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
-                      <TableRow className="border-b border-slate-700 hover:bg-transparent">
-                        <TableHead className="text-slate-400">
+                      <TableRow className="border-b border-border hover:bg-transparent">
+                        <TableHead className="text-muted-foreground">
                           Nº Operación
                         </TableHead>
-                        <TableHead className="text-slate-400">Tipo</TableHead>
-                        <TableHead className="text-slate-400">
+                        <TableHead className="text-muted-foreground">Tipo</TableHead>
+                        <TableHead className="text-muted-foreground">
                           Origen → Destino
                         </TableHead>
-                        <TableHead className="text-slate-400">
+                        <TableHead className="text-muted-foreground">
                           Cliente
                         </TableHead>
-                        <TableHead className="text-slate-400">
+                        <TableHead className="text-muted-foreground">
                           Vehículo / Chofer
                         </TableHead>
-                        <TableHead className="text-slate-400">
+                        <TableHead className="text-muted-foreground">
                           Fecha Programada
                         </TableHead>
-                        <TableHead className="text-slate-400">Estado</TableHead>
-                        <TableHead className="text-right text-slate-400">
+                        <TableHead className="text-muted-foreground">Estado</TableHead>
+                        <TableHead className="text-right text-muted-foreground">
                           Acciones
                         </TableHead>
                       </TableRow>
@@ -839,14 +839,14 @@ export default function OperationsPage() {
                       {operations.map((op) => (
                         <TableRow
                           key={op.operation.id}
-                          className="border-b border-slate-700 hover:bg-[#2a2d3a]"
+                          className="border-b border-border hover:bg-ui-surface-elevated"
                         >
                           <TableCell>
                             <div>
-                              <div className="font-medium text-slate-200 font-mono">
+                              <div className="font-medium text-foreground font-mono">
                                 {op.operation.operationNumber}
                               </div>
-                              <div className="text-xs text-slate-500">
+                              <div className="text-xs text-muted-foreground">
                                 ID: {op.operation.id}
                               </div>
                             </div>
@@ -854,7 +854,7 @@ export default function OperationsPage() {
                           <TableCell>
                             <Badge
                               variant="outline"
-                              className="border-purple-500/50 text-purple-400"
+                              className="border-secondary/50 text-secondary"
                             >
                               {getOperationTypeLabel(
                                 op.operation.operationType
@@ -863,16 +863,16 @@ export default function OperationsPage() {
                           </TableCell>
                           <TableCell>
                             <div className="space-y-1">
-                              <div className="flex items-center gap-1 text-sm text-slate-300">
-                                <MapPin className="w-3 h-3 text-green-400" />
+                              <div className="flex items-center gap-1 text-sm text-foreground">
+                                <MapPin className="w-3 h-3 text-success" />
                                 {op.operation.origin}
                               </div>
-                              <div className="flex items-center gap-1 text-sm text-slate-300">
-                                <MapPin className="w-3 h-3 text-red-400" />
+                              <div className="flex items-center gap-1 text-sm text-foreground">
+                                <MapPin className="w-3 h-3 text-destructive" />
                                 {op.operation.destination}
                               </div>
                               {op.operation.distance && (
-                                <div className="text-xs text-slate-500">
+                                <div className="text-xs text-muted-foreground">
                                   {op.operation.distance} km
                                 </div>
                               )}
@@ -881,28 +881,28 @@ export default function OperationsPage() {
                           <TableCell>
                             {op.client ? (
                               <div className="text-sm">
-                                <div className="text-slate-300">
+                                <div className="text-foreground">
                                   {op.client.businessName}
                                 </div>
                                 {op.client.industry && (
-                                  <div className="text-xs text-slate-500">
+                                  <div className="text-xs text-muted-foreground">
                                     {op.client.industry}
                                   </div>
                                 )}
                               </div>
                             ) : (
-                              <span className="text-slate-500 text-xs">
+                              <span className="text-muted-foreground text-xs">
                                 Sin cliente
                               </span>
                             )}
                           </TableCell>
                           <TableCell>
                             <div className="space-y-1">
-                              <div className="flex items-center gap-1 text-sm text-slate-300">
+                              <div className="flex items-center gap-1 text-sm text-foreground">
                                 <Truck className="w-3 h-3" />
                                 {op.vehicle.plateNumber}
                               </div>
-                              <div className="flex items-center gap-1 text-sm text-slate-300">
+                              <div className="flex items-center gap-1 text-sm text-foreground">
                                 <Users className="w-3 h-3" />
                                 {op.driver.firstName} {op.driver.lastName}
                               </div>
@@ -910,13 +910,13 @@ export default function OperationsPage() {
                           </TableCell>
                           <TableCell>
                             <div className="space-y-1">
-                              <div className="text-sm text-slate-300">
+                              <div className="text-sm text-foreground">
                                 {formatDateTime(
                                   op.operation.scheduledStartDate
                                 )}
                               </div>
                               {op.operation.scheduledEndDate && (
-                                <div className="text-xs text-slate-500">
+                                <div className="text-xs text-muted-foreground">
                                   Hasta:{" "}
                                   {formatDateTime(
                                     op.operation.scheduledEndDate
@@ -938,7 +938,7 @@ export default function OperationsPage() {
                                     `/dashboard/operations/${op.operation.id}`
                                   )
                                 }
-                                className="text-slate-400 hover:text-blue-400 hover:bg-blue-500/10"
+                                className="text-muted-foreground hover:text-primary hover:bg-primary/10"
                                 title="Ver detalles"
                               >
                                 <Eye className="h-4 w-4" />
@@ -947,7 +947,7 @@ export default function OperationsPage() {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => handleEditClick(op)}
-                                className="text-slate-400 hover:text-purple-400 hover:bg-purple-500/10"
+                                className="text-muted-foreground hover:text-secondary hover:bg-secondary/10"
                                 title="Editar"
                               >
                                 <Edit className="h-4 w-4" />
@@ -956,7 +956,7 @@ export default function OperationsPage() {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => handleDeleteClick(op)}
-                                className="text-slate-400 hover:text-red-400 hover:bg-red-500/10"
+                                className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                                 title="Eliminar"
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -970,8 +970,8 @@ export default function OperationsPage() {
                 </div>
 
                 {/* Pagination */}
-                <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-700">
-                  <p className="text-sm text-slate-400">
+                <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
+                  <p className="text-sm text-muted-foreground">
                     Mostrando {(page - 1) * limit + 1} a{" "}
                     {Math.min(page * limit, total)} de {total} operaciones
                   </p>
@@ -980,7 +980,7 @@ export default function OperationsPage() {
                       variant="outline"
                       onClick={() => setPage(page - 1)}
                       disabled={page === 1}
-                      className="border-slate-600 text-slate-300 hover:bg-[#2a2d3a] disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="border-border text-foreground hover:bg-ui-surface-elevated disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Anterior
                     </Button>
@@ -994,7 +994,7 @@ export default function OperationsPage() {
                       .map((p, index, array) => (
                         <div key={p} className="flex items-center">
                           {index > 0 && array[index - 1] !== p - 1 && (
-                            <span className="text-slate-500 px-2">...</span>
+                            <span className="text-muted-foreground px-2">...</span>
                           )}
                           <Button
                             variant={p === page ? "default" : "outline"}
@@ -1002,7 +1002,7 @@ export default function OperationsPage() {
                             className={
                               p === page
                                 ? "bg-purple-600 hover:bg-purple-700 text-white"
-                                : "border-slate-600 text-slate-300 hover:bg-[#2a2d3a]"
+                                : "border-border text-foreground hover:bg-ui-surface-elevated"
                             }
                           >
                             {p}
@@ -1013,7 +1013,7 @@ export default function OperationsPage() {
                       variant="outline"
                       onClick={() => setPage(page + 1)}
                       disabled={page === totalPages}
-                      className="border-slate-600 text-slate-300 hover:bg-[#2a2d3a] disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="border-border text-foreground hover:bg-ui-surface-elevated disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Siguiente
                     </Button>
@@ -1027,14 +1027,14 @@ export default function OperationsPage() {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="bg-[#23262f] border-slate-700">
+        <DialogContent className="bg-card border-border">
           <DialogHeader>
-            <DialogTitle className="text-slate-100">
+            <DialogTitle className="text-foreground">
               Confirmar Eliminación
             </DialogTitle>
-            <DialogDescription className="text-slate-400">
+            <DialogDescription className="text-muted-foreground">
               ¿Estás seguro de que deseas eliminar la operación{" "}
-              <strong className="text-slate-200">
+              <strong className="text-foreground">
                 {operationToDelete?.operation.operationNumber}
               </strong>
               ? Esta acción no se puede deshacer.
@@ -1044,7 +1044,7 @@ export default function OperationsPage() {
             <Button
               variant="outline"
               onClick={() => setDeleteDialogOpen(false)}
-              className="border-slate-600 text-slate-300 hover:bg-[#2a2d3a]"
+              className="border-border text-foreground hover:bg-ui-surface-elevated"
             >
               Cancelar
             </Button>
@@ -1070,14 +1070,14 @@ export default function OperationsPage() {
           }
         }}
       >
-        <DialogContent className="bg-[#23262f] border-slate-700 max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="bg-card border-border max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-slate-100">
+            <DialogTitle className="text-foreground">
               {editDialogOpen
                 ? "Editar Operación"
                 : "Nueva Programación de Operación"}
             </DialogTitle>
-            <DialogDescription className="text-slate-400">
+            <DialogDescription className="text-muted-foreground">
               {editDialogOpen
                 ? "Actualiza la información de la operación"
                 : "Completa la información para programar una nueva operación"}
@@ -1086,10 +1086,10 @@ export default function OperationsPage() {
 
           {/* Error Message */}
           {error && (
-            <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-3 flex items-start gap-2">
-              <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+            <div className="bg-destructive/10 border border-destructive/50 rounded-lg p-3 flex items-start gap-2">
+              <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-red-400">Error</p>
+                <p className="text-sm font-medium text-destructive">Error</p>
                 <p className="text-sm text-red-300 mt-1">{error}</p>
               </div>
             </div>
@@ -1098,14 +1098,14 @@ export default function OperationsPage() {
           <form onSubmit={handleFormSubmit} className="space-y-4">
             {/* Operation Details */}
             <div className="space-y-4">
-              <h3 className="text-sm font-medium text-slate-300 border-b border-slate-700 pb-2">
+              <h3 className="text-sm font-medium text-foreground border-b border-border pb-2">
                 Información de la Operación
               </h3>
 
               <div className="grid grid-cols-2 gap-4">
                 {!editDialogOpen && (
                   <div className="col-span-2">
-                    <Label htmlFor="operationNumber" className="text-slate-300">
+                    <Label htmlFor="operationNumber" className="text-foreground">
                       Número de Operación *
                     </Label>
                     <Input
@@ -1118,14 +1118,14 @@ export default function OperationsPage() {
                         })
                       }
                       required
-                      className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1"
+                      className="bg-ui-surface-elevated border-border text-foreground mt-1"
                       placeholder="OP-12345"
                     />
                   </div>
                 )}
 
                 <div>
-                  <Label htmlFor="operationType" className="text-slate-300">
+                  <Label htmlFor="operationType" className="text-foreground">
                     Tipo de Operación *
                   </Label>
                   <Select
@@ -1138,7 +1138,7 @@ export default function OperationsPage() {
                       })
                     }
                   >
-                    <SelectTrigger className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1">
+                    <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground mt-1">
                       <SelectValue placeholder="Seleccionar tipo" />
                     </SelectTrigger>
                     <SelectContent>
@@ -1153,7 +1153,7 @@ export default function OperationsPage() {
 
                 {editDialogOpen && (
                   <div>
-                    <Label htmlFor="status" className="text-slate-300">
+                    <Label htmlFor="status" className="text-foreground">
                       Estado
                     </Label>
                     <Select
@@ -1166,7 +1166,7 @@ export default function OperationsPage() {
                         })
                       }
                     >
-                      <SelectTrigger className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1">
+                      <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground mt-1">
                         <SelectValue placeholder="Seleccionar estado" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1184,13 +1184,13 @@ export default function OperationsPage() {
 
             {/* Route Details */}
             <div className="space-y-4">
-              <h3 className="text-sm font-medium text-slate-300 border-b border-slate-700 pb-2">
+              <h3 className="text-sm font-medium text-foreground border-b border-border pb-2">
                 Detalles del Traslado
               </h3>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="origin" className="text-slate-300">
+                  <Label htmlFor="origin" className="text-foreground">
                     Origen *
                   </Label>
                   <Input
@@ -1200,13 +1200,13 @@ export default function OperationsPage() {
                       setFormData({ ...formData, origin: e.target.value })
                     }
                     required
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1"
+                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
                     placeholder="Ej: Bodega Central, Santiago"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="destination" className="text-slate-300">
+                  <Label htmlFor="destination" className="text-foreground">
                     Destino *
                   </Label>
                   <Input
@@ -1216,13 +1216,13 @@ export default function OperationsPage() {
                       setFormData({ ...formData, destination: e.target.value })
                     }
                     required
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1"
+                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
                     placeholder="Ej: Faena Minera, Antofagasta"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="routeId" className="text-slate-300">
+                  <Label htmlFor="routeId" className="text-foreground">
                     Tramo/Ruta Asociada
                   </Label>
                   <Select
@@ -1237,7 +1237,7 @@ export default function OperationsPage() {
                       })
                     }
                   >
-                    <SelectTrigger className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1">
+                    <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground mt-1">
                       <SelectValue placeholder="Seleccionar ruta" />
                     </SelectTrigger>
                     <SelectContent>
@@ -1252,7 +1252,7 @@ export default function OperationsPage() {
                 </div>
 
                 <div>
-                  <Label htmlFor="distance" className="text-slate-300">
+                  <Label htmlFor="distance" className="text-foreground">
                     Distancia (km)
                   </Label>
                   <Input
@@ -1267,7 +1267,7 @@ export default function OperationsPage() {
                           : undefined,
                       })
                     }
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1"
+                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
                     placeholder="0"
                   />
                 </div>
@@ -1276,7 +1276,7 @@ export default function OperationsPage() {
 
             {/* Schedule */}
             <div className="space-y-4">
-              <h3 className="text-sm font-medium text-slate-300 border-b border-slate-700 pb-2">
+              <h3 className="text-sm font-medium text-foreground border-b border-border pb-2">
                 Programación
               </h3>
 
@@ -1284,7 +1284,7 @@ export default function OperationsPage() {
                 <div>
                   <Label
                     htmlFor="scheduledStartDate"
-                    className="text-slate-300"
+                    className="text-foreground"
                   >
                     Fecha y Hora de Inicio *
                   </Label>
@@ -1299,12 +1299,12 @@ export default function OperationsPage() {
                       })
                     }
                     required
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1"
+                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="scheduledEndDate" className="text-slate-300">
+                  <Label htmlFor="scheduledEndDate" className="text-foreground">
                     Fecha y Hora de Término
                   </Label>
                   <Input
@@ -1317,7 +1317,7 @@ export default function OperationsPage() {
                         scheduledEndDate: e.target.value,
                       })
                     }
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1"
+                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
                   />
                 </div>
               </div>
@@ -1325,13 +1325,13 @@ export default function OperationsPage() {
 
             {/* Assignments */}
             <div className="space-y-4">
-              <h3 className="text-sm font-medium text-slate-300 border-b border-slate-700 pb-2">
+              <h3 className="text-sm font-medium text-foreground border-b border-border pb-2">
                 Asignaciones
               </h3>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="clientId" className="text-slate-300">
+                  <Label htmlFor="clientId" className="text-foreground">
                     Cliente
                   </Label>
                   <Select
@@ -1346,7 +1346,7 @@ export default function OperationsPage() {
                       })
                     }
                   >
-                    <SelectTrigger className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1">
+                    <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground mt-1">
                       <SelectValue placeholder="Seleccionar cliente" />
                     </SelectTrigger>
                     <SelectContent>
@@ -1364,7 +1364,7 @@ export default function OperationsPage() {
                 </div>
 
                 <div>
-                  <Label htmlFor="providerId" className="text-slate-300">
+                  <Label htmlFor="providerId" className="text-foreground">
                     Proveedor de Transporte
                   </Label>
                   <Select
@@ -1379,7 +1379,7 @@ export default function OperationsPage() {
                       })
                     }
                   >
-                    <SelectTrigger className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1">
+                    <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground mt-1">
                       <SelectValue placeholder="Seleccionar proveedor" />
                     </SelectTrigger>
                     <SelectContent>
@@ -1397,7 +1397,7 @@ export default function OperationsPage() {
                 </div>
 
                 <div>
-                  <Label htmlFor="driverId" className="text-slate-300">
+                  <Label htmlFor="driverId" className="text-foreground">
                     Chofer *
                   </Label>
                   <Select
@@ -1409,7 +1409,7 @@ export default function OperationsPage() {
                       })
                     }
                   >
-                    <SelectTrigger className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1">
+                    <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground mt-1">
                       <SelectValue placeholder="Seleccionar chofer" />
                     </SelectTrigger>
                     <SelectContent>
@@ -1426,7 +1426,7 @@ export default function OperationsPage() {
                 </div>
 
                 <div>
-                  <Label htmlFor="vehicleId" className="text-slate-300">
+                  <Label htmlFor="vehicleId" className="text-foreground">
                     Vehículo *
                   </Label>
                   <Select
@@ -1438,7 +1438,7 @@ export default function OperationsPage() {
                       })
                     }
                   >
-                    <SelectTrigger className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1">
+                    <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground mt-1">
                       <SelectValue placeholder="Seleccionar vehículo" />
                     </SelectTrigger>
                     <SelectContent>
@@ -1459,13 +1459,13 @@ export default function OperationsPage() {
 
             {/* Cargo Details */}
             <div className="space-y-4">
-              <h3 className="text-sm font-medium text-slate-300 border-b border-slate-700 pb-2">
+              <h3 className="text-sm font-medium text-foreground border-b border-border pb-2">
                 Detalles de la Carga
               </h3>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
-                  <Label htmlFor="cargoDescription" className="text-slate-300">
+                  <Label htmlFor="cargoDescription" className="text-foreground">
                     Descripción de la Carga / Maquinaria
                   </Label>
                   <Textarea
@@ -1477,14 +1477,14 @@ export default function OperationsPage() {
                         cargoDescription: e.target.value,
                       })
                     }
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1"
+                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
                     placeholder="Ej: Excavadora Caterpillar 320D, código: EXC-001"
                     rows={3}
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="cargoWeight" className="text-slate-300">
+                  <Label htmlFor="cargoWeight" className="text-foreground">
                     Peso de la Carga (kg)
                   </Label>
                   <Input
@@ -1499,7 +1499,7 @@ export default function OperationsPage() {
                           : undefined,
                       })
                     }
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1"
+                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
                     placeholder="0"
                   />
                 </div>
@@ -1508,12 +1508,12 @@ export default function OperationsPage() {
 
             {/* Notes */}
             <div className="space-y-4">
-              <h3 className="text-sm font-medium text-slate-300 border-b border-slate-700 pb-2">
+              <h3 className="text-sm font-medium text-foreground border-b border-border pb-2">
                 Observaciones y Notas
               </h3>
 
               <div>
-                <Label htmlFor="notes" className="text-slate-300">
+                <Label htmlFor="notes" className="text-foreground">
                   Notas y Condiciones Especiales
                 </Label>
                 <Textarea
@@ -1522,7 +1522,7 @@ export default function OperationsPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, notes: e.target.value })
                   }
-                  className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1"
+                  className="bg-ui-surface-elevated border-border text-foreground mt-1"
                   placeholder="Instrucciones especiales, condiciones del lugar, requisitos de seguridad..."
                   rows={4}
                 />
@@ -1538,7 +1538,7 @@ export default function OperationsPage() {
                   setEditDialogOpen(false);
                   setOperationToEdit(null);
                 }}
-                className="border-slate-600 text-slate-300 hover:bg-[#2a2d3a]"
+                className="border-border text-foreground hover:bg-ui-surface-elevated"
                 disabled={formLoading}
               >
                 Cancelar

@@ -37,12 +37,12 @@ export function TransferCard({
 
   const etaColors = {
     early: "text-green-400",
-    ontime: "text-slate-300",
+    ontime: "text-foreground",
     late: "text-red-400",
   };
 
   return (
-    <div className="bg-[#2a2d3a] border border-slate-700 rounded-lg p-4 hover:border-purple-500 transition-colors">
+    <div className="bg-ui-surface-elevated border border-border rounded-lg p-4 hover:border-primary transition-colors">
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
@@ -53,7 +53,7 @@ export function TransferCard({
               {status}
             </span>
           </div>
-          <div className="flex items-center gap-4 text-xs text-slate-400">
+          <div className="flex items-center gap-4 text-xs text-muted-foreground">
             <div className="flex items-center gap-1">
               <svg
                 className="w-3 h-3"
@@ -89,7 +89,7 @@ export function TransferCard({
             </div>
           </div>
         </div>
-        <button className="text-purple-400 hover:text-purple-300">
+        <button className="text-secondary hover:text-secondary-light">
           <svg
             className="w-5 h-5"
             fill="none"

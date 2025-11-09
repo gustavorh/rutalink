@@ -18,12 +18,12 @@ export function DashboardSidebar({
     <aside
       className={`${
         isCollapsed ? "w-20" : "w-64"
-      } bg-[#23262f] p-6 flex flex-col transition-all duration-300 relative`}
+      } flex-shrink-0 bg-ui-sidebar-bg p-6 flex flex-col transition-all duration-300 relative`}
     >
       {/* Toggle Button */}
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}
-        className="absolute -right-3 top-8 bg-[#2a2d3a] hover:bg-[#353845] text-white rounded-full p-1.5 shadow-lg z-10 transition-colors"
+        className="absolute -right-3 top-8 bg-ui-surface-elevated hover:bg-ui-surface-hover text-foreground rounded-full p-1.5 shadow-lg z-10 transition-colors border border-border"
         aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
       >
         <svg
@@ -54,8 +54,12 @@ export function DashboardSidebar({
         />
         {!isCollapsed && (
           <div className="flex flex-col">
-            <span className="text-white font-semibold text-sm">RutaLink</span>
-            <span className="text-slate-400 text-xs">Bilix Ingeniería</span>
+            <span className="text-foreground font-semibold text-sm">
+              RutaLink
+            </span>
+            <span className="text-muted-foreground text-xs">
+              Bilix Ingeniería
+            </span>
           </div>
         )}
       </div>
@@ -66,10 +70,10 @@ export function DashboardSidebar({
           <button
             className={`w-full flex items-center ${
               isCollapsed ? "justify-center" : "gap-2"
-            } px-3 py-2 rounded text-sm ${
+            } px-3 py-2 rounded text-sm transition-colors ${
               isActive("/dashboard")
-                ? "text-white bg-[#2a2d3a]"
-                : "text-slate-300 hover:bg-[#2a2d3a]"
+                ? "bg-primary text-primary-foreground font-medium"
+                : "text-foreground hover:bg-ui-surface-elevated hover:text-foreground"
             }`}
             title={isCollapsed ? "Panel de Control" : ""}
           >
@@ -109,20 +113,20 @@ export function DashboardSidebar({
             <div className="ml-4 mt-1 space-y-1">
               <div
                 onClick={() => onNavigate("/dashboard")}
-                className={`px-3 py-2 text-xs cursor-pointer rounded ${
+                className={`px-3 py-2 text-xs cursor-pointer rounded transition-colors ${
                   isActive("/dashboard")
-                    ? "text-white bg-[#2a2d3a]"
-                    : "text-slate-400 hover:text-slate-300 hover:bg-[#353845]"
+                    ? "bg-primary/20 text-primary border-l-2 border-primary font-medium"
+                    : "text-muted-foreground hover:text-foreground hover:bg-ui-surface-hover"
                 }`}
               >
                 Dashboard
               </div>
               <div
                 onClick={() => onNavigate("/dashboard/operations")}
-                className={`px-3 py-2 text-xs cursor-pointer rounded ${
+                className={`px-3 py-2 text-xs cursor-pointer rounded transition-colors ${
                   isActive("/dashboard/operations")
-                    ? "text-white bg-[#2a2d3a]"
-                    : "text-slate-400 hover:text-slate-300 hover:bg-[#353845]"
+                    ? "bg-primary/20 text-primary border-l-2 border-primary font-medium"
+                    : "text-muted-foreground hover:text-foreground hover:bg-ui-surface-hover"
                 }`}
               >
                 Programación de Operaciones
@@ -130,20 +134,20 @@ export function DashboardSidebar({
               {/* Módulo de Administración y Control de Operaciones */}
               <div
                 onClick={() => onNavigate("/dashboard/#")}
-                className={`px-3 py-2 text-xs cursor-pointer rounded ${
+                className={`px-3 py-2 text-xs cursor-pointer rounded transition-colors ${
                   isActive("/dashboard/operations/admin")
-                    ? "text-white bg-[#2a2d3a]"
-                    : "text-slate-400 hover:text-slate-300 hover:bg-[#353845]"
+                    ? "bg-primary/20 text-primary border-l-2 border-primary font-medium"
+                    : "text-muted-foreground hover:text-foreground hover:bg-ui-surface-hover"
                 }`}
               >
                 Administración y Control de Operaciones
               </div>
               <div
                 onClick={() => onNavigate("/dashboard")}
-                className={`px-3 py-2 text-xs cursor-pointer rounded ${
+                className={`px-3 py-2 text-xs cursor-pointer rounded transition-colors ${
                   isActive("/dashboard/reports")
-                    ? "text-white bg-[#2a2d3a]"
-                    : "text-slate-400 hover:text-slate-300 hover:bg-[#353845]"
+                    ? "bg-primary/20 text-primary border-l-2 border-primary font-medium"
+                    : "text-muted-foreground hover:text-foreground hover:bg-ui-surface-hover"
                 }`}
               >
                 Reportes Automáticos
@@ -156,10 +160,10 @@ export function DashboardSidebar({
           onClick={() => onNavigate("/dashboard/trucks")}
           className={`w-full flex items-center ${
             isCollapsed ? "justify-center" : "gap-2"
-          } px-3 py-2 rounded text-sm ${
+          } px-3 py-2 rounded text-sm transition-colors ${
             isParentActive("/dashboard/trucks")
-              ? "text-white bg-[#2a2d3a]"
-              : "text-slate-300 hover:bg-[#2a2d3a]"
+              ? "bg-primary text-primary-foreground font-medium"
+              : "text-foreground hover:bg-ui-surface-elevated hover:text-foreground"
           }`}
           title={isCollapsed ? "Camiones" : ""}
         >
@@ -173,7 +177,7 @@ export function DashboardSidebar({
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth={2}
-              d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+              d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m-4 0v-1m4 1v-1m6 0a2 2 0 104 0m-4 0a2 2 0 114 0m-4 0v-1m4 1v-1"
             />
           </svg>
           {!isCollapsed && (
@@ -200,10 +204,10 @@ export function DashboardSidebar({
           onClick={() => onNavigate("/dashboard/drivers")}
           className={`w-full flex items-center ${
             isCollapsed ? "justify-center" : "gap-2"
-          } px-3 py-2 rounded text-sm ${
+          } px-3 py-2 rounded text-sm transition-colors ${
             isParentActive("/dashboard/drivers")
-              ? "text-white bg-[#2a2d3a]"
-              : "text-slate-300 hover:bg-[#2a2d3a]"
+              ? "bg-primary text-primary-foreground font-medium"
+              : "text-foreground hover:bg-ui-surface-elevated hover:text-foreground"
           }`}
           title={isCollapsed ? "Choferes" : ""}
         >
@@ -244,10 +248,10 @@ export function DashboardSidebar({
           onClick={() => onNavigate("/dashboard/clients")}
           className={`w-full flex items-center ${
             isCollapsed ? "justify-center" : "gap-2"
-          } px-3 py-2 rounded text-sm ${
+          } px-3 py-2 rounded text-sm transition-colors ${
             isParentActive("/dashboard/clients")
-              ? "text-white bg-[#2a2d3a]"
-              : "text-slate-300 hover:bg-[#2a2d3a]"
+              ? "bg-primary text-primary-foreground font-medium"
+              : "text-foreground hover:bg-ui-surface-elevated hover:text-foreground"
           }`}
           title={isCollapsed ? "Clientes" : ""}
         >
@@ -288,10 +292,10 @@ export function DashboardSidebar({
           onClick={() => onNavigate("/dashboard/providers")}
           className={`w-full flex items-center ${
             isCollapsed ? "justify-center" : "gap-2"
-          } px-3 py-2 rounded text-sm ${
+          } px-3 py-2 rounded text-sm transition-colors ${
             isParentActive("/dashboard/providers")
-              ? "text-white bg-[#2a2d3a]"
-              : "text-slate-300 hover:bg-[#2a2d3a]"
+              ? "bg-primary text-primary-foreground font-medium"
+              : "text-foreground hover:bg-ui-surface-elevated hover:text-foreground"
           }`}
           title={isCollapsed ? "Proveedores" : ""}
         >
@@ -332,10 +336,10 @@ export function DashboardSidebar({
           onClick={() => onNavigate("/dashboard/routes")}
           className={`w-full flex items-center ${
             isCollapsed ? "justify-center" : "gap-2"
-          } px-3 py-2 rounded text-sm ${
+          } px-3 py-2 rounded text-sm transition-colors ${
             isParentActive("/dashboard/routes")
-              ? "text-white bg-[#2a2d3a]"
-              : "text-slate-300 hover:bg-[#2a2d3a]"
+              ? "bg-primary text-primary-foreground font-medium"
+              : "text-foreground hover:bg-ui-surface-elevated hover:text-foreground"
           }`}
           title={isCollapsed ? "Tramos y Rutas" : ""}
         >
@@ -376,10 +380,10 @@ export function DashboardSidebar({
           onClick={() => onNavigate("/dashboard/maintenance")}
           className={`w-full flex items-center ${
             isCollapsed ? "justify-center" : "gap-2"
-          } px-3 py-2 rounded text-sm ${
+          } px-3 py-2 rounded text-sm transition-colors ${
             isParentActive("/dashboard/maintenance")
-              ? "text-white bg-[#2a2d3a]"
-              : "text-slate-300 hover:bg-[#2a2d3a]"
+              ? "bg-primary text-primary-foreground font-medium"
+              : "text-foreground hover:bg-ui-surface-elevated hover:text-foreground"
           }`}
           title={isCollapsed ? "Mantención" : ""}
         >
@@ -426,10 +430,10 @@ export function DashboardSidebar({
           onClick={() => onNavigate("/dashboard/analytics")}
           className={`w-full flex items-center ${
             isCollapsed ? "justify-center" : "gap-2"
-          } px-3 py-2 rounded text-sm ${
+          } px-3 py-2 rounded text-sm transition-colors ${
             isParentActive("/dashboard/analytics")
-              ? "text-white bg-[#2a2d3a]"
-              : "text-slate-300 hover:bg-[#2a2d3a]"
+              ? "bg-primary text-primary-foreground font-medium"
+              : "text-foreground hover:bg-ui-surface-elevated hover:text-foreground"
           }`}
           title={isCollapsed ? "Analíticas" : ""}
         >

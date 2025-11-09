@@ -36,8 +36,8 @@ export default function DashboardLayout({
   // Prevent hydration mismatch by not rendering until mounted
   if (!mounted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#2a2d3a]">
-        <p className="text-slate-300">Cargando...</p>
+      <div className="min-h-screen flex items-center justify-center bg-ui-surface-elevated">
+        <p className="text-foreground">Cargando...</p>
       </div>
     );
   }
@@ -48,7 +48,7 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-[#2a2d3a]">
+    <div className="flex min-h-screen bg-ui-surface-elevated overflow-hidden">
       {/* Sidebar */}
       <DashboardSidebar
         currentPath={pathname}
@@ -56,7 +56,7 @@ export default function DashboardLayout({
       />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Header */}
         <DashboardHeader user={user} onLogout={handleLogout} />
 

@@ -269,8 +269,8 @@ export default function ClientsPage() {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#2a2d3a]">
-        <p className="text-slate-300">Cargando...</p>
+      <div className="min-h-screen flex items-center justify-center bg-ui-surface-elevated">
+        <p className="text-foreground">Cargando...</p>
       </div>
     );
   }
@@ -297,17 +297,17 @@ export default function ClientsPage() {
         {/* Page Header with Stats */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-slate-100 flex items-center gap-2">
-              <Building2 className="w-6 h-6 text-blue-400" />
+            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+              <Building2 className="w-6 h-6 text-primary" />
               Mantenedor de Clientes
             </h1>
-            <p className="text-slate-400 mt-1">
+            <p className="text-muted-foreground mt-1">
               Gestión de información comercial y operativa de clientes
             </p>
           </div>
           <Button
             onClick={handleCreateClick}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
+            className="bg-primary hover:bg-primary-dark text-white"
           >
             <Plus className="mr-2 h-4 w-4" />
             Nuevo Cliente
@@ -316,72 +316,72 @@ export default function ClientsPage() {
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-[#23262f] border-slate-700">
+          <Card className="bg-card border-border">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-slate-400">
+                  <p className="text-xs font-medium text-muted-foreground">
                     Total Clientes
                   </p>
-                  <p className="text-2xl font-bold text-slate-100 mt-1">
+                  <p className="text-2xl font-bold text-foreground mt-1">
                     {total}
                   </p>
                 </div>
-                <div className="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center">
-                  <Building2 className="w-6 h-6 text-blue-400" />
+                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                  <Building2 className="w-6 h-6 text-primary" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-[#23262f] border-slate-700">
+          <Card className="bg-card border-border">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-slate-400">
+                  <p className="text-xs font-medium text-muted-foreground">
                     Clientes Activos
                   </p>
-                  <p className="text-2xl font-bold text-slate-100 mt-1">
+                  <p className="text-2xl font-bold text-foreground mt-1">
                     {activeClients}
                   </p>
                 </div>
-                <div className="w-12 h-12 bg-green-500/10 rounded-lg flex items-center justify-center">
-                  <CheckCircle className="w-6 h-6 text-green-400" />
+                <div className="w-12 h-12 bg-success/10 rounded-lg flex items-center justify-center">
+                  <CheckCircle className="w-6 h-6 text-success" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-[#23262f] border-slate-700">
+          <Card className="bg-card border-border">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-slate-400">
+                  <p className="text-xs font-medium text-muted-foreground">
                     Rubros Registrados
                   </p>
-                  <p className="text-2xl font-bold text-slate-100 mt-1">
+                  <p className="text-2xl font-bold text-foreground mt-1">
                     {Object.keys(clientsByIndustry).length}
                   </p>
                 </div>
-                <div className="w-12 h-12 bg-purple-500/10 rounded-lg flex items-center justify-center">
-                  <Building className="w-6 h-6 text-purple-400" />
+                <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center">
+                  <Building className="w-6 h-6 text-secondary" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-[#23262f] border-slate-700">
+          <Card className="bg-card border-border">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-slate-400">
+                  <p className="text-xs font-medium text-muted-foreground">
                     Rubro Principal
                   </p>
-                  <p className="text-sm font-bold text-slate-100 mt-1">
+                  <p className="text-sm font-bold text-foreground mt-1">
                     {topIndustry ? getIndustryLabel(topIndustry[0]) : "N/A"}
                   </p>
                   {topIndustry && (
-                    <p className="text-xs text-slate-500 mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       {topIndustry[1]} cliente
                       {topIndustry[1] !== 1 ? "s" : ""}
                     </p>
@@ -396,14 +396,14 @@ export default function ClientsPage() {
         </div>
 
         {/* Filters Card */}
-        <Card className="bg-[#23262f] border-slate-700">
+        <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle className="text-slate-100 flex items-center gap-2">
-                <Filter className="w-5 h-5 text-blue-400" />
+              <CardTitle className="text-foreground flex items-center gap-2">
+                <Filter className="w-5 h-5 text-primary" />
                 Filtros de Búsqueda
               </CardTitle>
-              <CardDescription className="text-slate-400">
+              <CardDescription className="text-muted-foreground">
                 Filtra y busca clientes según tus criterios
               </CardDescription>
             </div>
@@ -411,7 +411,7 @@ export default function ClientsPage() {
               variant="outline"
               size="sm"
               onClick={() => setShowFilters(!showFilters)}
-              className="border-slate-600 text-slate-300 hover:bg-[#2a2d3a]"
+              className="border-border text-foreground hover:bg-ui-surface-elevated"
             >
               {showFilters ? "Ocultar" : "Mostrar"} Filtros
             </Button>
@@ -421,18 +421,18 @@ export default function ClientsPage() {
               {/* Search Bar - Always Visible */}
               <div className="flex gap-2">
                 <div className="relative flex-1">
-                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Buscar por razón social, RUT, contacto..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                    className="pl-10 bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-blue-500"
+                    className="pl-10 bg-ui-surface-elevated border-border text-foreground placeholder-muted-foreground focus:border-primary"
                   />
                 </div>
                 <Button
                   onClick={handleSearch}
-                  className="bg-blue-600 hover:bg-blue-700"
+                  className="bg-primary hover:bg-primary-dark"
                 >
                   Buscar
                 </Button>
@@ -440,16 +440,16 @@ export default function ClientsPage() {
 
               {/* Additional Filters */}
               {showFilters && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-slate-700">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-border">
                   <div>
-                    <label className="text-xs font-medium text-slate-400 mb-2 block">
+                    <label className="text-xs font-medium text-muted-foreground mb-2 block">
                       Estado
                     </label>
                     <Select
                       value={statusFilter}
                       onValueChange={setStatusFilter}
                     >
-                      <SelectTrigger className="bg-[#2a2d3a] border-slate-600 text-slate-300">
+                      <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground">
                         <SelectValue placeholder="Estado" />
                       </SelectTrigger>
                       <SelectContent>
@@ -461,14 +461,14 @@ export default function ClientsPage() {
                   </div>
 
                   <div>
-                    <label className="text-xs font-medium text-slate-400 mb-2 block">
+                    <label className="text-xs font-medium text-muted-foreground mb-2 block">
                       Rubro / Industria
                     </label>
                     <Select
                       value={industryFilter}
                       onValueChange={setIndustryFilter}
                     >
-                      <SelectTrigger className="bg-[#2a2d3a] border-slate-600 text-slate-300">
+                      <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground">
                         <SelectValue placeholder="Rubro" />
                       </SelectTrigger>
                       <SelectContent>
@@ -491,14 +491,14 @@ export default function ClientsPage() {
         </Card>
 
         {/* Clients Table */}
-        <Card className="bg-[#23262f] border-slate-700">
+        <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle className="text-slate-100 flex items-center gap-2">
-                <FileText className="w-5 h-5 text-blue-400" />
+              <CardTitle className="text-foreground flex items-center gap-2">
+                <FileText className="w-5 h-5 text-primary" />
                 Listado de Clientes
               </CardTitle>
-              <CardDescription className="text-slate-400">
+              <CardDescription className="text-muted-foreground">
                 Total de {total} clientes registrados
               </CardDescription>
             </div>
@@ -506,7 +506,7 @@ export default function ClientsPage() {
               <Button
                 variant="outline"
                 size="sm"
-                className="border-slate-600 text-slate-300 hover:bg-[#2a2d3a]"
+                className="border-border text-foreground hover:bg-ui-surface-elevated"
                 onClick={() => {
                   /* TODO: Implement export functionality */
                 }}
@@ -520,20 +520,20 @@ export default function ClientsPage() {
             {loading ? (
               <div className="text-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-                <p className="text-slate-400 mt-4">Cargando clientes...</p>
+                <p className="text-muted-foreground mt-4">Cargando clientes...</p>
               </div>
             ) : error ? (
               <div className="text-center py-12">
-                <AlertTriangle className="w-12 h-12 text-red-400 mx-auto mb-4" />
-                <p className="text-red-400">{error}</p>
+                <AlertTriangle className="w-12 h-12 text-destructive mx-auto mb-4" />
+                <p className="text-destructive">{error}</p>
               </div>
             ) : clients.length === 0 ? (
               <div className="text-center py-12">
                 <Building2 className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                <p className="text-slate-500">No se encontraron clientes</p>
+                <p className="text-muted-foreground">No se encontraron clientes</p>
                 <Button
                   onClick={handleCreateClick}
-                  className="mt-4 bg-blue-600 hover:bg-blue-700"
+                  className="mt-4 bg-primary hover:bg-primary-dark"
                 >
                   <Plus className="mr-2 h-4 w-4" />
                   Agregar Primer Cliente
@@ -544,20 +544,20 @@ export default function ClientsPage() {
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
-                      <TableRow className="border-b border-slate-700 hover:bg-transparent">
-                        <TableHead className="text-slate-400">
+                      <TableRow className="border-b border-border hover:bg-transparent">
+                        <TableHead className="text-muted-foreground">
                           Razón Social
                         </TableHead>
-                        <TableHead className="text-slate-400">RUT</TableHead>
-                        <TableHead className="text-slate-400">
+                        <TableHead className="text-muted-foreground">RUT</TableHead>
+                        <TableHead className="text-muted-foreground">
                           Contacto
                         </TableHead>
-                        <TableHead className="text-slate-400">
+                        <TableHead className="text-muted-foreground">
                           Ubicación
                         </TableHead>
-                        <TableHead className="text-slate-400">Rubro</TableHead>
-                        <TableHead className="text-slate-400">Estado</TableHead>
-                        <TableHead className="text-right text-slate-400">
+                        <TableHead className="text-muted-foreground">Rubro</TableHead>
+                        <TableHead className="text-muted-foreground">Estado</TableHead>
+                        <TableHead className="text-right text-muted-foreground">
                           Acciones
                         </TableHead>
                       </TableRow>
@@ -566,44 +566,44 @@ export default function ClientsPage() {
                       {clients.map((client) => (
                         <TableRow
                           key={client.id}
-                          className="border-b border-slate-700 hover:bg-[#2a2d3a]"
+                          className="border-b border-border hover:bg-ui-surface-elevated"
                         >
                           <TableCell>
                             <div>
-                              <div className="font-medium text-slate-200">
+                              <div className="font-medium text-foreground">
                                 {client.businessName}
                               </div>
                               {client.observations && (
-                                <div className="text-xs text-slate-500 mt-1 truncate max-w-[200px]">
+                                <div className="text-xs text-muted-foreground mt-1 truncate max-w-[200px]">
                                   {client.observations}
                                 </div>
                               )}
                             </div>
                           </TableCell>
-                          <TableCell className="font-mono text-sm text-slate-300">
+                          <TableCell className="font-mono text-sm text-foreground">
                             {client.taxId || "N/A"}
                           </TableCell>
                           <TableCell>
                             <div className="text-sm space-y-1">
                               {client.contactName && (
-                                <div className="text-slate-300">
+                                <div className="text-foreground">
                                   {client.contactName}
                                 </div>
                               )}
                               {client.contactEmail && (
-                                <div className="text-slate-400 text-xs">
+                                <div className="text-muted-foreground text-xs">
                                   {client.contactEmail}
                                 </div>
                               )}
                               {client.contactPhone && (
-                                <div className="text-slate-400 text-xs">
+                                <div className="text-muted-foreground text-xs">
                                   {client.contactPhone}
                                 </div>
                               )}
                               {!client.contactName &&
                                 !client.contactEmail &&
                                 !client.contactPhone && (
-                                  <div className="text-slate-500 text-xs">
+                                  <div className="text-muted-foreground text-xs">
                                     Sin contacto
                                   </div>
                                 )}
@@ -612,17 +612,17 @@ export default function ClientsPage() {
                           <TableCell>
                             <div className="text-sm space-y-1">
                               {client.city && (
-                                <div className="text-slate-300">
+                                <div className="text-foreground">
                                   {client.city}
                                 </div>
                               )}
                               {client.region && (
-                                <div className="text-slate-400 text-xs">
+                                <div className="text-muted-foreground text-xs">
                                   {client.region}
                                 </div>
                               )}
                               {!client.city && !client.region && (
-                                <div className="text-slate-500 text-xs">
+                                <div className="text-muted-foreground text-xs">
                                   N/A
                                 </div>
                               )}
@@ -632,12 +632,12 @@ export default function ClientsPage() {
                             {client.industry ? (
                               <Badge
                                 variant="outline"
-                                className="border-blue-500/50 text-blue-400"
+                                className="border-primary/50 text-primary"
                               >
                                 {getIndustryLabel(client.industry)}
                               </Badge>
                             ) : (
-                              <span className="text-slate-500 text-xs">
+                              <span className="text-muted-foreground text-xs">
                                 Sin clasificar
                               </span>
                             )}
@@ -647,8 +647,8 @@ export default function ClientsPage() {
                               variant={client.status ? "default" : "outline"}
                               className={
                                 client.status
-                                  ? "bg-green-500/10 text-green-400 border-green-500/50"
-                                  : "border-slate-500/50 text-slate-500"
+                                  ? "bg-success/10 text-success border-success/50"
+                                  : "border-slate-500/50 text-muted-foreground"
                               }
                             >
                               {client.status ? "Activo" : "Inactivo"}
@@ -662,7 +662,7 @@ export default function ClientsPage() {
                                 onClick={() =>
                                   router.push(`/dashboard/clients/${client.id}`)
                                 }
-                                className="text-slate-400 hover:text-blue-400 hover:bg-blue-500/10"
+                                className="text-muted-foreground hover:text-primary hover:bg-primary/10"
                                 title="Ver detalles"
                               >
                                 <Eye className="h-4 w-4" />
@@ -671,7 +671,7 @@ export default function ClientsPage() {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => handleEditClick(client)}
-                                className="text-slate-400 hover:text-purple-400 hover:bg-purple-500/10"
+                                className="text-muted-foreground hover:text-secondary hover:bg-secondary/10"
                                 title="Editar"
                               >
                                 <Edit className="h-4 w-4" />
@@ -680,7 +680,7 @@ export default function ClientsPage() {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => handleDeleteClick(client)}
-                                className="text-slate-400 hover:text-red-400 hover:bg-red-500/10"
+                                className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                                 title="Eliminar"
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -694,8 +694,8 @@ export default function ClientsPage() {
                 </div>
 
                 {/* Pagination */}
-                <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-700">
-                  <p className="text-sm text-slate-400">
+                <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
+                  <p className="text-sm text-muted-foreground">
                     Mostrando {(page - 1) * limit + 1} a{" "}
                     {Math.min(page * limit, total)} de {total} clientes
                   </p>
@@ -704,7 +704,7 @@ export default function ClientsPage() {
                       variant="outline"
                       onClick={() => setPage(page - 1)}
                       disabled={page === 1}
-                      className="border-slate-600 text-slate-300 hover:bg-[#2a2d3a] disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="border-border text-foreground hover:bg-ui-surface-elevated disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Anterior
                     </Button>
@@ -718,15 +718,15 @@ export default function ClientsPage() {
                       .map((p, index, array) => (
                         <div key={p} className="flex items-center">
                           {index > 0 && array[index - 1] !== p - 1 && (
-                            <span className="text-slate-500 px-2">...</span>
+                            <span className="text-muted-foreground px-2">...</span>
                           )}
                           <Button
                             variant={p === page ? "default" : "outline"}
                             onClick={() => setPage(p)}
                             className={
                               p === page
-                                ? "bg-blue-600 hover:bg-blue-700 text-white"
-                                : "border-slate-600 text-slate-300 hover:bg-[#2a2d3a]"
+                                ? "bg-primary hover:bg-primary-dark text-white"
+                                : "border-border text-foreground hover:bg-ui-surface-elevated"
                             }
                           >
                             {p}
@@ -737,7 +737,7 @@ export default function ClientsPage() {
                       variant="outline"
                       onClick={() => setPage(page + 1)}
                       disabled={page === totalPages}
-                      className="border-slate-600 text-slate-300 hover:bg-[#2a2d3a] disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="border-border text-foreground hover:bg-ui-surface-elevated disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Siguiente
                     </Button>
@@ -751,14 +751,14 @@ export default function ClientsPage() {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="bg-[#23262f] border-slate-700">
+        <DialogContent className="bg-card border-border">
           <DialogHeader>
-            <DialogTitle className="text-slate-100">
+            <DialogTitle className="text-foreground">
               Confirmar Eliminación
             </DialogTitle>
-            <DialogDescription className="text-slate-400">
+            <DialogDescription className="text-muted-foreground">
               ¿Estás seguro de que deseas eliminar al cliente{" "}
-              <strong className="text-slate-200">
+              <strong className="text-foreground">
                 {clientToDelete?.businessName}
               </strong>
               ? Esta acción marcará el cliente como inactivo.
@@ -768,7 +768,7 @@ export default function ClientsPage() {
             <Button
               variant="outline"
               onClick={() => setDeleteDialogOpen(false)}
-              className="border-slate-600 text-slate-300 hover:bg-[#2a2d3a]"
+              className="border-border text-foreground hover:bg-ui-surface-elevated"
             >
               Cancelar
             </Button>
@@ -793,12 +793,12 @@ export default function ClientsPage() {
           }
         }}
       >
-        <DialogContent className="bg-[#23262f] border-slate-700 max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="bg-card border-border max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-slate-100">
+            <DialogTitle className="text-foreground">
               {editDialogOpen ? "Editar Cliente" : "Nuevo Cliente"}
             </DialogTitle>
-            <DialogDescription className="text-slate-400">
+            <DialogDescription className="text-muted-foreground">
               {editDialogOpen
                 ? "Actualiza la información del cliente"
                 : "Completa la información del nuevo cliente"}
@@ -807,13 +807,13 @@ export default function ClientsPage() {
           <form onSubmit={handleFormSubmit} className="space-y-4">
             {/* Business Information */}
             <div className="space-y-4">
-              <h3 className="text-sm font-medium text-slate-300 border-b border-slate-700 pb-2">
+              <h3 className="text-sm font-medium text-foreground border-b border-border pb-2">
                 Información Comercial
               </h3>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
-                  <Label htmlFor="businessName" className="text-slate-300">
+                  <Label htmlFor="businessName" className="text-foreground">
                     Razón Social *
                   </Label>
                   <Input
@@ -823,13 +823,13 @@ export default function ClientsPage() {
                       setFormData({ ...formData, businessName: e.target.value })
                     }
                     required
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1"
+                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
                     placeholder="Ej: Constructora ABC S.A."
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="taxId" className="text-slate-300">
+                  <Label htmlFor="taxId" className="text-foreground">
                     RUT
                   </Label>
                   <Input
@@ -838,13 +838,13 @@ export default function ClientsPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, taxId: e.target.value })
                     }
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1"
+                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
                     placeholder="Ej: 76.123.456-7"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="industry" className="text-slate-300">
+                  <Label htmlFor="industry" className="text-foreground">
                     Rubro / Industria
                   </Label>
                   <Select
@@ -856,7 +856,7 @@ export default function ClientsPage() {
                       })
                     }
                   >
-                    <SelectTrigger className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1">
+                    <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground mt-1">
                       <SelectValue placeholder="Seleccionar rubro" />
                     </SelectTrigger>
                     <SelectContent>
@@ -873,13 +873,13 @@ export default function ClientsPage() {
 
             {/* Contact Information */}
             <div className="space-y-4">
-              <h3 className="text-sm font-medium text-slate-300 border-b border-slate-700 pb-2">
+              <h3 className="text-sm font-medium text-foreground border-b border-border pb-2">
                 Información de Contacto
               </h3>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
-                  <Label htmlFor="contactName" className="text-slate-300">
+                  <Label htmlFor="contactName" className="text-foreground">
                     Nombre de Contacto
                   </Label>
                   <Input
@@ -888,13 +888,13 @@ export default function ClientsPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, contactName: e.target.value })
                     }
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1"
+                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
                     placeholder="Ej: Juan Pérez"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="contactEmail" className="text-slate-300">
+                  <Label htmlFor="contactEmail" className="text-foreground">
                     Email de Contacto
                   </Label>
                   <Input
@@ -904,13 +904,13 @@ export default function ClientsPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, contactEmail: e.target.value })
                     }
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1"
+                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
                     placeholder="contacto@empresa.cl"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="contactPhone" className="text-slate-300">
+                  <Label htmlFor="contactPhone" className="text-foreground">
                     Teléfono de Contacto
                   </Label>
                   <Input
@@ -919,7 +919,7 @@ export default function ClientsPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, contactPhone: e.target.value })
                     }
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1"
+                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
                     placeholder="+56 9 1234 5678"
                   />
                 </div>
@@ -928,13 +928,13 @@ export default function ClientsPage() {
 
             {/* Location Information */}
             <div className="space-y-4">
-              <h3 className="text-sm font-medium text-slate-300 border-b border-slate-700 pb-2">
+              <h3 className="text-sm font-medium text-foreground border-b border-border pb-2">
                 Ubicación
               </h3>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
-                  <Label htmlFor="address" className="text-slate-300">
+                  <Label htmlFor="address" className="text-foreground">
                     Dirección
                   </Label>
                   <Input
@@ -943,13 +943,13 @@ export default function ClientsPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, address: e.target.value })
                     }
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1"
+                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
                     placeholder="Ej: Av. Principal 123"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="city" className="text-slate-300">
+                  <Label htmlFor="city" className="text-foreground">
                     Ciudad
                   </Label>
                   <Input
@@ -958,13 +958,13 @@ export default function ClientsPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, city: e.target.value })
                     }
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1"
+                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
                     placeholder="Ej: Santiago"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="region" className="text-slate-300">
+                  <Label htmlFor="region" className="text-foreground">
                     Región
                   </Label>
                   <Input
@@ -973,7 +973,7 @@ export default function ClientsPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, region: e.target.value })
                     }
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1"
+                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
                     placeholder="Ej: Metropolitana"
                   />
                 </div>
@@ -982,13 +982,13 @@ export default function ClientsPage() {
 
             {/* Additional Information */}
             <div className="space-y-4">
-              <h3 className="text-sm font-medium text-slate-300 border-b border-slate-700 pb-2">
+              <h3 className="text-sm font-medium text-foreground border-b border-border pb-2">
                 Información Adicional
               </h3>
 
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="observations" className="text-slate-300">
+                  <Label htmlFor="observations" className="text-foreground">
                     Observaciones
                   </Label>
                   <Textarea
@@ -997,14 +997,14 @@ export default function ClientsPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, observations: e.target.value })
                     }
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1"
+                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
                     placeholder="Observaciones generales del cliente..."
                     rows={3}
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="notes" className="text-slate-300">
+                  <Label htmlFor="notes" className="text-foreground">
                     Notas Internas
                   </Label>
                   <Textarea
@@ -1013,7 +1013,7 @@ export default function ClientsPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, notes: e.target.value })
                     }
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1"
+                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
                     placeholder="Notas internas sobre el cliente..."
                     rows={3}
                   />
@@ -1027,11 +1027,11 @@ export default function ClientsPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, status: e.target.checked })
                     }
-                    className="rounded border-slate-600 bg-[#2a2d3a] text-blue-600 focus:ring-blue-500"
+                    className="rounded border-border bg-ui-surface-elevated text-primary focus:ring-blue-500"
                   />
                   <Label
                     htmlFor="status"
-                    className="text-slate-300 cursor-pointer"
+                    className="text-foreground cursor-pointer"
                   >
                     Cliente Activo
                   </Label>
@@ -1048,14 +1048,14 @@ export default function ClientsPage() {
                   setEditDialogOpen(false);
                   setClientToEdit(null);
                 }}
-                className="border-slate-600 text-slate-300 hover:bg-[#2a2d3a]"
+                className="border-border text-foreground hover:bg-ui-surface-elevated"
                 disabled={formLoading}
               >
                 Cancelar
               </Button>
               <Button
                 type="submit"
-                className="bg-blue-600 hover:bg-blue-700 text-white"
+                className="bg-primary hover:bg-primary-dark text-white"
                 disabled={formLoading}
               >
                 {formLoading ? (

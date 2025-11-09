@@ -89,38 +89,38 @@ export default function NewTruckPage() {
           <Button
             variant="outline"
             onClick={() => router.push("/dashboard/trucks")}
-            className="border-slate-600 text-slate-300 hover:bg-[#23262f]"
+            className="border-border text-foreground hover:bg-card"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Volver
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-slate-100 flex items-center gap-2">
-              <TruckIcon className="w-6 h-6 text-blue-400" />
+            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+              <TruckIcon className="w-6 h-6 text-primary" />
               Nuevo Camión
             </h1>
-            <p className="text-slate-400 mt-1">
+            <p className="text-muted-foreground mt-1">
               Registra un nuevo camión en la flota
             </p>
           </div>
         </div>
 
         {error && (
-          <Card className="bg-red-500/10 border-red-500/50">
+          <Card className="bg-destructive/10 border-destructive/50">
             <CardContent className="p-4">
-              <p className="text-red-400">{error}</p>
+              <p className="text-destructive">{error}</p>
             </CardContent>
           </Card>
         )}
 
         {/* Form */}
         <form onSubmit={handleSubmit}>
-          <Card className="bg-[#23262f] border-slate-700">
+          <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="text-slate-100">
+              <CardTitle className="text-foreground">
                 Información del Camión
               </CardTitle>
-              <CardDescription className="text-slate-400">
+              <CardDescription className="text-muted-foreground">
                 Completa los datos del nuevo camión
               </CardDescription>
             </CardHeader>
@@ -128,8 +128,8 @@ export default function NewTruckPage() {
               {/* Basic Information */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="plateNumber" className="text-slate-300">
-                    Patente <span className="text-red-400">*</span>
+                  <Label htmlFor="plateNumber" className="text-foreground">
+                    Patente <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="plateNumber"
@@ -142,13 +142,13 @@ export default function NewTruckPage() {
                     }
                     placeholder="AB-1234"
                     required
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300"
+                    className="bg-ui-surface-elevated border-border text-foreground"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="vehicleType" className="text-slate-300">
-                    Tipo de Vehículo <span className="text-red-400">*</span>
+                  <Label htmlFor="vehicleType" className="text-foreground">
+                    Tipo de Vehículo <span className="text-destructive">*</span>
                   </Label>
                   <Select
                     value={formData.vehicleType}
@@ -159,7 +159,7 @@ export default function NewTruckPage() {
                       })
                     }
                   >
-                    <SelectTrigger className="bg-[#2a2d3a] border-slate-600 text-slate-300">
+                    <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -173,7 +173,7 @@ export default function NewTruckPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="brand" className="text-slate-300">
+                  <Label htmlFor="brand" className="text-foreground">
                     Marca
                   </Label>
                   <Input
@@ -183,12 +183,12 @@ export default function NewTruckPage() {
                       setFormData({ ...formData, brand: e.target.value })
                     }
                     placeholder="Mercedes-Benz, Volvo, etc."
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300"
+                    className="bg-ui-surface-elevated border-border text-foreground"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="model" className="text-slate-300">
+                  <Label htmlFor="model" className="text-foreground">
                     Modelo
                   </Label>
                   <Input
@@ -198,12 +198,12 @@ export default function NewTruckPage() {
                       setFormData({ ...formData, model: e.target.value })
                     }
                     placeholder="Actros, FH16, etc."
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300"
+                    className="bg-ui-surface-elevated border-border text-foreground"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="year" className="text-slate-300">
+                  <Label htmlFor="year" className="text-foreground">
                     Año
                   </Label>
                   <Input
@@ -218,12 +218,12 @@ export default function NewTruckPage() {
                     }
                     min="1900"
                     max={new Date().getFullYear() + 1}
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300"
+                    className="bg-ui-surface-elevated border-border text-foreground"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="color" className="text-slate-300">
+                  <Label htmlFor="color" className="text-foreground">
                     Color
                   </Label>
                   <Input
@@ -233,12 +233,12 @@ export default function NewTruckPage() {
                       setFormData({ ...formData, color: e.target.value })
                     }
                     placeholder="Blanco, Rojo, etc."
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300"
+                    className="bg-ui-surface-elevated border-border text-foreground"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="capacity" className="text-slate-300">
+                  <Label htmlFor="capacity" className="text-foreground">
                     Capacidad
                   </Label>
                   <Input
@@ -253,12 +253,12 @@ export default function NewTruckPage() {
                     }
                     min="0"
                     placeholder="20"
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300"
+                    className="bg-ui-surface-elevated border-border text-foreground"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="capacityUnit" className="text-slate-300">
+                  <Label htmlFor="capacityUnit" className="text-foreground">
                     Unidad de Capacidad
                   </Label>
                   <Select
@@ -270,7 +270,7 @@ export default function NewTruckPage() {
                       })
                     }
                   >
-                    <SelectTrigger className="bg-[#2a2d3a] border-slate-600 text-slate-300">
+                    <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -284,7 +284,7 @@ export default function NewTruckPage() {
                 </div>
 
                 <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="vin" className="text-slate-300">
+                  <Label htmlFor="vin" className="text-foreground">
                     VIN (Número de Identificación)
                   </Label>
                   <Input
@@ -298,12 +298,12 @@ export default function NewTruckPage() {
                     }
                     placeholder="1HGBH41JXMN109186"
                     maxLength={50}
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300"
+                    className="bg-ui-surface-elevated border-border text-foreground"
                   />
                 </div>
 
                 <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="notes" className="text-slate-300">
+                  <Label htmlFor="notes" className="text-foreground">
                     Notas
                   </Label>
                   <Textarea
@@ -314,26 +314,26 @@ export default function NewTruckPage() {
                     }
                     placeholder="Información adicional sobre el camión..."
                     rows={4}
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300"
+                    className="bg-ui-surface-elevated border-border text-foreground"
                   />
                 </div>
               </div>
 
               {/* Actions */}
-              <div className="flex justify-end gap-3 pt-6 border-t border-slate-700">
+              <div className="flex justify-end gap-3 pt-6 border-t border-border">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => router.push("/dashboard/trucks")}
                   disabled={loading}
-                  className="border-slate-600 text-slate-300 hover:bg-[#2a2d3a]"
+                  className="border-border text-foreground hover:bg-ui-surface-elevated"
                 >
                   Cancelar
                 </Button>
                 <Button
                   type="submit"
                   disabled={loading || !formData.plateNumber}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  className="bg-primary hover:bg-primary-dark text-white"
                 >
                   {loading ? (
                     <>Guardando...</>

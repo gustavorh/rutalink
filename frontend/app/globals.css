@@ -4,39 +4,52 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
+  --color-sidebar-ring: hsl(var(--sidebar-ring));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
+  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+  --color-sidebar-primary: hsl(var(--sidebar-primary));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar: hsl(var(--sidebar));
+  --color-chart-5: hsl(var(--chart-5));
+  --color-chart-4: hsl(var(--chart-4));
+  --color-chart-3: hsl(var(--chart-3));
+  --color-chart-2: hsl(var(--chart-2));
+  --color-chart-1: hsl(var(--chart-1));
+  --color-ring: hsl(var(--ring));
+  --color-input: hsl(var(--input));
+  --color-border: hsl(var(--border));
+  --color-destructive: hsl(var(--destructive));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-light: hsl(var(--primary-light));
+  --color-primary-dark: hsl(var(--primary-dark));
+  --color-secondary-light: hsl(var(--secondary-light));
+  --color-secondary-dark: hsl(var(--secondary-dark));
+  --color-success: hsl(var(--success));
+  --color-success-foreground: hsl(var(--success-foreground));
+  --color-warning: hsl(var(--warning));
+  --color-warning-foreground: hsl(var(--warning-foreground));
+  --color-info: hsl(var(--info));
+  --color-info-foreground: hsl(var(--info-foreground));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-card: hsl(var(--card));
+  --color-ui-sidebar-bg: hsl(var(--ui-sidebar-bg));
+  --color-ui-surface-elevated: hsl(var(--ui-surface-elevated));
+  --color-ui-surface-hover: hsl(var(--ui-surface-hover));
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -45,71 +58,136 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+
+  /* Fleet Logistics SaaS Palette - Light Mode */
+  --primary: 215 84% 49%; /* #1976D2 */
+  --primary-light: 215 100% 70%; /* #63A4FF */
+  --primary-dark: 215 92% 35%; /* #0D47A1 */
+  --primary-foreground: 0 0% 100%; /* white */
+
+  --secondary: 174 100% 29%; /* #009688 */
+  --secondary-light: 174 59% 55%; /* #52C7B8 */
+  --secondary-dark: 174 100% 18%; /* #00695C */
+  --secondary-foreground: 0 0% 100%; /* white */
+
+  --background: 216 28% 94%; /* #EBEEF5 - Slightly darker for depth */
+  --foreground: 222 47% 11%; /* #0F1419 - Darker text for better contrast */
+
+  --card: 0 0% 98%; /* #FAFAFA - Slight gray tint for depth */
+  --card-foreground: 222 47% 11%; /* #0F1419 - Dark text */
+
+  --popover: 0 0% 100%; /* #FFFFFF */
+  --popover-foreground: 222 47% 11%; /* #0F1419 */
+
+  --muted: 220 13% 91%; /* #E5E7EB - More visible muted background */
+  --muted-foreground: 215 16% 47%; /* #64748B - Darker muted text */
+
+  --accent: 215 84% 49%; /* using primary */
+  --accent-foreground: 0 0% 100%;
+
+  --destructive: 4 72% 50%; /* #D32F2F - error */
+  --destructive-foreground: 0 0% 100%;
+
+  --success: 123 42% 33%; /* #2E7D32 */
+  --success-foreground: 0 0% 100%;
+
+  --warning: 24 96% 47%; /* #ED6C02 */
+  --warning-foreground: 0 0% 100%;
+
+  --info: 199 91% 41%; /* #0288D1 */
+  --info-foreground: 0 0% 100%;
+
+  --border: 214 32% 91%; /* #DFE3E8 - More visible borders */
+  --input: 214 32% 91%; /* #DFE3E8 */
+  --ring: 215 84% 49%;
+
+  /* Route colors for charts/maps */
+  --chart-1: 122 39% 49%; /* #4CAF50 - route-a */
+  --chart-2: 45 100% 50%; /* #FFB300 - route-b */
+  --chart-3: 262 47% 55%; /* #7E57C2 - route-c */
+  --chart-4: 14 89% 52%; /* #F4511E - route-d */
+  --chart-5: 199 88% 57%; /* #29B6F6 - route-e */
+
+  /* Sidebar uses surface/card colors */
+  --sidebar: 0 0% 99%; /* #FCFCFC - Subtle depth */
+  --sidebar-foreground: 222 47% 11%; /* #0F1419 */
+  --sidebar-primary: 215 84% 49%; /* #1976D2 */
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 220 13% 95%; /* #F1F3F5 - Visible accent */
+  --sidebar-accent-foreground: 222 47% 11%;
+  --sidebar-border: 214 32% 91%; /* #DFE3E8 */
+  --sidebar-ring: 215 84% 49%;
+
+  /* UI Surface variants (used in components) */
+  --ui-sidebar-bg: 0 0% 99%; /* #FCFCFC - Subtle depth */
+  --ui-surface-elevated: 0 0% 97%; /* #F7F7F7 - Cards with visible depth */
+  --ui-surface-hover: 220 13% 93%; /* #EDEDF0 - More visible hover */
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* Fleet Logistics SaaS Palette - Dark Mode */
+  --primary: 215 100% 67%; /* #58A6FF - dark-accent-primary */
+  --primary-light: 215 100% 75%;
+  --primary-dark: 215 92% 35%;
+  --primary-foreground: 225 45% 15%;
+
+  --secondary: 174 48% 55%; /* #3FB6A8 - dark-accent-secondary */
+  --secondary-light: 174 59% 65%;
+  --secondary-dark: 174 100% 18%;
+  --secondary-foreground: 225 45% 15%;
+
+  --background: 215 28% 7%; /* #0D1117 - dark-background */
+  --foreground: 213 31% 91%; /* #E6EDF3 - dark-text-primary */
+
+  --card: 215 15% 12%; /* #161B22 - dark-surface */
+  --card-foreground: 213 31% 91%; /* #E6EDF3 */
+
+  --popover: 215 15% 12%; /* #161B22 */
+  --popover-foreground: 213 31% 91%; /* #E6EDF3 */
+
+  --muted: 215 15% 12%;
+  --muted-foreground: 217 11% 57%; /* #8B949E - dark-text-secondary */
+
+  --accent: 215 100% 67%; /* using primary */
+  --accent-foreground: 213 31% 91%;
+
+  --destructive: 4 72% 50%; /* #D32F2F */
+  --destructive-foreground: 213 31% 91%;
+
+  --success: 123 42% 33%; /* #2E7D32 */
+  --success-foreground: 213 31% 91%;
+
+  --warning: 24 96% 47%; /* #ED6C02 */
+  --warning-foreground: 213 31% 91%;
+
+  --info: 199 91% 41%; /* #0288D1 */
+  --info-foreground: 213 31% 91%;
+
+  --border: 215 15% 21%; /* #30363D - dark-border */
+  --input: 215 15% 21%; /* #30363D */
+  --ring: 215 100% 67%;
+
+  /* Route colors remain same for consistency */
+  --chart-1: 122 39% 49%; /* #4CAF50 */
+  --chart-2: 45 100% 50%; /* #FFB300 */
+  --chart-3: 262 47% 55%; /* #7E57C2 */
+  --chart-4: 14 89% 52%; /* #F4511E */
+  --chart-5: 199 88% 57%; /* #29B6F6 */
+
+  /* Sidebar in dark mode */
+  --sidebar: 215 15% 12%; /* #161B22 */
+  --sidebar-foreground: 213 31% 91%; /* #E6EDF3 */
+  --sidebar-primary: 215 100% 67%; /* #58A6FF */
+  --sidebar-primary-foreground: 213 31% 91%;
+  --sidebar-accent: 215 28% 7%; /* #0D1117 */
+  --sidebar-accent-foreground: 213 31% 91%;
+  --sidebar-border: 215 15% 21%; /* #30363D */
+  --sidebar-ring: 215 100% 67%;
+
+  /* UI Surface variants (dark mode specific) */
+  --ui-sidebar-bg: 215 15% 14%; /* #23262f approximation */
+  --ui-surface-elevated: 215 15% 17%; /* #2a2d3a approximation */
+  --ui-surface-hover: 215 15% 20%; /* #353845 approximation */
 }
 
 @layer base {
@@ -118,5 +196,27 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  /* Add subtle shadows for depth in light mode */
+  .light .shadow-sm,
+  .shadow-sm {
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  }
+
+  .light .shadow,
+  .shadow {
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  }
+
+  /* Dark mode keeps default shadows */
+  .dark .shadow-sm {
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  }
+
+  .dark .shadow {
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.4);
   }
 }

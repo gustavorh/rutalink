@@ -29,19 +29,19 @@ export function DaySchedule({
         <div className="text-white font-medium">
           {day}, {date}
         </div>
-        <span className="text-xs text-slate-400">
+        <span className="text-xs text-muted-foreground">
           {totalTransfers} traslados
         </span>
       </div>
       {isExpanded ? (
         <div className="space-y-2">
           {items.map((item, index) => (
-            <div key={index} className="bg-[#2a2d3a] rounded p-2 text-xs">
+            <div key={index} className="bg-ui-surface-elevated rounded p-2 text-xs">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-slate-300">
+                <span className="text-foreground">
                   {item.time} - {item.route}
                 </span>
-                <span className="text-purple-400">{item.vehicle}</span>
+                <span className="text-secondary">{item.vehicle}</span>
               </div>
               <div className="text-slate-500">
                 {item.cargo} - Cliente: {item.client}

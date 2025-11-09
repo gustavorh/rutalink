@@ -272,8 +272,8 @@ export default function TrucksPage() {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#2a2d3a]">
-        <p className="text-slate-300">Cargando...</p>
+      <div className="min-h-screen flex items-center justify-center bg-ui-surface-elevated">
+        <p className="text-foreground">Cargando...</p>
       </div>
     );
   }
@@ -299,17 +299,17 @@ export default function TrucksPage() {
         {/* Page Header with Stats */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-slate-100 flex items-center gap-2">
-              <TruckIcon className="w-6 h-6 text-blue-400" />
+            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+              <TruckIcon className="w-6 h-6 text-primary" />
               Mantenedor de Camiones
             </h1>
-            <p className="text-slate-400 mt-1">
+            <p className="text-muted-foreground mt-1">
               Gestión de flota de camiones y documentación
             </p>
           </div>
           <Button
             onClick={handleCreateClick}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
+            className="bg-primary hover:bg-primary-dark text-white"
           >
             <Plus className="mr-2 h-4 w-4" />
             Nuevo Camión
@@ -318,71 +318,73 @@ export default function TrucksPage() {
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-[#23262f] border-slate-700">
+          <Card className="bg-card border-border">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-slate-400">
+                  <p className="text-xs font-medium text-muted-foreground">
                     Total Camiones
                   </p>
-                  <p className="text-2xl font-bold text-slate-100 mt-1">
+                  <p className="text-2xl font-bold text-foreground mt-1">
                     {total}
                   </p>
                 </div>
-                <div className="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center">
-                  <TruckIcon className="w-6 h-6 text-blue-400" />
+                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                  <TruckIcon className="w-6 h-6 text-primary" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-[#23262f] border-slate-700">
+          <Card className="bg-card border-border">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-slate-400">Activos</p>
-                  <p className="text-2xl font-bold text-slate-100 mt-1">
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Activos
+                  </p>
+                  <p className="text-2xl font-bold text-foreground mt-1">
                     {activeTrucks}
                   </p>
                 </div>
-                <div className="w-12 h-12 bg-green-500/10 rounded-lg flex items-center justify-center">
-                  <CheckCircle className="w-6 h-6 text-green-400" />
+                <div className="w-12 h-12 bg-success/10 rounded-lg flex items-center justify-center">
+                  <CheckCircle className="w-6 h-6 text-success" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-[#23262f] border-slate-700">
+          <Card className="bg-card border-border">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-slate-400">
+                  <p className="text-xs font-medium text-muted-foreground">
                     En Mantenimiento
                   </p>
-                  <p className="text-2xl font-bold text-yellow-400 mt-1">
+                  <p className="text-2xl font-bold text-warning mt-1">
                     {inMaintenanceTrucks}
                   </p>
                 </div>
-                <div className="w-12 h-12 bg-yellow-500/10 rounded-lg flex items-center justify-center">
-                  <Wrench className="w-6 h-6 text-yellow-400" />
+                <div className="w-12 h-12 bg-warning/10 rounded-lg flex items-center justify-center">
+                  <Wrench className="w-6 h-6 text-warning" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-[#23262f] border-slate-700">
+          <Card className="bg-card border-border">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-slate-400">
+                  <p className="text-xs font-medium text-muted-foreground">
                     Operaciones Próximas
                   </p>
-                  <p className="text-2xl font-bold text-slate-100 mt-1">
+                  <p className="text-2xl font-bold text-foreground mt-1">
                     {totalUpcomingOperations}
                   </p>
                 </div>
-                <div className="w-12 h-12 bg-purple-500/10 rounded-lg flex items-center justify-center">
-                  <Clock className="w-6 h-6 text-purple-400" />
+                <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center">
+                  <Clock className="w-6 h-6 text-secondary" />
                 </div>
               </div>
             </CardContent>
@@ -390,14 +392,14 @@ export default function TrucksPage() {
         </div>
 
         {/* Filters Card */}
-        <Card className="bg-[#23262f] border-slate-700">
+        <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle className="text-slate-100 flex items-center gap-2">
-                <Filter className="w-5 h-5 text-blue-400" />
+              <CardTitle className="text-foreground flex items-center gap-2">
+                <Filter className="w-5 h-5 text-primary" />
                 Filtros de Búsqueda
               </CardTitle>
-              <CardDescription className="text-slate-400">
+              <CardDescription className="text-muted-foreground">
                 Filtra y busca camiones según tus criterios
               </CardDescription>
             </div>
@@ -405,7 +407,7 @@ export default function TrucksPage() {
               variant="outline"
               size="sm"
               onClick={() => setShowFilters(!showFilters)}
-              className="border-slate-600 text-slate-300 hover:bg-[#2a2d3a]"
+              className="border-border text-foreground hover:bg-ui-surface-elevated"
             >
               {showFilters ? "Ocultar" : "Mostrar"} Filtros
             </Button>
@@ -415,18 +417,18 @@ export default function TrucksPage() {
               {/* Search Bar - Always Visible */}
               <div className="flex gap-2">
                 <div className="relative flex-1">
-                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Buscar por patente, marca, modelo..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                    className="pl-10 bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-blue-500"
+                    className="pl-10 bg-ui-surface-elevated border-border text-foreground placeholder-muted-foreground focus:border-primary"
                   />
                 </div>
                 <Button
                   onClick={handleSearch}
-                  className="bg-blue-600 hover:bg-blue-700"
+                  className="bg-primary hover:bg-primary-dark"
                 >
                   Buscar
                 </Button>
@@ -434,16 +436,16 @@ export default function TrucksPage() {
 
               {/* Additional Filters */}
               {showFilters && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-slate-700">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-border">
                   <div>
-                    <label className="text-xs font-medium text-slate-400 mb-2 block">
+                    <label className="text-xs font-medium text-muted-foreground mb-2 block">
                       Estado
                     </label>
                     <Select
                       value={statusFilter}
                       onValueChange={setStatusFilter}
                     >
-                      <SelectTrigger className="bg-[#2a2d3a] border-slate-600 text-slate-300">
+                      <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground">
                         <SelectValue placeholder="Estado" />
                       </SelectTrigger>
                       <SelectContent>
@@ -455,14 +457,14 @@ export default function TrucksPage() {
                   </div>
 
                   <div>
-                    <label className="text-xs font-medium text-slate-400 mb-2 block">
+                    <label className="text-xs font-medium text-muted-foreground mb-2 block">
                       Tipo de Vehículo
                     </label>
                     <Select
                       value={vehicleTypeFilter}
                       onValueChange={setVehicleTypeFilter}
                     >
-                      <SelectTrigger className="bg-[#2a2d3a] border-slate-600 text-slate-300">
+                      <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground">
                         <SelectValue placeholder="Tipo" />
                       </SelectTrigger>
                       <SelectContent>
@@ -477,14 +479,14 @@ export default function TrucksPage() {
                   </div>
 
                   <div>
-                    <label className="text-xs font-medium text-slate-400 mb-2 block">
+                    <label className="text-xs font-medium text-muted-foreground mb-2 block">
                       Estado Operativo
                     </label>
                     <Select
                       value={operationalStatusFilter}
                       onValueChange={setOperationalStatusFilter}
                     >
-                      <SelectTrigger className="bg-[#2a2d3a] border-slate-600 text-slate-300">
+                      <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground">
                         <SelectValue placeholder="Estado Operativo" />
                       </SelectTrigger>
                       <SelectContent>
@@ -504,14 +506,14 @@ export default function TrucksPage() {
         </Card>
 
         {/* Trucks Table */}
-        <Card className="bg-[#23262f] border-slate-700">
+        <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle className="text-slate-100 flex items-center gap-2">
-                <FileText className="w-5 h-5 text-blue-400" />
+              <CardTitle className="text-foreground flex items-center gap-2">
+                <FileText className="w-5 h-5 text-primary" />
                 Listado de Camiones
               </CardTitle>
-              <CardDescription className="text-slate-400">
+              <CardDescription className="text-muted-foreground">
                 Total de {total} camiones registrados
               </CardDescription>
             </div>
@@ -519,7 +521,7 @@ export default function TrucksPage() {
               <Button
                 variant="outline"
                 size="sm"
-                className="border-slate-600 text-slate-300 hover:bg-[#2a2d3a]"
+                className="border-border text-foreground hover:bg-ui-surface-elevated"
                 onClick={() => {
                   /* TODO: Implement export functionality */
                 }}
@@ -533,20 +535,24 @@ export default function TrucksPage() {
             {loading ? (
               <div className="text-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-                <p className="text-slate-400 mt-4">Cargando camiones...</p>
+                <p className="text-muted-foreground mt-4">
+                  Cargando camiones...
+                </p>
               </div>
             ) : error ? (
               <div className="text-center py-12">
-                <AlertTriangle className="w-12 h-12 text-red-400 mx-auto mb-4" />
-                <p className="text-red-400">{error}</p>
+                <AlertTriangle className="w-12 h-12 text-destructive mx-auto mb-4" />
+                <p className="text-destructive">{error}</p>
               </div>
             ) : trucks.length === 0 ? (
               <div className="text-center py-12">
                 <TruckIcon className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                <p className="text-slate-500">No se encontraron camiones</p>
+                <p className="text-muted-foreground">
+                  No se encontraron camiones
+                </p>
                 <Button
                   onClick={handleCreateClick}
-                  className="mt-4 bg-blue-600 hover:bg-blue-700"
+                  className="mt-4 bg-primary hover:bg-primary-dark"
                 >
                   <Plus className="mr-2 h-4 w-4" />
                   Agregar Primer Camión
@@ -557,26 +563,32 @@ export default function TrucksPage() {
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
-                      <TableRow className="border-b border-slate-700 hover:bg-transparent">
-                        <TableHead className="text-slate-400">
+                      <TableRow className="border-b border-border hover:bg-transparent">
+                        <TableHead className="text-muted-foreground">
                           Patente
                         </TableHead>
-                        <TableHead className="text-slate-400">
+                        <TableHead className="text-muted-foreground">
                           Marca / Modelo
                         </TableHead>
-                        <TableHead className="text-slate-400">Año</TableHead>
-                        <TableHead className="text-slate-400">Tipo</TableHead>
-                        <TableHead className="text-slate-400">
+                        <TableHead className="text-muted-foreground">
+                          Año
+                        </TableHead>
+                        <TableHead className="text-muted-foreground">
+                          Tipo
+                        </TableHead>
+                        <TableHead className="text-muted-foreground">
                           Capacidad
                         </TableHead>
-                        <TableHead className="text-slate-400">
+                        <TableHead className="text-muted-foreground">
                           Estado Operativo
                         </TableHead>
-                        <TableHead className="text-slate-400">
+                        <TableHead className="text-muted-foreground">
                           Operaciones
                         </TableHead>
-                        <TableHead className="text-slate-400">Estado</TableHead>
-                        <TableHead className="text-right text-slate-400">
+                        <TableHead className="text-muted-foreground">
+                          Estado
+                        </TableHead>
+                        <TableHead className="text-right text-muted-foreground">
                           Acciones
                         </TableHead>
                       </TableRow>
@@ -589,33 +601,33 @@ export default function TrucksPage() {
                         return (
                           <TableRow
                             key={truck.id}
-                            className="border-b border-slate-700 hover:bg-[#2a2d3a]"
+                            className="border-b border-border hover:bg-ui-surface-elevated"
                           >
-                            <TableCell className="font-mono text-sm text-slate-300 font-bold">
+                            <TableCell className="font-mono text-sm text-foreground font-bold">
                               {truck.plateNumber}
                             </TableCell>
                             <TableCell>
                               <div>
-                                <div className="font-medium text-slate-200">
+                                <div className="font-medium text-foreground">
                                   {truck.brand || "N/A"}
                                 </div>
-                                <div className="text-xs text-slate-500 mt-1">
+                                <div className="text-xs text-muted-foreground mt-1">
                                   {truck.model || "Sin modelo"}
                                 </div>
                               </div>
                             </TableCell>
-                            <TableCell className="text-slate-300">
+                            <TableCell className="text-foreground">
                               {truck.year || "N/A"}
                             </TableCell>
                             <TableCell>
                               <Badge
                                 variant="outline"
-                                className="border-blue-500/50 text-blue-400"
+                                className="border-primary/50 text-primary"
                               >
                                 {getVehicleTypeLabel(truck.vehicleType)}
                               </Badge>
                             </TableCell>
-                            <TableCell className="text-slate-300">
+                            <TableCell className="text-foreground">
                               {truck.capacity
                                 ? `${truck.capacity} ${
                                     truck.capacityUnit || ""
@@ -625,16 +637,16 @@ export default function TrucksPage() {
                             <TableCell>
                               <div className="flex items-center gap-2">
                                 {opStatus.color === "green" && (
-                                  <CheckCircle className="w-4 h-4 text-green-400" />
+                                  <CheckCircle className="w-4 h-4 text-success" />
                                 )}
                                 {opStatus.color === "yellow" && (
-                                  <Wrench className="w-4 h-4 text-yellow-400" />
+                                  <Wrench className="w-4 h-4 text-warning" />
                                 )}
                                 {opStatus.color === "red" && (
-                                  <XCircle className="w-4 h-4 text-red-400" />
+                                  <XCircle className="w-4 h-4 text-destructive" />
                                 )}
                                 {opStatus.color === "blue" && (
-                                  <Clock className="w-4 h-4 text-blue-400" />
+                                  <Clock className="w-4 h-4 text-primary" />
                                 )}
                                 <Badge
                                   variant="outline"
@@ -646,10 +658,10 @@ export default function TrucksPage() {
                             </TableCell>
                             <TableCell>
                               <div className="text-sm space-y-1">
-                                <div className="text-slate-300">
+                                <div className="text-foreground">
                                   Total: {truck.totalOperations || 0}
                                 </div>
-                                <div className="text-slate-500">
+                                <div className="text-muted-foreground">
                                   Próximas: {truck.upcomingOperations || 0}
                                 </div>
                               </div>
@@ -659,8 +671,8 @@ export default function TrucksPage() {
                                 variant={truck.status ? "default" : "outline"}
                                 className={
                                   truck.status
-                                    ? "bg-green-500/10 text-green-400 border-green-500/50"
-                                    : "border-slate-500/50 text-slate-500"
+                                    ? "bg-success/10 text-success border-success/50"
+                                    : "border-slate-500/50 text-muted-foreground"
                                 }
                               >
                                 {truck.status ? "Activo" : "Inactivo"}
@@ -674,7 +686,7 @@ export default function TrucksPage() {
                                   onClick={() =>
                                     router.push(`/dashboard/trucks/${truck.id}`)
                                   }
-                                  className="text-slate-400 hover:text-blue-400 hover:bg-blue-500/10"
+                                  className="text-muted-foreground hover:text-primary hover:bg-primary/10"
                                   title="Ver detalles"
                                 >
                                   <Eye className="h-4 w-4" />
@@ -683,7 +695,7 @@ export default function TrucksPage() {
                                   variant="ghost"
                                   size="icon"
                                   onClick={() => handleEditClick(truck)}
-                                  className="text-slate-400 hover:text-blue-400 hover:bg-blue-500/10"
+                                  className="text-muted-foreground hover:text-primary hover:bg-primary/10"
                                   title="Editar"
                                 >
                                   <Edit className="h-4 w-4" />
@@ -692,7 +704,7 @@ export default function TrucksPage() {
                                   variant="ghost"
                                   size="icon"
                                   onClick={() => handleDeleteClick(truck)}
-                                  className="text-slate-400 hover:text-red-400 hover:bg-red-500/10"
+                                  className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                                   title="Eliminar"
                                 >
                                   <Trash2 className="h-4 w-4" />
@@ -707,8 +719,8 @@ export default function TrucksPage() {
                 </div>
 
                 {/* Pagination */}
-                <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-700">
-                  <p className="text-sm text-slate-400">
+                <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
+                  <p className="text-sm text-muted-foreground">
                     Mostrando {(page - 1) * limit + 1} a{" "}
                     {Math.min(page * limit, total)} de {total} camiones
                   </p>
@@ -717,7 +729,7 @@ export default function TrucksPage() {
                       variant="outline"
                       onClick={() => setPage(page - 1)}
                       disabled={page === 1}
-                      className="border-slate-600 text-slate-300 hover:bg-[#2a2d3a] disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="border-border text-foreground hover:bg-ui-surface-elevated disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Anterior
                     </Button>
@@ -731,15 +743,17 @@ export default function TrucksPage() {
                       .map((p, index, array) => (
                         <div key={p} className="flex items-center">
                           {index > 0 && array[index - 1] !== p - 1 && (
-                            <span className="text-slate-500 px-2">...</span>
+                            <span className="text-muted-foreground px-2">
+                              ...
+                            </span>
                           )}
                           <Button
                             variant={p === page ? "default" : "outline"}
                             onClick={() => setPage(p)}
                             className={
                               p === page
-                                ? "bg-blue-600 hover:bg-blue-700 text-white"
-                                : "border-slate-600 text-slate-300 hover:bg-[#2a2d3a]"
+                                ? "bg-primary hover:bg-primary-dark text-white"
+                                : "border-border text-foreground hover:bg-ui-surface-elevated"
                             }
                           >
                             {p}
@@ -750,7 +764,7 @@ export default function TrucksPage() {
                       variant="outline"
                       onClick={() => setPage(page + 1)}
                       disabled={page === totalPages}
-                      className="border-slate-600 text-slate-300 hover:bg-[#2a2d3a] disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="border-border text-foreground hover:bg-ui-surface-elevated disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Siguiente
                     </Button>
@@ -764,14 +778,14 @@ export default function TrucksPage() {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="bg-[#23262f] border-slate-700">
+        <DialogContent className="bg-card border-border">
           <DialogHeader>
-            <DialogTitle className="text-slate-100">
+            <DialogTitle className="text-foreground">
               Confirmar Eliminación
             </DialogTitle>
-            <DialogDescription className="text-slate-400">
+            <DialogDescription className="text-muted-foreground">
               ¿Estás seguro de que deseas eliminar el camión{" "}
-              <strong className="text-slate-200">
+              <strong className="text-foreground">
                 {truckToDelete?.plateNumber}
               </strong>
               ? Esta acción no se puede deshacer.
@@ -781,7 +795,7 @@ export default function TrucksPage() {
             <Button
               variant="outline"
               onClick={() => setDeleteDialogOpen(false)}
-              className="border-slate-600 text-slate-300 hover:bg-[#2a2d3a]"
+              className="border-border text-foreground hover:bg-ui-surface-elevated"
             >
               Cancelar
             </Button>
@@ -806,12 +820,12 @@ export default function TrucksPage() {
           }
         }}
       >
-        <DialogContent className="bg-[#23262f] border-slate-700 max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="bg-card border-border max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-slate-100">
+            <DialogTitle className="text-foreground">
               {editDialogOpen ? "Editar Camión" : "Nuevo Camión"}
             </DialogTitle>
-            <DialogDescription className="text-slate-400">
+            <DialogDescription className="text-muted-foreground">
               {editDialogOpen
                 ? "Actualiza la información del camión"
                 : "Completa los datos del nuevo camión"}
@@ -820,14 +834,14 @@ export default function TrucksPage() {
           <form onSubmit={handleFormSubmit} className="space-y-4">
             {/* Basic Information */}
             <div className="space-y-4">
-              <h3 className="text-sm font-medium text-slate-300 border-b border-slate-700 pb-2">
+              <h3 className="text-sm font-medium text-foreground border-b border-border pb-2">
                 Información del Camión
               </h3>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="plateNumber" className="text-slate-300">
-                    Patente <span className="text-red-400">*</span>
+                  <Label htmlFor="plateNumber" className="text-foreground">
+                    Patente <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="plateNumber"
@@ -837,13 +851,13 @@ export default function TrucksPage() {
                     }
                     placeholder="AB-1234"
                     required
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1"
+                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="vehicleType" className="text-slate-300">
-                    Tipo de Vehículo <span className="text-red-400">*</span>
+                  <Label htmlFor="vehicleType" className="text-foreground">
+                    Tipo de Vehículo <span className="text-destructive">*</span>
                   </Label>
                   <Select
                     value={formData.vehicleType}
@@ -851,7 +865,7 @@ export default function TrucksPage() {
                       handleChange("vehicleType", value as VehicleType)
                     }
                   >
-                    <SelectTrigger className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1">
+                    <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground mt-1">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -865,7 +879,7 @@ export default function TrucksPage() {
                 </div>
 
                 <div>
-                  <Label htmlFor="brand" className="text-slate-300">
+                  <Label htmlFor="brand" className="text-foreground">
                     Marca
                   </Label>
                   <Input
@@ -873,12 +887,12 @@ export default function TrucksPage() {
                     value={formData.brand}
                     onChange={(e) => handleChange("brand", e.target.value)}
                     placeholder="Mercedes-Benz, Volvo, etc."
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1"
+                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="model" className="text-slate-300">
+                  <Label htmlFor="model" className="text-foreground">
                     Modelo
                   </Label>
                   <Input
@@ -886,12 +900,12 @@ export default function TrucksPage() {
                     value={formData.model}
                     onChange={(e) => handleChange("model", e.target.value)}
                     placeholder="Actros, FH16, etc."
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1"
+                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="year" className="text-slate-300">
+                  <Label htmlFor="year" className="text-foreground">
                     Año
                   </Label>
                   <Input
@@ -906,12 +920,12 @@ export default function TrucksPage() {
                     }
                     min="1900"
                     max={new Date().getFullYear() + 1}
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1"
+                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="color" className="text-slate-300">
+                  <Label htmlFor="color" className="text-foreground">
                     Color
                   </Label>
                   <Input
@@ -919,12 +933,12 @@ export default function TrucksPage() {
                     value={formData.color}
                     onChange={(e) => handleChange("color", e.target.value)}
                     placeholder="Blanco, Rojo, etc."
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1"
+                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="capacity" className="text-slate-300">
+                  <Label htmlFor="capacity" className="text-foreground">
                     Capacidad
                   </Label>
                   <Input
@@ -939,12 +953,12 @@ export default function TrucksPage() {
                     }
                     min="0"
                     placeholder="20"
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1"
+                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="capacityUnit" className="text-slate-300">
+                  <Label htmlFor="capacityUnit" className="text-foreground">
                     Unidad de Capacidad
                   </Label>
                   <Select
@@ -953,7 +967,7 @@ export default function TrucksPage() {
                       handleChange("capacityUnit", value as CapacityUnit)
                     }
                   >
-                    <SelectTrigger className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1">
+                    <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground mt-1">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -967,7 +981,7 @@ export default function TrucksPage() {
                 </div>
 
                 <div className="col-span-2">
-                  <Label htmlFor="vin" className="text-slate-300">
+                  <Label htmlFor="vin" className="text-foreground">
                     VIN (Número de Identificación)
                   </Label>
                   <Input
@@ -978,12 +992,12 @@ export default function TrucksPage() {
                     }
                     placeholder="1HGBH41JXMN109186"
                     maxLength={50}
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1"
+                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
                   />
                 </div>
 
                 <div className="col-span-2">
-                  <Label htmlFor="notes" className="text-slate-300">
+                  <Label htmlFor="notes" className="text-foreground">
                     Notas
                   </Label>
                   <Textarea
@@ -992,7 +1006,7 @@ export default function TrucksPage() {
                     onChange={(e) => handleChange("notes", e.target.value)}
                     placeholder="Información adicional sobre el camión..."
                     rows={4}
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1"
+                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
                   />
                 </div>
 
@@ -1003,11 +1017,11 @@ export default function TrucksPage() {
                       id="status"
                       checked={formData.status}
                       onChange={(e) => handleChange("status", e.target.checked)}
-                      className="rounded border-slate-600 bg-[#2a2d3a] text-blue-600 focus:ring-blue-500"
+                      className="rounded border-border bg-ui-surface-elevated text-primary focus:ring-blue-500"
                     />
                     <Label
                       htmlFor="status"
-                      className="text-slate-300 cursor-pointer"
+                      className="text-foreground cursor-pointer"
                     >
                       Camión Activo
                     </Label>
@@ -1025,7 +1039,7 @@ export default function TrucksPage() {
                   setEditDialogOpen(false);
                   setTruckToEdit(null);
                 }}
-                className="border-slate-600 text-slate-300 hover:bg-[#2a2d3a]"
+                className="border-border text-foreground hover:bg-ui-surface-elevated"
                 disabled={formLoading}
               >
                 Cancelar
@@ -1033,7 +1047,7 @@ export default function TrucksPage() {
               <Button
                 type="submit"
                 disabled={formLoading || !formData.plateNumber}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
+                className="bg-primary hover:bg-primary-dark text-white"
               >
                 {formLoading ? (
                   <>

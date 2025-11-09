@@ -18,8 +18,8 @@ export default function MaintenancePage() {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#2a2d3a]">
-        <p className="text-slate-300">Cargando...</p>
+      <div className="min-h-screen flex items-center justify-center bg-ui-surface-elevated">
+        <p className="text-foreground">Cargando...</p>
       </div>
     );
   }
@@ -32,8 +32,8 @@ export default function MaintenancePage() {
   return (
     <main className="flex-1 overflow-y-auto p-6">
       <div className="max-w-[1400px] mx-auto space-y-6">
-        <h1 className="text-2xl font-bold text-slate-100">Mantención</h1>
-        <p className="text-slate-400">Página en construcción...</p>
+        <h1 className="text-2xl font-bold text-foreground">Mantención</h1>
+        <p className="text-muted-foreground">Página en construcción...</p>
       </div>
     </main>
   );

@@ -180,8 +180,8 @@ export default function DriverFormPage() {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#2a2d3a]">
-        <p className="text-slate-300">Cargando...</p>
+      <div className="min-h-screen flex items-center justify-center bg-ui-surface-elevated">
+        <p className="text-foreground">Cargando...</p>
       </div>
     );
   }
@@ -200,16 +200,16 @@ export default function DriverFormPage() {
             variant="outline"
             size="icon"
             onClick={() => router.push("/dashboard/drivers")}
-            className="border-slate-600 text-slate-300 hover:bg-[#23262f]"
+            className="border-border text-foreground hover:bg-card"
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-slate-100 flex items-center gap-2">
-              <UserPlus className="w-6 h-6 text-purple-400" />
+            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+              <UserPlus className="w-6 h-6 text-secondary" />
               {isEdit ? "Editar Chofer" : "Nuevo Chofer"}
             </h1>
-            <p className="text-slate-400 mt-1">
+            <p className="text-muted-foreground mt-1">
               {isEdit
                 ? "Actualiza la información del chofer"
                 : "Registra un nuevo chofer en el sistema"}
@@ -218,11 +218,11 @@ export default function DriverFormPage() {
         </div>
 
         {error && (
-          <Card className="bg-red-500/10 border-red-500/50">
+          <Card className="bg-destructive/10 border-destructive/50">
             <CardContent className="pt-6">
               <div className="flex items-center gap-2">
-                <AlertCircle className="h-5 w-5 text-red-400" />
-                <p className="text-red-400">{error}</p>
+                <AlertCircle className="h-5 w-5 text-destructive" />
+                <p className="text-destructive">{error}</p>
               </div>
             </CardContent>
           </Card>
@@ -230,19 +230,19 @@ export default function DriverFormPage() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Personal Information */}
-          <Card className="bg-[#23262f] border-slate-700">
+          <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="text-slate-100">
+              <CardTitle className="text-foreground">
                 Información Personal
               </CardTitle>
-              <CardDescription className="text-slate-400">
+              <CardDescription className="text-muted-foreground">
                 Datos básicos del chofer
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="rut" className="text-slate-300">
+                  <Label htmlFor="rut" className="text-foreground">
                     RUT *
                   </Label>
                   <Input
@@ -252,11 +252,11 @@ export default function DriverFormPage() {
                     placeholder="12.345.678-9"
                     required
                     disabled={isEdit}
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
+                    className="bg-ui-surface-elevated border-border text-foreground placeholder-muted-foreground focus:border-purple-500"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="firstName" className="text-slate-300">
+                  <Label htmlFor="firstName" className="text-foreground">
                     Nombre *
                   </Label>
                   <Input
@@ -264,11 +264,11 @@ export default function DriverFormPage() {
                     value={formData.firstName}
                     onChange={(e) => handleChange("firstName", e.target.value)}
                     required
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
+                    className="bg-ui-surface-elevated border-border text-foreground placeholder-muted-foreground focus:border-purple-500"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="lastName" className="text-slate-300">
+                  <Label htmlFor="lastName" className="text-foreground">
                     Apellido *
                   </Label>
                   <Input
@@ -276,11 +276,11 @@ export default function DriverFormPage() {
                     value={formData.lastName}
                     onChange={(e) => handleChange("lastName", e.target.value)}
                     required
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
+                    className="bg-ui-surface-elevated border-border text-foreground placeholder-muted-foreground focus:border-purple-500"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="dateOfBirth" className="text-slate-300">
+                  <Label htmlFor="dateOfBirth" className="text-foreground">
                     Fecha de Nacimiento
                   </Label>
                   <Input
@@ -290,11 +290,11 @@ export default function DriverFormPage() {
                     onChange={(e) =>
                       handleChange("dateOfBirth", e.target.value)
                     }
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
+                    className="bg-ui-surface-elevated border-border text-foreground placeholder-muted-foreground focus:border-purple-500"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-slate-300">
+                  <Label htmlFor="email" className="text-foreground">
                     Email
                   </Label>
                   <Input
@@ -302,55 +302,55 @@ export default function DriverFormPage() {
                     type="email"
                     value={formData.email}
                     onChange={(e) => handleChange("email", e.target.value)}
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
+                    className="bg-ui-surface-elevated border-border text-foreground placeholder-muted-foreground focus:border-purple-500"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="phone" className="text-slate-300">
+                  <Label htmlFor="phone" className="text-foreground">
                     Teléfono
                   </Label>
                   <Input
                     id="phone"
                     value={formData.phone}
                     onChange={(e) => handleChange("phone", e.target.value)}
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
+                    className="bg-ui-surface-elevated border-border text-foreground placeholder-muted-foreground focus:border-purple-500"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="address" className="text-slate-300">
+                <Label htmlFor="address" className="text-foreground">
                   Dirección
                 </Label>
                 <Input
                   id="address"
                   value={formData.address}
                   onChange={(e) => handleChange("address", e.target.value)}
-                  className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
+                  className="bg-ui-surface-elevated border-border text-foreground placeholder-muted-foreground focus:border-purple-500"
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="city" className="text-slate-300">
+                  <Label htmlFor="city" className="text-foreground">
                     Ciudad
                   </Label>
                   <Input
                     id="city"
                     value={formData.city}
                     onChange={(e) => handleChange("city", e.target.value)}
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
+                    className="bg-ui-surface-elevated border-border text-foreground placeholder-muted-foreground focus:border-purple-500"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="region" className="text-slate-300">
+                  <Label htmlFor="region" className="text-foreground">
                     Región
                   </Label>
                   <Input
                     id="region"
                     value={formData.region}
                     onChange={(e) => handleChange("region", e.target.value)}
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
+                    className="bg-ui-surface-elevated border-border text-foreground placeholder-muted-foreground focus:border-purple-500"
                   />
                 </div>
               </div>
@@ -358,19 +358,19 @@ export default function DriverFormPage() {
           </Card>
 
           {/* License Information */}
-          <Card className="bg-[#23262f] border-slate-700">
+          <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="text-slate-100">
+              <CardTitle className="text-foreground">
                 Información de Licencia
               </CardTitle>
-              <CardDescription className="text-slate-400">
+              <CardDescription className="text-muted-foreground">
                 Datos de la licencia de conducir
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="licenseType" className="text-slate-300">
+                  <Label htmlFor="licenseType" className="text-foreground">
                     Tipo de Licencia *
                   </Label>
                   <Select
@@ -379,7 +379,7 @@ export default function DriverFormPage() {
                       handleChange("licenseType", value)
                     }
                   >
-                    <SelectTrigger className="bg-[#2a2d3a] border-slate-600 text-slate-300">
+                    <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -392,7 +392,7 @@ export default function DriverFormPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="licenseNumber" className="text-slate-300">
+                  <Label htmlFor="licenseNumber" className="text-foreground">
                     Número de Licencia *
                   </Label>
                   <Input
@@ -402,13 +402,13 @@ export default function DriverFormPage() {
                       handleChange("licenseNumber", e.target.value)
                     }
                     required
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
+                    className="bg-ui-surface-elevated border-border text-foreground placeholder-muted-foreground focus:border-purple-500"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label
                     htmlFor="licenseExpirationDate"
-                    className="text-slate-300"
+                    className="text-foreground"
                   >
                     Fecha de Vencimiento *
                   </Label>
@@ -420,7 +420,7 @@ export default function DriverFormPage() {
                       handleChange("licenseExpirationDate", e.target.value)
                     }
                     required
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
+                    className="bg-ui-surface-elevated border-border text-foreground placeholder-muted-foreground focus:border-purple-500"
                   />
                 </div>
               </div>
@@ -428,12 +428,12 @@ export default function DriverFormPage() {
           </Card>
 
           {/* Emergency Contact */}
-          <Card className="bg-[#23262f] border-slate-700">
+          <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="text-slate-100">
+              <CardTitle className="text-foreground">
                 Contacto de Emergencia
               </CardTitle>
-              <CardDescription className="text-slate-400">
+              <CardDescription className="text-muted-foreground">
                 Información del contacto en caso de emergencia
               </CardDescription>
             </CardHeader>
@@ -442,7 +442,7 @@ export default function DriverFormPage() {
                 <div className="space-y-2">
                   <Label
                     htmlFor="emergencyContactName"
-                    className="text-slate-300"
+                    className="text-foreground"
                   >
                     Nombre
                   </Label>
@@ -452,13 +452,13 @@ export default function DriverFormPage() {
                     onChange={(e) =>
                       handleChange("emergencyContactName", e.target.value)
                     }
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
+                    className="bg-ui-surface-elevated border-border text-foreground placeholder-muted-foreground focus:border-purple-500"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label
                     htmlFor="emergencyContactPhone"
-                    className="text-slate-300"
+                    className="text-foreground"
                   >
                     Teléfono
                   </Label>
@@ -468,7 +468,7 @@ export default function DriverFormPage() {
                     onChange={(e) =>
                       handleChange("emergencyContactPhone", e.target.value)
                     }
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
+                    className="bg-ui-surface-elevated border-border text-foreground placeholder-muted-foreground focus:border-purple-500"
                   />
                 </div>
               </div>
@@ -476,19 +476,19 @@ export default function DriverFormPage() {
           </Card>
 
           {/* Additional Information */}
-          <Card className="bg-[#23262f] border-slate-700">
+          <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="text-slate-100">
+              <CardTitle className="text-foreground">
                 Información Adicional
               </CardTitle>
-              <CardDescription className="text-slate-400">
+              <CardDescription className="text-muted-foreground">
                 Estado y clasificación del chofer
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="status" className="text-slate-300">
+                  <Label htmlFor="status" className="text-foreground">
                     Estado
                   </Label>
                   <Select
@@ -497,7 +497,7 @@ export default function DriverFormPage() {
                       handleChange("status", value === "active")
                     }
                   >
-                    <SelectTrigger className="bg-[#2a2d3a] border-slate-600 text-slate-300">
+                    <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -507,7 +507,7 @@ export default function DriverFormPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="isExternal" className="text-slate-300">
+                  <Label htmlFor="isExternal" className="text-foreground">
                     Tipo de Chofer
                   </Label>
                   <Select
@@ -516,7 +516,7 @@ export default function DriverFormPage() {
                       handleChange("isExternal", value === "external")
                     }
                   >
-                    <SelectTrigger className="bg-[#2a2d3a] border-slate-600 text-slate-300">
+                    <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -529,7 +529,7 @@ export default function DriverFormPage() {
 
               {formData.isExternal && (
                 <div className="space-y-2">
-                  <Label htmlFor="externalCompany" className="text-slate-300">
+                  <Label htmlFor="externalCompany" className="text-foreground">
                     Empresa Externa
                   </Label>
                   <Input
@@ -539,13 +539,13 @@ export default function DriverFormPage() {
                       handleChange("externalCompany", e.target.value)
                     }
                     placeholder="Nombre de la empresa"
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
+                    className="bg-ui-surface-elevated border-border text-foreground placeholder-muted-foreground focus:border-purple-500"
                   />
                 </div>
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="notes" className="text-slate-300">
+                <Label htmlFor="notes" className="text-foreground">
                   Notas
                 </Label>
                 <Textarea
@@ -554,7 +554,7 @@ export default function DriverFormPage() {
                   onChange={(e) => handleChange("notes", e.target.value)}
                   rows={3}
                   placeholder="Información adicional sobre el chofer"
-                  className="bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-purple-500"
+                  className="bg-ui-surface-elevated border-border text-foreground placeholder-muted-foreground focus:border-purple-500"
                 />
               </div>
             </CardContent>
@@ -567,7 +567,7 @@ export default function DriverFormPage() {
               variant="outline"
               onClick={() => router.push("/dashboard/drivers")}
               disabled={loading}
-              className="border-slate-600 text-slate-300 hover:bg-[#23262f]"
+              className="border-border text-foreground hover:bg-card"
             >
               Cancelar
             </Button>

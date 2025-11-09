@@ -19,18 +19,20 @@ export function MetricCard({
   iconBgColor,
 }: MetricCardProps) {
   const trendColors = {
-    up: "text-green-400",
-    down: "text-red-400",
-    neutral: "text-slate-400",
+    up: "text-success",
+    down: "text-destructive",
+    neutral: "text-muted-foreground",
   };
 
   return (
-    <Card className="bg-[#23262f] border-slate-700">
+    <Card className="bg-card border-border dark:border-border">
       <CardContent className="p-6">
         <div className="flex items-start justify-between">
           <div>
-            <div className="text-3xl font-bold text-white mb-1">{value}</div>
-            <div className="text-sm text-slate-400">{label}</div>
+            <div className="text-3xl font-bold text-foreground mb-1">
+              {value}
+            </div>
+            <div className="text-sm text-muted-foreground">{label}</div>
             {trend && (
               <div className={`text-xs mt-1 ${trendColors[trendDirection]}`}>
                 {trend}

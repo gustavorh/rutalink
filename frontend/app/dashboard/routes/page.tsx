@@ -260,16 +260,16 @@ export default function RoutesPage() {
   };
 
   const getDifficultyColor = (difficulty?: string | null) => {
-    if (!difficulty) return "text-slate-500";
+    if (!difficulty) return "text-muted-foreground";
     switch (difficulty) {
       case "fácil":
-        return "text-green-400";
+        return "text-success";
       case "moderada":
-        return "text-yellow-400";
+        return "text-warning";
       case "difícil":
-        return "text-red-400";
+        return "text-destructive";
       default:
-        return "text-slate-500";
+        return "text-muted-foreground";
     }
   };
 
@@ -285,8 +285,8 @@ export default function RoutesPage() {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#2a2d3a]">
-        <p className="text-slate-300">Cargando...</p>
+      <div className="min-h-screen flex items-center justify-center bg-ui-surface-elevated">
+        <p className="text-foreground">Cargando...</p>
       </div>
     );
   }
@@ -318,17 +318,17 @@ export default function RoutesPage() {
         {/* Page Header with Stats */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-slate-100 flex items-center gap-2">
-              <RouteIcon className="w-6 h-6 text-blue-400" />
+            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+              <RouteIcon className="w-6 h-6 text-primary" />
               Mantenedor de Tramos y Rutas
             </h1>
-            <p className="text-slate-400 mt-1">
+            <p className="text-muted-foreground mt-1">
               Gestión de rutas estándar para optimización operativa
             </p>
           </div>
           <Button
             onClick={handleCreateClick}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
+            className="bg-primary hover:bg-primary-dark text-white"
           >
             <Plus className="mr-2 h-4 w-4" />
             Nueva Ruta
@@ -337,72 +337,72 @@ export default function RoutesPage() {
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-[#23262f] border-slate-700">
+          <Card className="bg-card border-border">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-slate-400">
+                  <p className="text-xs font-medium text-muted-foreground">
                     Total Rutas
                   </p>
-                  <p className="text-2xl font-bold text-slate-100 mt-1">
+                  <p className="text-2xl font-bold text-foreground mt-1">
                     {total}
                   </p>
                 </div>
-                <div className="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center">
-                  <RouteIcon className="w-6 h-6 text-blue-400" />
+                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                  <RouteIcon className="w-6 h-6 text-primary" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-[#23262f] border-slate-700">
+          <Card className="bg-card border-border">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-slate-400">
+                  <p className="text-xs font-medium text-muted-foreground">
                     Rutas Activas
                   </p>
-                  <p className="text-2xl font-bold text-slate-100 mt-1">
+                  <p className="text-2xl font-bold text-foreground mt-1">
                     {activeRoutes}
                   </p>
                 </div>
-                <div className="w-12 h-12 bg-green-500/10 rounded-lg flex items-center justify-center">
-                  <CheckCircle className="w-6 h-6 text-green-400" />
+                <div className="w-12 h-12 bg-success/10 rounded-lg flex items-center justify-center">
+                  <CheckCircle className="w-6 h-6 text-success" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-[#23262f] border-slate-700">
+          <Card className="bg-card border-border">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-slate-400">
+                  <p className="text-xs font-medium text-muted-foreground">
                     Distancia Promedio
                   </p>
-                  <p className="text-2xl font-bold text-slate-100 mt-1">
+                  <p className="text-2xl font-bold text-foreground mt-1">
                     {avgDistance > 0 ? `${avgDistance} km` : "N/A"}
                   </p>
                 </div>
-                <div className="w-12 h-12 bg-purple-500/10 rounded-lg flex items-center justify-center">
-                  <Navigation className="w-6 h-6 text-purple-400" />
+                <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center">
+                  <Navigation className="w-6 h-6 text-secondary" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-[#23262f] border-slate-700">
+          <Card className="bg-card border-border">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-slate-400">
+                  <p className="text-xs font-medium text-muted-foreground">
                     Tipo Principal
                   </p>
-                  <p className="text-sm font-bold text-slate-100 mt-1">
+                  <p className="text-sm font-bold text-foreground mt-1">
                     {topType ? getRouteTypeLabel(topType[0]) : "N/A"}
                   </p>
                   {topType && (
-                    <p className="text-xs text-slate-500 mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       {topType[1]} ruta{topType[1] !== 1 ? "s" : ""}
                     </p>
                   )}
@@ -416,14 +416,14 @@ export default function RoutesPage() {
         </div>
 
         {/* Filters Card */}
-        <Card className="bg-[#23262f] border-slate-700">
+        <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle className="text-slate-100 flex items-center gap-2">
-                <Filter className="w-5 h-5 text-blue-400" />
+              <CardTitle className="text-foreground flex items-center gap-2">
+                <Filter className="w-5 h-5 text-primary" />
                 Filtros de Búsqueda
               </CardTitle>
-              <CardDescription className="text-slate-400">
+              <CardDescription className="text-muted-foreground">
                 Filtra y busca rutas según tus criterios
               </CardDescription>
             </div>
@@ -431,7 +431,7 @@ export default function RoutesPage() {
               variant="outline"
               size="sm"
               onClick={() => setShowFilters(!showFilters)}
-              className="border-slate-600 text-slate-300 hover:bg-[#2a2d3a]"
+              className="border-border text-foreground hover:bg-ui-surface-elevated"
             >
               {showFilters ? "Ocultar" : "Mostrar"} Filtros
             </Button>
@@ -441,18 +441,18 @@ export default function RoutesPage() {
               {/* Search Bar - Always Visible */}
               <div className="flex gap-2">
                 <div className="relative flex-1">
-                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Buscar por nombre, código, origen o destino..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                    className="pl-10 bg-[#2a2d3a] border-slate-600 text-slate-300 placeholder-slate-500 focus:border-blue-500"
+                    className="pl-10 bg-ui-surface-elevated border-border text-foreground placeholder-muted-foreground focus:border-primary"
                   />
                 </div>
                 <Button
                   onClick={handleSearch}
-                  className="bg-blue-600 hover:bg-blue-700"
+                  className="bg-primary hover:bg-primary-dark"
                 >
                   Buscar
                 </Button>
@@ -460,16 +460,16 @@ export default function RoutesPage() {
 
               {/* Additional Filters */}
               {showFilters && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-slate-700">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-border">
                   <div>
-                    <label className="text-xs font-medium text-slate-400 mb-2 block">
+                    <label className="text-xs font-medium text-muted-foreground mb-2 block">
                       Estado
                     </label>
                     <Select
                       value={statusFilter}
                       onValueChange={setStatusFilter}
                     >
-                      <SelectTrigger className="bg-[#2a2d3a] border-slate-600 text-slate-300">
+                      <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground">
                         <SelectValue placeholder="Estado" />
                       </SelectTrigger>
                       <SelectContent>
@@ -481,14 +481,14 @@ export default function RoutesPage() {
                   </div>
 
                   <div>
-                    <label className="text-xs font-medium text-slate-400 mb-2 block">
+                    <label className="text-xs font-medium text-muted-foreground mb-2 block">
                       Tipo de Ruta
                     </label>
                     <Select
                       value={routeTypeFilter}
                       onValueChange={setRouteTypeFilter}
                     >
-                      <SelectTrigger className="bg-[#2a2d3a] border-slate-600 text-slate-300">
+                      <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground">
                         <SelectValue placeholder="Tipo de ruta" />
                       </SelectTrigger>
                       <SelectContent>
@@ -503,14 +503,14 @@ export default function RoutesPage() {
                   </div>
 
                   <div>
-                    <label className="text-xs font-medium text-slate-400 mb-2 block">
+                    <label className="text-xs font-medium text-muted-foreground mb-2 block">
                       Dificultad
                     </label>
                     <Select
                       value={difficultyFilter}
                       onValueChange={setDifficultyFilter}
                     >
-                      <SelectTrigger className="bg-[#2a2d3a] border-slate-600 text-slate-300">
+                      <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground">
                         <SelectValue placeholder="Dificultad" />
                       </SelectTrigger>
                       <SelectContent>
@@ -532,14 +532,14 @@ export default function RoutesPage() {
         </Card>
 
         {/* Routes Table */}
-        <Card className="bg-[#23262f] border-slate-700">
+        <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle className="text-slate-100 flex items-center gap-2">
-                <FileText className="w-5 h-5 text-blue-400" />
+              <CardTitle className="text-foreground flex items-center gap-2">
+                <FileText className="w-5 h-5 text-primary" />
                 Listado de Rutas
               </CardTitle>
-              <CardDescription className="text-slate-400">
+              <CardDescription className="text-muted-foreground">
                 Total de {total} rutas registradas
               </CardDescription>
             </div>
@@ -547,7 +547,7 @@ export default function RoutesPage() {
               <Button
                 variant="outline"
                 size="sm"
-                className="border-slate-600 text-slate-300 hover:bg-[#2a2d3a]"
+                className="border-border text-foreground hover:bg-ui-surface-elevated"
                 onClick={() => {
                   /* TODO: Implement export functionality */
                 }}
@@ -561,20 +561,20 @@ export default function RoutesPage() {
             {loading ? (
               <div className="text-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-                <p className="text-slate-400 mt-4">Cargando rutas...</p>
+                <p className="text-muted-foreground mt-4">Cargando rutas...</p>
               </div>
             ) : error ? (
               <div className="text-center py-12">
-                <AlertTriangle className="w-12 h-12 text-red-400 mx-auto mb-4" />
-                <p className="text-red-400">{error}</p>
+                <AlertTriangle className="w-12 h-12 text-destructive mx-auto mb-4" />
+                <p className="text-destructive">{error}</p>
               </div>
             ) : routes.length === 0 ? (
               <div className="text-center py-12">
                 <RouteIcon className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                <p className="text-slate-500">No se encontraron rutas</p>
+                <p className="text-muted-foreground">No se encontraron rutas</p>
                 <Button
                   onClick={handleCreateClick}
-                  className="mt-4 bg-blue-600 hover:bg-blue-700"
+                  className="mt-4 bg-primary hover:bg-primary-dark"
                 >
                   <Plus className="mr-2 h-4 w-4" />
                   Agregar Primera Ruta
@@ -585,26 +585,26 @@ export default function RoutesPage() {
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
-                      <TableRow className="border-b border-slate-700 hover:bg-transparent">
-                        <TableHead className="text-slate-400">
+                      <TableRow className="border-b border-border hover:bg-transparent">
+                        <TableHead className="text-muted-foreground">
                           Nombre / Código
                         </TableHead>
-                        <TableHead className="text-slate-400">
+                        <TableHead className="text-muted-foreground">
                           Origen → Destino
                         </TableHead>
-                        <TableHead className="text-slate-400">
+                        <TableHead className="text-muted-foreground">
                           Distancia
                         </TableHead>
-                        <TableHead className="text-slate-400">
+                        <TableHead className="text-muted-foreground">
                           Duración
                         </TableHead>
-                        <TableHead className="text-slate-400">Tipo</TableHead>
-                        <TableHead className="text-slate-400">
+                        <TableHead className="text-muted-foreground">Tipo</TableHead>
+                        <TableHead className="text-muted-foreground">
                           Dificultad
                         </TableHead>
-                        <TableHead className="text-slate-400">Peajes</TableHead>
-                        <TableHead className="text-slate-400">Estado</TableHead>
-                        <TableHead className="text-right text-slate-400">
+                        <TableHead className="text-muted-foreground">Peajes</TableHead>
+                        <TableHead className="text-muted-foreground">Estado</TableHead>
+                        <TableHead className="text-right text-muted-foreground">
                           Acciones
                         </TableHead>
                       </TableRow>
@@ -613,15 +613,15 @@ export default function RoutesPage() {
                       {routes.map((route) => (
                         <TableRow
                           key={route.id}
-                          className="border-b border-slate-700 hover:bg-[#2a2d3a]"
+                          className="border-b border-border hover:bg-ui-surface-elevated"
                         >
                           <TableCell>
                             <div>
-                              <div className="font-medium text-slate-200">
+                              <div className="font-medium text-foreground">
                                 {route.name}
                               </div>
                               {route.code && (
-                                <div className="text-xs text-slate-500 mt-1 font-mono">
+                                <div className="text-xs text-muted-foreground mt-1 font-mono">
                                   {route.code}
                                 </div>
                               )}
@@ -629,14 +629,14 @@ export default function RoutesPage() {
                           </TableCell>
                           <TableCell>
                             <div className="text-sm space-y-1">
-                              <div className="flex items-center gap-1 text-slate-300">
-                                <MapPin className="w-3 h-3 text-green-400" />
+                              <div className="flex items-center gap-1 text-foreground">
+                                <MapPin className="w-3 h-3 text-success" />
                                 <span className="truncate max-w-[150px]">
                                   {route.origin}
                                 </span>
                               </div>
-                              <div className="flex items-center gap-1 text-slate-400">
-                                <MapPin className="w-3 h-3 text-red-400" />
+                              <div className="flex items-center gap-1 text-muted-foreground">
+                                <MapPin className="w-3 h-3 text-destructive" />
                                 <span className="truncate max-w-[150px]">
                                   {route.destination}
                                 </span>
@@ -645,28 +645,28 @@ export default function RoutesPage() {
                           </TableCell>
                           <TableCell>
                             {route.distance ? (
-                              <div className="flex items-center gap-1 text-slate-300">
-                                <Navigation className="w-3 h-3 text-blue-400" />
+                              <div className="flex items-center gap-1 text-foreground">
+                                <Navigation className="w-3 h-3 text-primary" />
                                 <span className="font-medium">
                                   {route.distance} km
                                 </span>
                               </div>
                             ) : (
-                              <span className="text-slate-500 text-xs">
+                              <span className="text-muted-foreground text-xs">
                                 N/A
                               </span>
                             )}
                           </TableCell>
                           <TableCell>
                             {route.estimatedDuration ? (
-                              <div className="flex items-center gap-1 text-slate-300">
-                                <Clock className="w-3 h-3 text-purple-400" />
+                              <div className="flex items-center gap-1 text-foreground">
+                                <Clock className="w-3 h-3 text-secondary" />
                                 <span className="font-medium">
                                   {formatDuration(route.estimatedDuration)}
                                 </span>
                               </div>
                             ) : (
-                              <span className="text-slate-500 text-xs">
+                              <span className="text-muted-foreground text-xs">
                                 N/A
                               </span>
                             )}
@@ -675,12 +675,12 @@ export default function RoutesPage() {
                             {route.routeType ? (
                               <Badge
                                 variant="outline"
-                                className="border-blue-500/50 text-blue-400"
+                                className="border-primary/50 text-primary"
                               >
                                 {getRouteTypeLabel(route.routeType)}
                               </Badge>
                             ) : (
-                              <span className="text-slate-500 text-xs">
+                              <span className="text-muted-foreground text-xs">
                                 N/A
                               </span>
                             )}
@@ -695,7 +695,7 @@ export default function RoutesPage() {
                                 {getDifficultyLabel(route.difficulty)}
                               </span>
                             ) : (
-                              <span className="text-slate-500 text-xs">
+                              <span className="text-muted-foreground text-xs">
                                 N/A
                               </span>
                             )}
@@ -705,12 +705,12 @@ export default function RoutesPage() {
                               <div className="space-y-1">
                                 <Badge
                                   variant="outline"
-                                  className="border-yellow-500/50 text-yellow-400"
+                                  className="border-yellow-500/50 text-warning"
                                 >
                                   Sí
                                 </Badge>
                                 {route.estimatedTollCost && (
-                                  <div className="flex items-center gap-1 text-xs text-slate-400">
+                                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
                                     <DollarSign className="w-3 h-3" />$
                                     {route.estimatedTollCost}
                                   </div>
@@ -719,7 +719,7 @@ export default function RoutesPage() {
                             ) : (
                               <Badge
                                 variant="outline"
-                                className="border-slate-500/50 text-slate-500"
+                                className="border-slate-500/50 text-muted-foreground"
                               >
                                 No
                               </Badge>
@@ -730,8 +730,8 @@ export default function RoutesPage() {
                               variant={route.status ? "default" : "outline"}
                               className={
                                 route.status
-                                  ? "bg-green-500/10 text-green-400 border-green-500/50"
-                                  : "border-slate-500/50 text-slate-500"
+                                  ? "bg-success/10 text-success border-success/50"
+                                  : "border-slate-500/50 text-muted-foreground"
                               }
                             >
                               {route.status ? "Activa" : "Inactiva"}
@@ -745,7 +745,7 @@ export default function RoutesPage() {
                                 onClick={() =>
                                   router.push(`/dashboard/routes/${route.id}`)
                                 }
-                                className="text-slate-400 hover:text-blue-400 hover:bg-blue-500/10"
+                                className="text-muted-foreground hover:text-primary hover:bg-primary/10"
                                 title="Ver detalles"
                               >
                                 <Eye className="h-4 w-4" />
@@ -754,7 +754,7 @@ export default function RoutesPage() {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => handleEditClick(route)}
-                                className="text-slate-400 hover:text-purple-400 hover:bg-purple-500/10"
+                                className="text-muted-foreground hover:text-secondary hover:bg-secondary/10"
                                 title="Editar"
                               >
                                 <Edit className="h-4 w-4" />
@@ -763,7 +763,7 @@ export default function RoutesPage() {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => handleDeleteClick(route)}
-                                className="text-slate-400 hover:text-red-400 hover:bg-red-500/10"
+                                className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                                 title="Eliminar"
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -777,8 +777,8 @@ export default function RoutesPage() {
                 </div>
 
                 {/* Pagination */}
-                <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-700">
-                  <p className="text-sm text-slate-400">
+                <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
+                  <p className="text-sm text-muted-foreground">
                     Mostrando {(page - 1) * limit + 1} a{" "}
                     {Math.min(page * limit, total)} de {total} rutas
                   </p>
@@ -787,7 +787,7 @@ export default function RoutesPage() {
                       variant="outline"
                       onClick={() => setPage(page - 1)}
                       disabled={page === 1}
-                      className="border-slate-600 text-slate-300 hover:bg-[#2a2d3a] disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="border-border text-foreground hover:bg-ui-surface-elevated disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Anterior
                     </Button>
@@ -801,15 +801,15 @@ export default function RoutesPage() {
                       .map((p, index, array) => (
                         <div key={p} className="flex items-center">
                           {index > 0 && array[index - 1] !== p - 1 && (
-                            <span className="text-slate-500 px-2">...</span>
+                            <span className="text-muted-foreground px-2">...</span>
                           )}
                           <Button
                             variant={p === page ? "default" : "outline"}
                             onClick={() => setPage(p)}
                             className={
                               p === page
-                                ? "bg-blue-600 hover:bg-blue-700 text-white"
-                                : "border-slate-600 text-slate-300 hover:bg-[#2a2d3a]"
+                                ? "bg-primary hover:bg-primary-dark text-white"
+                                : "border-border text-foreground hover:bg-ui-surface-elevated"
                             }
                           >
                             {p}
@@ -820,7 +820,7 @@ export default function RoutesPage() {
                       variant="outline"
                       onClick={() => setPage(page + 1)}
                       disabled={page === totalPages}
-                      className="border-slate-600 text-slate-300 hover:bg-[#2a2d3a] disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="border-border text-foreground hover:bg-ui-surface-elevated disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Siguiente
                     </Button>
@@ -834,14 +834,14 @@ export default function RoutesPage() {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="bg-[#23262f] border-slate-700">
+        <DialogContent className="bg-card border-border">
           <DialogHeader>
-            <DialogTitle className="text-slate-100">
+            <DialogTitle className="text-foreground">
               Confirmar Eliminación
             </DialogTitle>
-            <DialogDescription className="text-slate-400">
+            <DialogDescription className="text-muted-foreground">
               ¿Estás seguro de que deseas eliminar la ruta{" "}
-              <strong className="text-slate-200">{routeToDelete?.name}</strong>?
+              <strong className="text-foreground">{routeToDelete?.name}</strong>?
               Esta acción no se puede deshacer y no podrá realizarse si la ruta
               está siendo usada en operaciones.
             </DialogDescription>
@@ -850,7 +850,7 @@ export default function RoutesPage() {
             <Button
               variant="outline"
               onClick={() => setDeleteDialogOpen(false)}
-              className="border-slate-600 text-slate-300 hover:bg-[#2a2d3a]"
+              className="border-border text-foreground hover:bg-ui-surface-elevated"
             >
               Cancelar
             </Button>
@@ -875,12 +875,12 @@ export default function RoutesPage() {
           }
         }}
       >
-        <DialogContent className="bg-[#23262f] border-slate-700 max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="bg-card border-border max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-slate-100">
+            <DialogTitle className="text-foreground">
               {editDialogOpen ? "Editar Ruta" : "Nueva Ruta"}
             </DialogTitle>
-            <DialogDescription className="text-slate-400">
+            <DialogDescription className="text-muted-foreground">
               {editDialogOpen
                 ? "Actualiza la información de la ruta"
                 : "Completa la información de la nueva ruta"}
@@ -889,13 +889,13 @@ export default function RoutesPage() {
           <form onSubmit={handleFormSubmit} className="space-y-4">
             {/* Basic Information */}
             <div className="space-y-4">
-              <h3 className="text-sm font-medium text-slate-300 border-b border-slate-700 pb-2">
+              <h3 className="text-sm font-medium text-foreground border-b border-border pb-2">
                 Información Básica
               </h3>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
-                  <Label htmlFor="name" className="text-slate-300">
+                  <Label htmlFor="name" className="text-foreground">
                     Nombre del Tramo *
                   </Label>
                   <Input
@@ -905,13 +905,13 @@ export default function RoutesPage() {
                       setFormData({ ...formData, name: e.target.value })
                     }
                     required
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1"
+                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
                     placeholder="Ej: Santiago - Valparaíso"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="code" className="text-slate-300">
+                  <Label htmlFor="code" className="text-foreground">
                     Código Interno
                   </Label>
                   <Input
@@ -920,13 +920,13 @@ export default function RoutesPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, code: e.target.value })
                     }
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1"
+                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
                     placeholder="Ej: STG-VAL-001"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="routeType" className="text-slate-300">
+                  <Label htmlFor="routeType" className="text-foreground">
                     Tipo de Ruta
                   </Label>
                   <Select
@@ -939,7 +939,7 @@ export default function RoutesPage() {
                       })
                     }
                   >
-                    <SelectTrigger className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1">
+                    <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground mt-1">
                       <SelectValue placeholder="Seleccionar tipo" />
                     </SelectTrigger>
                     <SelectContent>
@@ -956,13 +956,13 @@ export default function RoutesPage() {
 
             {/* Route Details */}
             <div className="space-y-4">
-              <h3 className="text-sm font-medium text-slate-300 border-b border-slate-700 pb-2">
+              <h3 className="text-sm font-medium text-foreground border-b border-border pb-2">
                 Detalles de la Ruta
               </h3>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
-                  <Label htmlFor="origin" className="text-slate-300">
+                  <Label htmlFor="origin" className="text-foreground">
                     Origen *
                   </Label>
                   <Input
@@ -972,13 +972,13 @@ export default function RoutesPage() {
                       setFormData({ ...formData, origin: e.target.value })
                     }
                     required
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1"
+                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
                     placeholder="Ej: Santiago, Región Metropolitana"
                   />
                 </div>
 
                 <div className="col-span-2">
-                  <Label htmlFor="destination" className="text-slate-300">
+                  <Label htmlFor="destination" className="text-foreground">
                     Destino *
                   </Label>
                   <Input
@@ -988,13 +988,13 @@ export default function RoutesPage() {
                       setFormData({ ...formData, destination: e.target.value })
                     }
                     required
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1"
+                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
                     placeholder="Ej: Valparaíso, Región de Valparaíso"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="distance" className="text-slate-300">
+                  <Label htmlFor="distance" className="text-foreground">
                     Distancia (km)
                   </Label>
                   <Input
@@ -1010,13 +1010,13 @@ export default function RoutesPage() {
                           : undefined,
                       })
                     }
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1"
+                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
                     placeholder="Ej: 120"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="estimatedDuration" className="text-slate-300">
+                  <Label htmlFor="estimatedDuration" className="text-foreground">
                     Duración Estimada (min)
                   </Label>
                   <Input
@@ -1032,13 +1032,13 @@ export default function RoutesPage() {
                           : undefined,
                       })
                     }
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1"
+                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
                     placeholder="Ej: 90"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="difficulty" className="text-slate-300">
+                  <Label htmlFor="difficulty" className="text-foreground">
                     Dificultad
                   </Label>
                   <Select
@@ -1051,7 +1051,7 @@ export default function RoutesPage() {
                       })
                     }
                   >
-                    <SelectTrigger className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1">
+                    <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground mt-1">
                       <SelectValue placeholder="Seleccionar dificultad" />
                     </SelectTrigger>
                     <SelectContent>
@@ -1065,7 +1065,7 @@ export default function RoutesPage() {
                 </div>
 
                 <div className="col-span-2">
-                  <Label htmlFor="roadConditions" className="text-slate-300">
+                  <Label htmlFor="roadConditions" className="text-foreground">
                     Condiciones del Camino
                   </Label>
                   <Input
@@ -1077,7 +1077,7 @@ export default function RoutesPage() {
                         roadConditions: e.target.value,
                       })
                     }
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1"
+                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
                     placeholder="Ej: Pavimentado, buen estado"
                   />
                 </div>
@@ -1086,7 +1086,7 @@ export default function RoutesPage() {
 
             {/* Toll Information */}
             <div className="space-y-4">
-              <h3 className="text-sm font-medium text-slate-300 border-b border-slate-700 pb-2">
+              <h3 className="text-sm font-medium text-foreground border-b border-border pb-2">
                 Información de Peajes
               </h3>
 
@@ -1102,11 +1102,11 @@ export default function RoutesPage() {
                         tollsRequired: e.target.checked,
                       })
                     }
-                    className="rounded border-slate-600 bg-[#2a2d3a] text-blue-600 focus:ring-blue-500"
+                    className="rounded border-border bg-ui-surface-elevated text-primary focus:ring-blue-500"
                   />
                   <Label
                     htmlFor="tollsRequired"
-                    className="text-slate-300 cursor-pointer"
+                    className="text-foreground cursor-pointer"
                   >
                     Requiere Peajes
                   </Label>
@@ -1116,7 +1116,7 @@ export default function RoutesPage() {
                   <div>
                     <Label
                       htmlFor="estimatedTollCost"
-                      className="text-slate-300"
+                      className="text-foreground"
                     >
                       Costo Estimado de Peajes
                     </Label>
@@ -1133,7 +1133,7 @@ export default function RoutesPage() {
                             : undefined,
                         })
                       }
-                      className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1"
+                      className="bg-ui-surface-elevated border-border text-foreground mt-1"
                       placeholder="Ej: 5000"
                     />
                   </div>
@@ -1143,13 +1143,13 @@ export default function RoutesPage() {
 
             {/* Additional Information */}
             <div className="space-y-4">
-              <h3 className="text-sm font-medium text-slate-300 border-b border-slate-700 pb-2">
+              <h3 className="text-sm font-medium text-foreground border-b border-border pb-2">
                 Información Adicional
               </h3>
 
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="observations" className="text-slate-300">
+                  <Label htmlFor="observations" className="text-foreground">
                     Observaciones
                   </Label>
                   <Textarea
@@ -1158,14 +1158,14 @@ export default function RoutesPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, observations: e.target.value })
                     }
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1"
+                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
                     placeholder="Observaciones generales de la ruta..."
                     rows={3}
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="notes" className="text-slate-300">
+                  <Label htmlFor="notes" className="text-foreground">
                     Notas Internas
                   </Label>
                   <Textarea
@@ -1174,7 +1174,7 @@ export default function RoutesPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, notes: e.target.value })
                     }
-                    className="bg-[#2a2d3a] border-slate-600 text-slate-300 mt-1"
+                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
                     placeholder="Notas internas sobre la ruta..."
                     rows={3}
                   />
@@ -1191,14 +1191,14 @@ export default function RoutesPage() {
                   setEditDialogOpen(false);
                   setRouteToEdit(null);
                 }}
-                className="border-slate-600 text-slate-300 hover:bg-[#2a2d3a]"
+                className="border-border text-foreground hover:bg-ui-surface-elevated"
                 disabled={formLoading}
               >
                 Cancelar
               </Button>
               <Button
                 type="submit"
-                className="bg-blue-600 hover:bg-blue-700 text-white"
+                className="bg-primary hover:bg-primary-dark text-white"
                 disabled={formLoading}
               >
                 {formLoading ? (

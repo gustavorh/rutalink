@@ -159,25 +159,25 @@ export default function ClientDetailPage() {
     const statusConfig = {
       scheduled: {
         label: "Programada",
-        className: "bg-blue-500/10 text-blue-400 border-blue-500/50",
+        className: "bg-primary/10 text-primary border-primary/50",
       },
       "in-progress": {
         label: "En Progreso",
-        className: "bg-yellow-500/10 text-yellow-400 border-yellow-500/50",
+        className: "bg-warning/10 text-warning border-yellow-500/50",
       },
       completed: {
         label: "Completada",
-        className: "bg-green-500/10 text-green-400 border-green-500/50",
+        className: "bg-success/10 text-success border-success/50",
       },
       cancelled: {
         label: "Cancelada",
-        className: "bg-red-500/10 text-red-400 border-red-500/50",
+        className: "bg-destructive/10 text-destructive border-destructive/50",
       },
     };
 
     const config = statusConfig[status as keyof typeof statusConfig] || {
       label: status,
-      className: "bg-slate-500/10 text-slate-400 border-slate-500/50",
+      className: "bg-slate-500/10 text-muted-foreground border-slate-500/50",
     };
 
     return (
@@ -193,8 +193,8 @@ export default function ClientDetailPage() {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#2a2d3a]">
-        <p className="text-slate-300">Cargando...</p>
+      <div className="min-h-screen flex items-center justify-center bg-ui-surface-elevated">
+        <p className="text-foreground">Cargando...</p>
       </div>
     );
   }
@@ -205,7 +205,7 @@ export default function ClientDetailPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#2a2d3a]">
+    <div className="flex min-h-screen bg-ui-surface-elevated">
       {/* Sidebar */}
       <DashboardSidebar
         currentPath="/dashboard/clients"
@@ -224,7 +224,7 @@ export default function ClientDetailPage() {
             <Button
               variant="ghost"
               onClick={() => router.push("/dashboard/clients")}
-              className="text-slate-400 hover:text-slate-300"
+              className="text-muted-foreground hover:text-foreground"
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
               Volver a Clientes
@@ -233,24 +233,24 @@ export default function ClientDetailPage() {
             {loading ? (
               <div className="text-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-                <p className="text-slate-400 mt-4">Cargando información...</p>
+                <p className="text-muted-foreground mt-4">Cargando información...</p>
               </div>
             ) : error ? (
               <div className="text-center py-12">
-                <AlertTriangle className="w-12 h-12 text-red-400 mx-auto mb-4" />
-                <p className="text-red-400">{error}</p>
+                <AlertTriangle className="w-12 h-12 text-destructive mx-auto mb-4" />
+                <p className="text-destructive">{error}</p>
               </div>
             ) : !client ? (
               <div className="text-center py-12">
-                <p className="text-slate-400">Cliente no encontrado</p>
+                <p className="text-muted-foreground">Cliente no encontrado</p>
               </div>
             ) : (
               <>
                 {/* Client Header */}
                 <div className="flex items-start justify-between">
                   <div>
-                    <h1 className="text-3xl font-bold text-slate-100 flex items-center gap-3">
-                      <Building2 className="w-8 h-8 text-blue-400" />
+                    <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
+                      <Building2 className="w-8 h-8 text-primary" />
                       {client.businessName}
                     </h1>
                     <div className="flex items-center gap-3 mt-2">
@@ -258,8 +258,8 @@ export default function ClientDetailPage() {
                         variant={client.status ? "default" : "outline"}
                         className={
                           client.status
-                            ? "bg-green-500/10 text-green-400 border-green-500/50"
-                            : "border-slate-500/50 text-slate-500"
+                            ? "bg-success/10 text-success border-success/50"
+                            : "border-slate-500/50 text-muted-foreground"
                         }
                       >
                         {client.status ? "Activo" : "Inactivo"}
@@ -267,7 +267,7 @@ export default function ClientDetailPage() {
                       {client.industry && (
                         <Badge
                           variant="outline"
-                          className="border-blue-500/50 text-blue-400"
+                          className="border-primary/50 text-primary"
                         >
                           {getIndustryLabel(client.industry)}
                         </Badge>
@@ -287,7 +287,7 @@ export default function ClientDetailPage() {
                     <Button
                       onClick={handleDeleteClick}
                       variant="outline"
-                      className="border-red-500/50 text-red-400 hover:bg-red-500/10"
+                      className="border-destructive/50 text-destructive hover:bg-destructive/10"
                     >
                       <Trash2 className="mr-2 h-4 w-4" />
                       Eliminar
@@ -298,36 +298,36 @@ export default function ClientDetailPage() {
                 {/* Client Information Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Contact Information */}
-                  <Card className="bg-[#23262f] border-slate-700">
+                  <Card className="bg-card border-border">
                     <CardHeader>
-                      <CardTitle className="text-slate-100 flex items-center gap-2">
-                        <FileText className="w-5 h-5 text-blue-400" />
+                      <CardTitle className="text-foreground flex items-center gap-2">
+                        <FileText className="w-5 h-5 text-primary" />
                         Información de Contacto
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div>
-                        <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
                           RUT
                         </p>
-                        <p className="text-slate-300 font-mono">
+                        <p className="text-foreground font-mono">
                           {client.taxId || "N/A"}
                         </p>
                       </div>
                       {client.contactName && (
                         <div>
-                          <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">
+                          <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
                             Contacto
                           </p>
-                          <p className="text-slate-300">{client.contactName}</p>
+                          <p className="text-foreground">{client.contactName}</p>
                         </div>
                       )}
                       {client.contactEmail && (
                         <div className="flex items-center gap-2">
-                          <Mail className="w-4 h-4 text-slate-500" />
+                          <Mail className="w-4 h-4 text-muted-foreground" />
                           <a
                             href={`mailto:${client.contactEmail}`}
-                            className="text-blue-400 hover:text-blue-300"
+                            className="text-primary hover:text-blue-300"
                           >
                             {client.contactEmail}
                           </a>
@@ -335,10 +335,10 @@ export default function ClientDetailPage() {
                       )}
                       {client.contactPhone && (
                         <div className="flex items-center gap-2">
-                          <Phone className="w-4 h-4 text-slate-500" />
+                          <Phone className="w-4 h-4 text-muted-foreground" />
                           <a
                             href={`tel:${client.contactPhone}`}
-                            className="text-blue-400 hover:text-blue-300"
+                            className="text-primary hover:text-blue-300"
                           >
                             {client.contactPhone}
                           </a>
@@ -348,44 +348,44 @@ export default function ClientDetailPage() {
                   </Card>
 
                   {/* Location Information */}
-                  <Card className="bg-[#23262f] border-slate-700">
+                  <Card className="bg-card border-border">
                     <CardHeader>
-                      <CardTitle className="text-slate-100 flex items-center gap-2">
-                        <MapPin className="w-5 h-5 text-green-400" />
+                      <CardTitle className="text-foreground flex items-center gap-2">
+                        <MapPin className="w-5 h-5 text-success" />
                         Ubicación
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       {client.address && (
                         <div>
-                          <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">
+                          <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
                             Dirección
                           </p>
-                          <p className="text-slate-300">{client.address}</p>
+                          <p className="text-foreground">{client.address}</p>
                         </div>
                       )}
                       {client.city && (
                         <div>
-                          <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">
+                          <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
                             Ciudad
                           </p>
-                          <p className="text-slate-300">{client.city}</p>
+                          <p className="text-foreground">{client.city}</p>
                         </div>
                       )}
                       {client.region && (
                         <div>
-                          <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">
+                          <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
                             Región
                           </p>
-                          <p className="text-slate-300">{client.region}</p>
+                          <p className="text-foreground">{client.region}</p>
                         </div>
                       )}
                       {client.country && (
                         <div>
-                          <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">
+                          <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
                             País
                           </p>
-                          <p className="text-slate-300">{client.country}</p>
+                          <p className="text-foreground">{client.country}</p>
                         </div>
                       )}
                     </CardContent>
@@ -394,29 +394,29 @@ export default function ClientDetailPage() {
 
                 {/* Additional Information */}
                 {(client.observations || client.notes) && (
-                  <Card className="bg-[#23262f] border-slate-700">
+                  <Card className="bg-card border-border">
                     <CardHeader>
-                      <CardTitle className="text-slate-100">
+                      <CardTitle className="text-foreground">
                         Información Adicional
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       {client.observations && (
                         <div>
-                          <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">
+                          <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
                             Observaciones
                           </p>
-                          <p className="text-slate-300">
+                          <p className="text-foreground">
                             {client.observations}
                           </p>
                         </div>
                       )}
                       {client.notes && (
                         <div>
-                          <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">
+                          <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
                             Notas Internas
                           </p>
-                          <p className="text-slate-300">{client.notes}</p>
+                          <p className="text-foreground">{client.notes}</p>
                         </div>
                       )}
                     </CardContent>
@@ -426,91 +426,91 @@ export default function ClientDetailPage() {
                 {/* Statistics */}
                 {statistics && (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                    <Card className="bg-[#23262f] border-slate-700">
+                    <Card className="bg-card border-border">
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-xs font-medium text-slate-400">
+                            <p className="text-xs font-medium text-muted-foreground">
                               Total Operaciones
                             </p>
-                            <p className="text-2xl font-bold text-slate-100 mt-1">
+                            <p className="text-2xl font-bold text-foreground mt-1">
                               {statistics.totalOperations}
                             </p>
                           </div>
-                          <div className="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center">
-                            <Package className="w-5 h-5 text-blue-400" />
+                          <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                            <Package className="w-5 h-5 text-primary" />
                           </div>
                         </div>
                       </CardContent>
                     </Card>
 
-                    <Card className="bg-[#23262f] border-slate-700">
+                    <Card className="bg-card border-border">
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-xs font-medium text-slate-400">
+                            <p className="text-xs font-medium text-muted-foreground">
                               Completadas
                             </p>
-                            <p className="text-2xl font-bold text-slate-100 mt-1">
+                            <p className="text-2xl font-bold text-foreground mt-1">
                               {statistics.completedOperations}
                             </p>
                           </div>
-                          <div className="w-10 h-10 bg-green-500/10 rounded-lg flex items-center justify-center">
-                            <CheckCircle className="w-5 h-5 text-green-400" />
+                          <div className="w-10 h-10 bg-success/10 rounded-lg flex items-center justify-center">
+                            <CheckCircle className="w-5 h-5 text-success" />
                           </div>
                         </div>
                       </CardContent>
                     </Card>
 
-                    <Card className="bg-[#23262f] border-slate-700">
+                    <Card className="bg-card border-border">
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-xs font-medium text-slate-400">
+                            <p className="text-xs font-medium text-muted-foreground">
                               En Progreso
                             </p>
-                            <p className="text-2xl font-bold text-slate-100 mt-1">
+                            <p className="text-2xl font-bold text-foreground mt-1">
                               {statistics.inProgressOperations}
                             </p>
                           </div>
-                          <div className="w-10 h-10 bg-yellow-500/10 rounded-lg flex items-center justify-center">
-                            <Clock className="w-5 h-5 text-yellow-400" />
+                          <div className="w-10 h-10 bg-warning/10 rounded-lg flex items-center justify-center">
+                            <Clock className="w-5 h-5 text-warning" />
                           </div>
                         </div>
                       </CardContent>
                     </Card>
 
-                    <Card className="bg-[#23262f] border-slate-700">
+                    <Card className="bg-card border-border">
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-xs font-medium text-slate-400">
+                            <p className="text-xs font-medium text-muted-foreground">
                               Programadas
                             </p>
-                            <p className="text-2xl font-bold text-slate-100 mt-1">
+                            <p className="text-2xl font-bold text-foreground mt-1">
                               {statistics.scheduledOperations}
                             </p>
                           </div>
-                          <div className="w-10 h-10 bg-purple-500/10 rounded-lg flex items-center justify-center">
-                            <Calendar className="w-5 h-5 text-purple-400" />
+                          <div className="w-10 h-10 bg-secondary/10 rounded-lg flex items-center justify-center">
+                            <Calendar className="w-5 h-5 text-secondary" />
                           </div>
                         </div>
                       </CardContent>
                     </Card>
 
-                    <Card className="bg-[#23262f] border-slate-700">
+                    <Card className="bg-card border-border">
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-xs font-medium text-slate-400">
+                            <p className="text-xs font-medium text-muted-foreground">
                               Canceladas
                             </p>
-                            <p className="text-2xl font-bold text-slate-100 mt-1">
+                            <p className="text-2xl font-bold text-foreground mt-1">
                               {statistics.cancelledOperations}
                             </p>
                           </div>
-                          <div className="w-10 h-10 bg-red-500/10 rounded-lg flex items-center justify-center">
-                            <AlertTriangle className="w-5 h-5 text-red-400" />
+                          <div className="w-10 h-10 bg-destructive/10 rounded-lg flex items-center justify-center">
+                            <AlertTriangle className="w-5 h-5 text-destructive" />
                           </div>
                         </div>
                       </CardContent>
@@ -519,13 +519,13 @@ export default function ClientDetailPage() {
                 )}
 
                 {/* Operations History */}
-                <Card className="bg-[#23262f] border-slate-700">
+                <Card className="bg-card border-border">
                   <CardHeader>
-                    <CardTitle className="text-slate-100 flex items-center gap-2">
-                      <TrendingUp className="w-5 h-5 text-blue-400" />
+                    <CardTitle className="text-foreground flex items-center gap-2">
+                      <TrendingUp className="w-5 h-5 text-primary" />
                       Historial de Operaciones
                     </CardTitle>
-                    <CardDescription className="text-slate-400">
+                    <CardDescription className="text-muted-foreground">
                       {total > 0
                         ? `Total de ${total} operaciones registradas`
                         : "No hay operaciones registradas"}
@@ -535,7 +535,7 @@ export default function ClientDetailPage() {
                     {operations.length === 0 ? (
                       <div className="text-center py-12">
                         <Package className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                        <p className="text-slate-500">
+                        <p className="text-muted-foreground">
                           No hay operaciones para este cliente
                         </p>
                       </div>
@@ -544,26 +544,26 @@ export default function ClientDetailPage() {
                         <div className="overflow-x-auto">
                           <Table>
                             <TableHeader>
-                              <TableRow className="border-b border-slate-700 hover:bg-transparent">
-                                <TableHead className="text-slate-400">
+                              <TableRow className="border-b border-border hover:bg-transparent">
+                                <TableHead className="text-muted-foreground">
                                   N° Operación
                                 </TableHead>
-                                <TableHead className="text-slate-400">
+                                <TableHead className="text-muted-foreground">
                                   Tipo
                                 </TableHead>
-                                <TableHead className="text-slate-400">
+                                <TableHead className="text-muted-foreground">
                                   Origen → Destino
                                 </TableHead>
-                                <TableHead className="text-slate-400">
+                                <TableHead className="text-muted-foreground">
                                   Fecha Programada
                                 </TableHead>
-                                <TableHead className="text-slate-400">
+                                <TableHead className="text-muted-foreground">
                                   Chofer
                                 </TableHead>
-                                <TableHead className="text-slate-400">
+                                <TableHead className="text-muted-foreground">
                                   Vehículo
                                 </TableHead>
-                                <TableHead className="text-slate-400">
+                                <TableHead className="text-muted-foreground">
                                   Estado
                                 </TableHead>
                               </TableRow>
@@ -572,42 +572,42 @@ export default function ClientDetailPage() {
                               {operations.map((operation) => (
                                 <TableRow
                                   key={operation.id}
-                                  className="border-b border-slate-700 hover:bg-[#2a2d3a] cursor-pointer"
+                                  className="border-b border-border hover:bg-ui-surface-elevated cursor-pointer"
                                   onClick={() =>
                                     router.push(
                                       `/dashboard/operations/${operation.id}`
                                     )
                                   }
                                 >
-                                  <TableCell className="font-mono text-sm text-slate-300">
+                                  <TableCell className="font-mono text-sm text-foreground">
                                     {operation.operationNumber}
                                   </TableCell>
-                                  <TableCell className="text-slate-300 capitalize">
+                                  <TableCell className="text-foreground capitalize">
                                     {operation.operationType}
                                   </TableCell>
                                   <TableCell>
                                     <div className="text-sm">
-                                      <div className="text-slate-300">
+                                      <div className="text-foreground">
                                         {operation.origin}
                                       </div>
-                                      <div className="text-slate-500 text-xs mt-1">
+                                      <div className="text-muted-foreground text-xs mt-1">
                                         → {operation.destination}
                                       </div>
                                     </div>
                                   </TableCell>
-                                  <TableCell className="text-slate-300 text-sm">
+                                  <TableCell className="text-foreground text-sm">
                                     {formatDateTime(
                                       operation.scheduledStartDate
                                     )}
                                   </TableCell>
                                   <TableCell>
                                     {operation.driver ? (
-                                      <div className="text-sm text-slate-300">
+                                      <div className="text-sm text-foreground">
                                         {operation.driver.firstName}{" "}
                                         {operation.driver.lastName}
                                       </div>
                                     ) : (
-                                      <span className="text-slate-500 text-xs">
+                                      <span className="text-muted-foreground text-xs">
                                         N/A
                                       </span>
                                     )}
@@ -615,19 +615,19 @@ export default function ClientDetailPage() {
                                   <TableCell>
                                     {operation.vehicle ? (
                                       <div className="text-sm">
-                                        <div className="text-slate-300 font-mono">
+                                        <div className="text-foreground font-mono">
                                           {operation.vehicle.plateNumber}
                                         </div>
                                         {operation.vehicle.brand &&
                                           operation.vehicle.model && (
-                                            <div className="text-slate-500 text-xs mt-1">
+                                            <div className="text-muted-foreground text-xs mt-1">
                                               {operation.vehicle.brand}{" "}
                                               {operation.vehicle.model}
                                             </div>
                                           )}
                                       </div>
                                     ) : (
-                                      <span className="text-slate-500 text-xs">
+                                      <span className="text-muted-foreground text-xs">
                                         N/A
                                       </span>
                                     )}
@@ -643,8 +643,8 @@ export default function ClientDetailPage() {
 
                         {/* Pagination */}
                         {totalPages > 1 && (
-                          <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-700">
-                            <p className="text-sm text-slate-400">
+                          <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
+                            <p className="text-sm text-muted-foreground">
                               Mostrando {(page - 1) * limit + 1} a{" "}
                               {Math.min(page * limit, total)} de {total}{" "}
                               operaciones
@@ -654,7 +654,7 @@ export default function ClientDetailPage() {
                                 variant="outline"
                                 onClick={() => setPage(page - 1)}
                                 disabled={page === 1}
-                                className="border-slate-600 text-slate-300 hover:bg-[#2a2d3a] disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="border-border text-foreground hover:bg-ui-surface-elevated disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 Anterior
                               </Button>
@@ -672,7 +672,7 @@ export default function ClientDetailPage() {
                                   <div key={p} className="flex items-center">
                                     {index > 0 &&
                                       array[index - 1] !== p - 1 && (
-                                        <span className="text-slate-500 px-2">
+                                        <span className="text-muted-foreground px-2">
                                           ...
                                         </span>
                                       )}
@@ -683,8 +683,8 @@ export default function ClientDetailPage() {
                                       onClick={() => setPage(p)}
                                       className={
                                         p === page
-                                          ? "bg-blue-600 hover:bg-blue-700 text-white"
-                                          : "border-slate-600 text-slate-300 hover:bg-[#2a2d3a]"
+                                          ? "bg-primary hover:bg-primary-dark text-white"
+                                          : "border-border text-foreground hover:bg-ui-surface-elevated"
                                       }
                                     >
                                       {p}
@@ -695,7 +695,7 @@ export default function ClientDetailPage() {
                                 variant="outline"
                                 onClick={() => setPage(page + 1)}
                                 disabled={page === totalPages}
-                                className="border-slate-600 text-slate-300 hover:bg-[#2a2d3a] disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="border-border text-foreground hover:bg-ui-surface-elevated disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 Siguiente
                               </Button>
@@ -714,14 +714,14 @@ export default function ClientDetailPage() {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="bg-[#23262f] border-slate-700">
+        <DialogContent className="bg-card border-border">
           <DialogHeader>
-            <DialogTitle className="text-slate-100">
+            <DialogTitle className="text-foreground">
               Confirmar Eliminación
             </DialogTitle>
-            <DialogDescription className="text-slate-400">
+            <DialogDescription className="text-muted-foreground">
               ¿Estás seguro de que deseas eliminar al cliente{" "}
-              <strong className="text-slate-200">{client?.businessName}</strong>
+              <strong className="text-foreground">{client?.businessName}</strong>
               ? Esta acción marcará el cliente como inactivo.
             </DialogDescription>
           </DialogHeader>
@@ -729,7 +729,7 @@ export default function ClientDetailPage() {
             <Button
               variant="outline"
               onClick={() => setDeleteDialogOpen(false)}
-              className="border-slate-600 text-slate-300 hover:bg-[#2a2d3a]"
+              className="border-border text-foreground hover:bg-ui-surface-elevated"
             >
               Cancelar
             </Button>

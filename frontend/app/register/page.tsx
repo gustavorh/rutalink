@@ -146,7 +146,7 @@ export default function RegisterPage() {
                   className={errors.firstName ? 'border-red-500' : ''}
                 />
                 {errors.firstName && (
-                  <p className="text-sm text-red-500">{errors.firstName.message}</p>
+                  <p className="text-sm text-destructive">{errors.firstName.message}</p>
                 )}
               </div>
 
@@ -162,7 +162,7 @@ export default function RegisterPage() {
                   className={errors.lastName ? 'border-red-500' : ''}
                 />
                 {errors.lastName && (
-                  <p className="text-sm text-red-500">{errors.lastName.message}</p>
+                  <p className="text-sm text-destructive">{errors.lastName.message}</p>
                 )}
               </div>
             </div>
@@ -179,7 +179,7 @@ export default function RegisterPage() {
                 className={errors.username ? 'border-red-500' : ''}
               />
               {errors.username && (
-                <p className="text-sm text-red-500">{errors.username.message}</p>
+                <p className="text-sm text-destructive">{errors.username.message}</p>
               )}
             </div>
 
@@ -195,7 +195,7 @@ export default function RegisterPage() {
                 className={errors.email ? 'border-red-500' : ''}
               />
               {errors.email && (
-                <p className="text-sm text-red-500">{errors.email.message}</p>
+                <p className="text-sm text-destructive">{errors.email.message}</p>
               )}
             </div>
 
@@ -212,7 +212,7 @@ export default function RegisterPage() {
                   className={errors.password ? 'border-red-500' : ''}
                 />
                 {errors.password && (
-                  <p className="text-sm text-red-500">{errors.password.message}</p>
+                  <p className="text-sm text-destructive">{errors.password.message}</p>
                 )}
               </div>
 
@@ -228,7 +228,7 @@ export default function RegisterPage() {
                   className={errors.confirmPassword ? 'border-red-500' : ''}
                 />
                 {errors.confirmPassword && (
-                  <p className="text-sm text-red-500">{errors.confirmPassword.message}</p>
+                  <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>
                 )}
               </div>
             </div>
@@ -246,7 +246,7 @@ export default function RegisterPage() {
                   className={errors.operatorId ? 'border-red-500' : ''}
                 />
                 {errors.operatorId && (
-                  <p className="text-sm text-red-500">{errors.operatorId.message}</p>
+                  <p className="text-sm text-destructive">{errors.operatorId.message}</p>
                 )}
                 <p className="text-xs text-slate-500">Your organization&apos;s operator ID</p>
               </div>
@@ -263,15 +263,15 @@ export default function RegisterPage() {
                   className={errors.roleId ? 'border-red-500' : ''}
                 />
                 {errors.roleId && (
-                  <p className="text-sm text-red-500">{errors.roleId.message}</p>
+                  <p className="text-sm text-destructive">{errors.roleId.message}</p>
                 )}
                 <p className="text-xs text-slate-500">Your assigned role ID</p>
               </div>
             </div>
 
             {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-md">
-                <p className="text-sm text-red-600">{error}</p>
+              <div className="p-3 bg-destructive/10 border border-destructive/50 rounded-md">
+                <p className="text-sm text-destructive">{error}</p>
               </div>
             )}
 
@@ -287,7 +287,7 @@ export default function RegisterPage() {
           <div className="mt-6 text-center text-sm text-slate-600">
             <p>
               Already have an account?{' '}
-              <a href="/login" className="font-medium text-blue-600 hover:text-blue-500">
+              <a href="/login" className="font-medium text-primary hover:text-primary-dark">
                 Sign in
               </a>
             </p>

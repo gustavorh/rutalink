@@ -23,7 +23,7 @@ export function ReportItem({
   };
 
   return (
-    <div className="bg-[#2a2d3a] border border-slate-700 rounded-lg p-4 hover:border-purple-500 transition-colors">
+    <div className="bg-ui-surface-elevated border border-border rounded-lg p-4 hover:border-primary transition-colors">
       <div className="flex items-start gap-3">
         <div className={`p-2 ${iconBgColor} rounded`}>{icon}</div>
         <div className="flex-1">
@@ -31,7 +31,7 @@ export function ReportItem({
             <h4 className="text-white font-medium text-sm">{title}</h4>
             <span className={`text-xs ${statusColors[status]}`}>{status}</span>
           </div>
-          <p className="text-xs text-slate-400 mb-2">{description}</p>
+          <p className="text-xs text-muted-foreground mb-2">{description}</p>
           {progress !== undefined ? (
             <div className="w-full bg-slate-700/50 rounded-full h-1.5">
               <div
@@ -46,7 +46,7 @@ export function ReportItem({
                   <span key={index}>
                     <button
                       onClick={action.onClick}
-                      className="text-xs text-purple-400 hover:text-purple-300"
+                      className="text-xs text-secondary hover:text-secondary-light"
                     >
                       {action.label}
                     </button>

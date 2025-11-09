@@ -40,8 +40,8 @@ export default function DashboardPage() {
   // Prevent hydration mismatch by not rendering until mounted
   if (!mounted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#2a2d3a]">
-        <p className="text-slate-300">Cargando...</p>
+      <div className="min-h-screen flex items-center justify-center bg-ui-surface-elevated">
+        <p className="text-foreground">Cargando...</p>
       </div>
     );
   }
@@ -70,16 +70,16 @@ export default function DashboardPage() {
         </div>
 
         {/* Real-time Transfers */}
-        <Card className="bg-[#23262f] border-slate-700">
+        <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-slate-100 flex items-center gap-2">
+            <CardTitle className="text-foreground flex items-center gap-2">
               Traslados en Tiempo Real
               <span className="flex h-2 w-2 relative">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
               </span>
             </CardTitle>
-            <button className="text-sm text-purple-400 hover:text-purple-300">
+            <button className="text-sm text-secondary hover:text-purple-300">
               Ver todos
             </button>
           </CardHeader>
@@ -91,9 +91,9 @@ export default function DashboardPage() {
         </Card>
 
         {/* Modules Grid */}
-        <Card className="bg-[#23262f] border-slate-700">
+        <Card className="bg-card border-border">
           <CardHeader>
-            <CardTitle className="text-slate-100">Módulos de Gestión</CardTitle>
+            <CardTitle className="text-foreground">Módulos de Gestión</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             {modulesData.map((module) => (
@@ -114,11 +114,11 @@ export default function DashboardPage() {
         {/* Scheduling and Reports Row */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Scheduling */}
-          <Card className="bg-[#23262f] border-slate-700">
+          <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="text-slate-100 flex items-center gap-2">
+              <CardTitle className="text-foreground flex items-center gap-2">
                 <svg
-                  className="w-5 h-5 text-purple-400"
+                  className="w-5 h-5 text-secondary"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -141,11 +141,11 @@ export default function DashboardPage() {
           </Card>
 
           {/* Automated Reports */}
-          <Card className="bg-[#23262f] border-slate-700">
+          <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="text-slate-100 flex items-center gap-2">
+              <CardTitle className="text-foreground flex items-center gap-2">
                 <svg
-                  className="w-5 h-5 text-blue-400"
+                  className="w-5 h-5 text-primary"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -178,16 +178,16 @@ export default function DashboardPage() {
         </div>
 
         {/* Comprehensive Transfer Table */}
-        <Card className="bg-[#23262f] border-slate-700">
+        <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-slate-100">
+            <CardTitle className="text-foreground">
               Seguimiento Completo de Traslados
             </CardTitle>
             <div className="flex gap-2">
-              <button className="text-sm text-slate-400 hover:text-slate-300 px-3 py-1 rounded border border-slate-600 hover:border-slate-500">
+              <button className="text-sm text-muted-foreground hover:text-foreground px-3 py-1 rounded border border-border hover:border-slate-500">
                 Filtrar
               </button>
-              <button className="text-sm text-slate-400 hover:text-slate-300 px-3 py-1 rounded border border-slate-600 hover:border-slate-500">
+              <button className="text-sm text-muted-foreground hover:text-foreground px-3 py-1 rounded border border-border hover:border-slate-500">
                 Exportar
               </button>
             </div>
@@ -196,32 +196,32 @@ export default function DashboardPage() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-slate-700">
-                    <th className="text-left text-xs font-medium text-slate-400 pb-3 pr-4">
+                  <tr className="border-b border-border">
+                    <th className="text-left text-xs font-medium text-muted-foreground pb-3 pr-4">
                       ID / Fecha
                     </th>
-                    <th className="text-left text-xs font-medium text-slate-400 pb-3 pr-4">
+                    <th className="text-left text-xs font-medium text-muted-foreground pb-3 pr-4">
                       Origen
                     </th>
-                    <th className="text-left text-xs font-medium text-slate-400 pb-3 pr-4">
+                    <th className="text-left text-xs font-medium text-muted-foreground pb-3 pr-4">
                       Destino
                     </th>
-                    <th className="text-left text-xs font-medium text-slate-400 pb-3 pr-4">
+                    <th className="text-left text-xs font-medium text-muted-foreground pb-3 pr-4">
                       Vehículo
                     </th>
-                    <th className="text-left text-xs font-medium text-slate-400 pb-3 pr-4">
+                    <th className="text-left text-xs font-medium text-muted-foreground pb-3 pr-4">
                       Chofer
                     </th>
-                    <th className="text-left text-xs font-medium text-slate-400 pb-3 pr-4">
+                    <th className="text-left text-xs font-medium text-muted-foreground pb-3 pr-4">
                       Carga
                     </th>
-                    <th className="text-left text-xs font-medium text-slate-400 pb-3 pr-4">
+                    <th className="text-left text-xs font-medium text-muted-foreground pb-3 pr-4">
                       Cliente
                     </th>
-                    <th className="text-left text-xs font-medium text-slate-400 pb-3 pr-4">
+                    <th className="text-left text-xs font-medium text-muted-foreground pb-3 pr-4">
                       Estado
                     </th>
-                    <th className="text-left text-xs font-medium text-slate-400 pb-3">
+                    <th className="text-left text-xs font-medium text-muted-foreground pb-3">
                       ETA
                     </th>
                   </tr>
@@ -273,24 +273,24 @@ export default function DashboardPage() {
             </div>
 
             {/* Pagination */}
-            <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-700">
-              <p className="text-sm text-slate-400">
+            <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
+              <p className="text-sm text-muted-foreground">
                 Mostrando 1 a 5 de 47 traslados
               </p>
               <div className="flex gap-2">
-                <button className="px-3 py-1 text-sm text-slate-400 hover:text-slate-300 border border-slate-600 hover:border-slate-500 rounded disabled:opacity-50 disabled:cursor-not-allowed">
+                <button className="px-3 py-1 text-sm text-muted-foreground hover:text-foreground border border-border hover:border-slate-500 rounded disabled:opacity-50 disabled:cursor-not-allowed">
                   Anterior
                 </button>
                 <button className="px-3 py-1 text-sm bg-purple-600 text-white rounded hover:bg-purple-700">
                   1
                 </button>
-                <button className="px-3 py-1 text-sm text-slate-400 hover:text-slate-300 border border-slate-600 hover:border-slate-500 rounded">
+                <button className="px-3 py-1 text-sm text-muted-foreground hover:text-foreground border border-border hover:border-slate-500 rounded">
                   2
                 </button>
-                <button className="px-3 py-1 text-sm text-slate-400 hover:text-slate-300 border border-slate-600 hover:border-slate-500 rounded">
+                <button className="px-3 py-1 text-sm text-muted-foreground hover:text-foreground border border-border hover:border-slate-500 rounded">
                   3
                 </button>
-                <button className="px-3 py-1 text-sm text-slate-400 hover:text-slate-300 border border-slate-600 hover:border-slate-500 rounded">
+                <button className="px-3 py-1 text-sm text-muted-foreground hover:text-foreground border border-border hover:border-slate-500 rounded">
                   Siguiente
                 </button>
               </div>

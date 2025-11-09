@@ -128,10 +128,10 @@ export default function TruckDetailPage() {
   // Show loading state
   if (!mounted || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#2a2d3a]">
+      <div className="min-h-screen flex items-center justify-center bg-ui-surface-elevated">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="text-slate-300 mt-4">Cargando...</p>
+          <p className="text-foreground mt-4">Cargando...</p>
         </div>
       </div>
     );
@@ -140,13 +140,13 @@ export default function TruckDetailPage() {
   // Show error state
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#2a2d3a]">
+      <div className="min-h-screen flex items-center justify-center bg-ui-surface-elevated">
         <div className="text-center max-w-md">
-          <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-6">
-            <p className="text-red-400 mb-4">{error}</p>
+          <div className="bg-destructive/10 border border-destructive/50 rounded-lg p-6">
+            <p className="text-destructive mb-4">{error}</p>
             <Button
               onClick={() => router.push("/dashboard/trucks")}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-primary hover:bg-primary-dark text-white"
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
               Volver a Camiones
@@ -165,7 +165,7 @@ export default function TruckDetailPage() {
   const opStatus = getOperationalStatusInfo(truck.operationalStatus);
 
   return (
-    <div className="flex min-h-screen bg-[#2a2d3a]">
+    <div className="flex min-h-screen bg-ui-surface-elevated">
       <DashboardSidebar
         currentPath="/dashboard/trucks"
         onNavigate={(path) => router.push(path)}
@@ -182,17 +182,17 @@ export default function TruckDetailPage() {
                 <Button
                   variant="outline"
                   onClick={() => router.push("/dashboard/trucks")}
-                  className="border-slate-600 text-slate-300 hover:bg-[#23262f]"
+                  className="border-border text-foreground hover:bg-card"
                 >
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   Volver
                 </Button>
                 <div>
-                  <h1 className="text-2xl font-bold text-slate-100 flex items-center gap-2">
-                    <TruckIcon className="w-6 h-6 text-blue-400" />
+                  <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+                    <TruckIcon className="w-6 h-6 text-primary" />
                     Detalle del Camión: {truck.plateNumber}
                   </h1>
-                  <p className="text-slate-400 mt-1">
+                  <p className="text-muted-foreground mt-1">
                     {truck.brand} {truck.model} ({truck.year})
                   </p>
                 </div>
@@ -201,7 +201,7 @@ export default function TruckDetailPage() {
                 onClick={() =>
                   router.push(`/dashboard/trucks/${truck.id}/edit`)
                 }
-                className="bg-blue-600 hover:bg-blue-700 text-white"
+                className="bg-primary hover:bg-primary-dark text-white"
               >
                 <Edit className="mr-2 h-4 w-4" />
                 Editar
@@ -209,83 +209,83 @@ export default function TruckDetailPage() {
             </div>
 
             {error && (
-              <Card className="bg-red-500/10 border-red-500/50">
+              <Card className="bg-destructive/10 border-destructive/50">
                 <CardContent className="p-4">
-                  <p className="text-red-400">{error}</p>
+                  <p className="text-destructive">{error}</p>
                 </CardContent>
               </Card>
             )}
 
             {/* Basic Information */}
-            <Card className="bg-[#23262f] border-slate-700">
+            <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="text-slate-100">
+                <CardTitle className="text-foreground">
                   Información General
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   <div>
-                    <p className="text-xs font-medium text-slate-400">
+                    <p className="text-xs font-medium text-muted-foreground">
                       Patente
                     </p>
-                    <p className="text-lg font-bold text-slate-100 mt-1">
+                    <p className="text-lg font-bold text-foreground mt-1">
                       {truck.plateNumber}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-slate-400">Marca</p>
-                    <p className="text-lg text-slate-100 mt-1">
+                    <p className="text-xs font-medium text-muted-foreground">Marca</p>
+                    <p className="text-lg text-foreground mt-1">
                       {truck.brand || "N/A"}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-slate-400">Modelo</p>
-                    <p className="text-lg text-slate-100 mt-1">
+                    <p className="text-xs font-medium text-muted-foreground">Modelo</p>
+                    <p className="text-lg text-foreground mt-1">
                       {truck.model || "N/A"}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-slate-400">Año</p>
-                    <p className="text-lg text-slate-100 mt-1">
+                    <p className="text-xs font-medium text-muted-foreground">Año</p>
+                    <p className="text-lg text-foreground mt-1">
                       {truck.year || "N/A"}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-slate-400">
+                    <p className="text-xs font-medium text-muted-foreground">
                       Tipo de Vehículo
                     </p>
                     <Badge
                       variant="outline"
-                      className="mt-1 border-blue-500/50 text-blue-400"
+                      className="mt-1 border-primary/50 text-primary"
                     >
                       {getVehicleTypeLabel(truck.vehicleType)}
                     </Badge>
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-slate-400">
+                    <p className="text-xs font-medium text-muted-foreground">
                       Capacidad
                     </p>
-                    <p className="text-lg text-slate-100 mt-1">
+                    <p className="text-lg text-foreground mt-1">
                       {truck.capacity
                         ? `${truck.capacity} ${truck.capacityUnit || ""}`
                         : "N/A"}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-slate-400">VIN</p>
-                    <p className="text-sm font-mono text-slate-100 mt-1">
+                    <p className="text-xs font-medium text-muted-foreground">VIN</p>
+                    <p className="text-sm font-mono text-foreground mt-1">
                       {truck.vin || "N/A"}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-slate-400">Color</p>
-                    <p className="text-lg text-slate-100 mt-1">
+                    <p className="text-xs font-medium text-muted-foreground">Color</p>
+                    <p className="text-lg text-foreground mt-1">
                       {truck.color || "N/A"}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-slate-400">
+                    <p className="text-xs font-medium text-muted-foreground">
                       Estado Operativo
                     </p>
                     <Badge
@@ -297,28 +297,28 @@ export default function TruckDetailPage() {
                   </div>
                 </div>
                 {truck.notes && (
-                  <div className="mt-6 pt-6 border-t border-slate-700">
-                    <p className="text-xs font-medium text-slate-400">Notas</p>
-                    <p className="text-sm text-slate-300 mt-2">{truck.notes}</p>
+                  <div className="mt-6 pt-6 border-t border-border">
+                    <p className="text-xs font-medium text-muted-foreground">Notas</p>
+                    <p className="text-sm text-foreground mt-2">{truck.notes}</p>
                   </div>
                 )}
               </CardContent>
             </Card>
 
             {/* Documents */}
-            <Card className="bg-[#23262f] border-slate-700">
+            <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="text-slate-100 flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-blue-400" />
+                <CardTitle className="text-foreground flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-primary" />
                   Documentos ({documents.length})
                 </CardTitle>
-                <CardDescription className="text-slate-400">
+                <CardDescription className="text-muted-foreground">
                   Documentación vigente del vehículo
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 {documents.length === 0 ? (
-                  <p className="text-slate-500 text-center py-8">
+                  <p className="text-muted-foreground text-center py-8">
                     No hay documentos registrados
                   </p>
                 ) : (
@@ -326,22 +326,22 @@ export default function TruckDetailPage() {
                     {documents.map((doc) => (
                       <div
                         key={doc.id}
-                        className="flex items-center justify-between p-4 bg-[#2a2d3a] rounded-lg border border-slate-700"
+                        className="flex items-center justify-between p-4 bg-ui-surface-elevated rounded-lg border border-border"
                       >
                         <div className="flex-1">
-                          <p className="font-medium text-slate-200">
+                          <p className="font-medium text-foreground">
                             {doc.documentName}
                           </p>
-                          <p className="text-xs text-slate-400 mt-1">
+                          <p className="text-xs text-muted-foreground mt-1">
                             {getDocumentTypeLabel(doc.documentType)}
                           </p>
                         </div>
                         {doc.expirationDate && (
                           <div className="text-right">
-                            <p className="text-xs text-slate-400">
+                            <p className="text-xs text-muted-foreground">
                               Vencimiento
                             </p>
-                            <p className="text-sm text-slate-300">
+                            <p className="text-sm text-foreground">
                               {formatDate(doc.expirationDate)}
                             </p>
                           </div>
@@ -356,16 +356,16 @@ export default function TruckDetailPage() {
             {/* Operations */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Upcoming Operations */}
-              <Card className="bg-[#23262f] border-slate-700">
+              <Card className="bg-card border-border">
                 <CardHeader>
-                  <CardTitle className="text-slate-100 flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-purple-400" />
+                  <CardTitle className="text-foreground flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-secondary" />
                     Operaciones Próximas ({upcomingOperations.length})
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {upcomingOperations.length === 0 ? (
-                    <p className="text-slate-500 text-center py-8">
+                    <p className="text-muted-foreground text-center py-8">
                       No hay operaciones próximas
                     </p>
                   ) : (
@@ -373,20 +373,20 @@ export default function TruckDetailPage() {
                       {upcomingOperations.slice(0, 5).map((op) => (
                         <div
                           key={op.id}
-                          className="p-3 bg-[#2a2d3a] rounded-lg border border-slate-700"
+                          className="p-3 bg-ui-surface-elevated rounded-lg border border-border"
                         >
                           <div className="flex items-center justify-between mb-2">
-                            <p className="font-medium text-slate-200">
+                            <p className="font-medium text-foreground">
                               {op.operationNumber}
                             </p>
                             <Badge
                               variant="outline"
-                              className="border-purple-500/50 text-purple-400"
+                              className="border-secondary/50 text-secondary"
                             >
                               {op.status}
                             </Badge>
                           </div>
-                          <div className="space-y-1 text-xs text-slate-400">
+                          <div className="space-y-1 text-xs text-muted-foreground">
                             <div className="flex items-center gap-2">
                               <MapPin className="w-3 h-3" />
                               {op.origin} → {op.destination}
@@ -404,16 +404,16 @@ export default function TruckDetailPage() {
               </Card>
 
               {/* Operation History */}
-              <Card className="bg-[#23262f] border-slate-700">
+              <Card className="bg-card border-border">
                 <CardHeader>
-                  <CardTitle className="text-slate-100 flex items-center gap-2">
-                    <Package className="w-5 h-5 text-green-400" />
+                  <CardTitle className="text-foreground flex items-center gap-2">
+                    <Package className="w-5 h-5 text-success" />
                     Historial de Operaciones ({operationHistory.length})
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {operationHistory.length === 0 ? (
-                    <p className="text-slate-500 text-center py-8">
+                    <p className="text-muted-foreground text-center py-8">
                       No hay historial de operaciones
                     </p>
                   ) : (
@@ -421,20 +421,20 @@ export default function TruckDetailPage() {
                       {operationHistory.slice(0, 5).map((op) => (
                         <div
                           key={op.id}
-                          className="p-3 bg-[#2a2d3a] rounded-lg border border-slate-700"
+                          className="p-3 bg-ui-surface-elevated rounded-lg border border-border"
                         >
                           <div className="flex items-center justify-between mb-2">
-                            <p className="font-medium text-slate-200">
+                            <p className="font-medium text-foreground">
                               {op.operationNumber}
                             </p>
                             <Badge
                               variant="outline"
-                              className="border-green-500/50 text-green-400"
+                              className="border-success/50 text-success"
                             >
                               {op.status}
                             </Badge>
                           </div>
-                          <div className="space-y-1 text-xs text-slate-400">
+                          <div className="space-y-1 text-xs text-muted-foreground">
                             <div className="flex items-center gap-2">
                               <MapPin className="w-3 h-3" />
                               {op.origin} → {op.destination}

@@ -55,7 +55,7 @@ export function TransferTableRow({
     },
     scheduled: {
       dotColor: "bg-slate-400",
-      textColor: "text-slate-300",
+      textColor: "text-foreground",
     },
     delayed: {
       dotColor: "bg-yellow-400 animate-pulse",
@@ -65,7 +65,7 @@ export function TransferTableRow({
 
   const etaConfig = {
     early: "text-green-400",
-    ontime: "text-slate-300",
+    ontime: "text-foreground",
     late: "text-red-400",
   };
 
@@ -73,27 +73,27 @@ export function TransferTableRow({
   const currentEta = etaConfig[eta.type];
 
   return (
-    <tr className="border-b border-slate-700/50 hover:bg-[#2a2d3a] transition-colors">
+    <tr className="border-b border-border/50 hover:bg-ui-surface-elevated transition-colors">
       <td className="py-4">
-        <input type="checkbox" className="rounded border-slate-600" />
+        <input type="checkbox" className="rounded border-border" />
       </td>
       <td className="py-4">
         <div className="text-white font-medium">{id}</div>
         <div className="text-xs text-slate-500">{date}</div>
       </td>
       <td className="py-4">
-        <div className="text-slate-300">{origin}</div>
+        <div className="text-foreground">{origin}</div>
         <div className="text-xs text-slate-500">→ {destination}</div>
-        <div className="text-xs text-purple-400">{distance}</div>
+        <div className="text-xs text-secondary">{distance}</div>
       </td>
       <td className="py-4">
         <div className="text-white">{vehicle}</div>
-        <div className="text-xs text-slate-400">{driver}</div>
+        <div className="text-xs text-muted-foreground">{driver}</div>
       </td>
       <td className="py-4">
-        <span className="text-slate-300 text-xs">{cargoType}</span>
+        <span className="text-foreground text-xs">{cargoType}</span>
       </td>
-      <td className="py-4 text-slate-300">{client}</td>
+      <td className="py-4 text-foreground">{client}</td>
       <td className="py-4">
         <span className="flex items-center gap-2">
           <div
@@ -114,7 +114,7 @@ export function TransferTableRow({
               key={index}
               onClick={action.onClick}
               className={`p-1 ${
-                action.color || "text-slate-400 hover:text-white"
+                action.color || "text-muted-foreground hover:text-white"
               }`}
               title={action.title}
             >
