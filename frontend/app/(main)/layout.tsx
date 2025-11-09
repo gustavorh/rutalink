@@ -48,7 +48,7 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-ui-surface-elevated overflow-hidden">
+    <div className="flex min-h-screen bg-ui-bg overflow-hidden">
       {/* Sidebar */}
       <DashboardSidebar
         currentPath={pathname}
@@ -61,7 +61,7 @@ export default function DashboardLayout({
         <DashboardHeader user={user} onLogout={handleLogout} />
 
         {/* Page Content */}
-        {children}
+        <main className="flex-1 overflow-auto">{children}</main>
 
         {/* Footer */}
         <DashboardFooter />

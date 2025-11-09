@@ -29,6 +29,7 @@ export interface User {
   operator?: {
     id: number;
     name: string;
+    super?: boolean;
   };
   role?: {
     id: number;

@@ -21,12 +21,12 @@ export function DashboardSidebar({
     <aside
       className={`${
         isCollapsed ? "w-20" : "w-64"
-      } flex-shrink-0 bg-ui-sidebar-bg p-6 flex flex-col transition-all duration-300 relative`}
+      } flex-shrink-0 bg-ui-sidebar-bg border-r border-border shadow-xl p-6 flex flex-col transition-all duration-300 relative z-20`}
     >
       {/* Toggle Button */}
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}
-        className="absolute -right-3 top-8 bg-ui-surface-elevated hover:bg-ui-surface-hover text-foreground rounded-full p-1.5 shadow-lg z-10 transition-colors border border-border"
+        className="absolute -right-3 top-8 bg-ui-surface-elevated hover:bg-ui-surface-hover text-foreground rounded-full p-1.5 shadow-xl z-30 transition-all hover:scale-110 border border-border ring-2 ring-ui-bg"
         aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
       >
         <svg
@@ -47,7 +47,7 @@ export function DashboardSidebar({
       </button>
 
       {/* Brand */}
-      <div className="mb-8 flex items-center gap-2">
+      <div className="mb-8 flex items-center gap-2 pb-6 border-b border-border/50">
         <Image
           src="/logo-bilix.png"
           alt="Bilix Ingeniería"
@@ -74,12 +74,12 @@ export function DashboardSidebar({
             onClick={() => setIsPanelOpen(!isPanelOpen)}
             className={`w-full flex items-center ${
               isCollapsed ? "justify-center" : "gap-2"
-            } px-3 py-2 rounded text-sm transition-colors ${
+            } px-3 py-2 rounded-lg text-sm transition-all ${
               isActive("/dashboard") ||
               isActive("/operations") ||
               isActive("/dashboard/reports")
-                ? "bg-primary text-primary-foreground font-medium"
-                : "text-foreground hover:bg-ui-surface-elevated hover:text-foreground"
+                ? "bg-primary text-primary-foreground font-medium shadow-md"
+                : "text-foreground hover:bg-ui-surface-elevated hover:text-foreground hover:shadow-sm"
             }`}
             title={isCollapsed ? "Panel de Control" : ""}
           >
@@ -159,14 +159,14 @@ export function DashboardSidebar({
             onClick={() => setIsMaestrosOpen(!isMaestrosOpen)}
             className={`w-full flex items-center ${
               isCollapsed ? "justify-center" : "gap-2"
-            } px-3 py-2 rounded text-sm transition-colors ${
+            } px-3 py-2 rounded-lg text-sm transition-all ${
               isParentActive("/trucks") ||
               isParentActive("/drivers") ||
               isParentActive("/clients") ||
               isParentActive("/providers") ||
               isParentActive("/routes")
-                ? "bg-primary text-primary-foreground font-medium"
-                : "text-foreground hover:bg-ui-surface-elevated hover:text-foreground"
+                ? "bg-primary text-primary-foreground font-medium shadow-md"
+                : "text-foreground hover:bg-ui-surface-elevated hover:text-foreground hover:shadow-sm"
             }`}
             title={isCollapsed ? "Maestros" : ""}
           >
@@ -329,10 +329,10 @@ export function DashboardSidebar({
           onClick={() => onNavigate("/dashboard/analytics")}
           className={`w-full flex items-center ${
             isCollapsed ? "justify-center" : "gap-2"
-          } px-3 py-2 rounded text-sm transition-colors ${
+          } px-3 py-2 rounded-lg text-sm transition-all ${
             isParentActive("/dashboard/analytics")
-              ? "bg-primary text-primary-foreground font-medium"
-              : "text-foreground hover:bg-ui-surface-elevated hover:text-foreground"
+              ? "bg-primary text-primary-foreground font-medium shadow-md"
+              : "text-foreground hover:bg-ui-surface-elevated hover:text-foreground hover:shadow-sm"
           }`}
           title={isCollapsed ? "Analíticas" : ""}
         >
@@ -367,10 +367,10 @@ export function DashboardSidebar({
             onClick={() => setIsAdministrationOpen(!isAdministrationOpen)}
             className={`w-full flex items-center ${
               isCollapsed ? "justify-center" : "gap-2"
-            } px-3 py-2 rounded text-sm transition-colors ${
+            } px-3 py-2 rounded-lg text-sm transition-all ${
               isParentActive("/administration")
-                ? "bg-primary text-primary-foreground font-medium"
-                : "text-foreground hover:bg-ui-surface-elevated hover:text-foreground"
+                ? "bg-primary text-primary-foreground font-medium shadow-md"
+                : "text-foreground hover:bg-ui-surface-elevated hover:text-foreground hover:shadow-sm"
             }`}
             title={isCollapsed ? "Administración" : ""}
           >
