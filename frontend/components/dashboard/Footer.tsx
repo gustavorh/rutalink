@@ -3,6 +3,7 @@ export function DashboardFooter() {
     <footer className="bg-[#1a1d25] border-t border-slate-700 py-4">
       <div className="max-w-[1400px] mx-auto px-6">
         <p className="text-center text-sm text-slate-400">
+          {"© "}
           <a
             href="https://www.bilix.cl"
             target="_blank"
@@ -11,7 +12,7 @@ export function DashboardFooter() {
           >
             Bilix Ingeniería
           </a>
-          {" | © 2025"}
+          {" | 2025"}
         </p>
       </div>
     </footer>
