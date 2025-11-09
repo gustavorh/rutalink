@@ -167,7 +167,14 @@ export function DashboardSidebar({
           </svg>
         </button>
 
-        <button className="w-full flex items-center gap-2 px-3 py-2 text-slate-300 hover:bg-[#2a2d3a] rounded text-sm">
+        <button
+          onClick={() => onNavigate("/dashboard/clients")}
+          className={`w-full flex items-center gap-2 px-3 py-2 rounded text-sm ${
+            isParentActive("/dashboard/clients")
+              ? "text-white bg-[#2a2d3a]"
+              : "text-slate-300 hover:bg-[#2a2d3a]"
+          }`}
+        >
           <svg
             className="w-4 h-4"
             fill="none"
@@ -197,7 +204,14 @@ export function DashboardSidebar({
           </svg>
         </button>
 
-        <button className="w-full flex items-center gap-2 px-3 py-2 text-slate-300 hover:bg-[#2a2d3a] rounded text-sm">
+        <button
+          onClick={() => onNavigate("/dashboard/providers")}
+          className={`w-full flex items-center gap-2 px-3 py-2 rounded text-sm ${
+            isParentActive("/dashboard/providers")
+              ? "text-white bg-[#2a2d3a]"
+              : "text-slate-300 hover:bg-[#2a2d3a]"
+          }`}
+        >
           <svg
             className="w-4 h-4"
             fill="none"
@@ -227,7 +241,14 @@ export function DashboardSidebar({
           </svg>
         </button>
 
-        <button className="w-full flex items-center gap-2 px-3 py-2 text-slate-300 hover:bg-[#2a2d3a] rounded text-sm">
+        <button
+          onClick={() => onNavigate("/dashboard/routes")}
+          className={`w-full flex items-center gap-2 px-3 py-2 rounded text-sm ${
+            isParentActive("/dashboard/routes")
+              ? "text-white bg-[#2a2d3a]"
+              : "text-slate-300 hover:bg-[#2a2d3a]"
+          }`}
+        >
           <svg
             className="w-4 h-4"
             fill="none"
@@ -257,7 +278,14 @@ export function DashboardSidebar({
           </svg>
         </button>
 
-        <button className="w-full flex items-center gap-2 px-3 py-2 text-slate-300 hover:bg-[#2a2d3a] rounded text-sm">
+        <button
+          onClick={() => onNavigate("/dashboard/maintenance")}
+          className={`w-full flex items-center gap-2 px-3 py-2 rounded text-sm ${
+            isParentActive("/dashboard/maintenance")
+              ? "text-white bg-[#2a2d3a]"
+              : "text-slate-300 hover:bg-[#2a2d3a]"
+          }`}
+        >
           <svg
             className="w-4 h-4"
             fill="none"
@@ -293,7 +321,14 @@ export function DashboardSidebar({
           </svg>
         </button>
 
-        <button className="w-full flex items-center gap-2 px-3 py-2 text-slate-300 hover:bg-[#2a2d3a] rounded text-sm">
+        <button
+          onClick={() => onNavigate("/dashboard/analytics")}
+          className={`w-full flex items-center gap-2 px-3 py-2 rounded text-sm ${
+            isParentActive("/dashboard/analytics")
+              ? "text-white bg-[#2a2d3a]"
+              : "text-slate-300 hover:bg-[#2a2d3a]"
+          }`}
+        >
           <svg
             className="w-4 h-4"
             fill="none"

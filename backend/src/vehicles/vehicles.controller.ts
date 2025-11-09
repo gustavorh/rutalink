@@ -62,6 +62,37 @@ export class VehiclesController {
     );
   }
 
+  // ============================================================================
+  // STATISTICS ENDPOINTS (must come before dynamic routes)
+  // ============================================================================
+
+  /**
+   * GET /vehicles/stats/overview
+   * Obtener estadísticas generales de la flota
+   */
+  @Get('stats/overview')
+  @RequirePermission('vehicles', 'read')
+  getFleetOverview(@Request() req: RequestWithUser) {
+    // Este método se puede implementar más adelante
+    return {
+      message: 'Fleet overview statistics endpoint',
+      operatorId: req.user.operatorId,
+    };
+  }
+
+  /**
+   * GET /vehicles/documents/expiring
+   * Obtener documentos próximos a vencer
+   */
+  @Get('documents/expiring')
+  @RequirePermission('vehicles', 'read')
+  async getExpiringDocuments(
+    @Query('days', ParseIntPipe) days: number = 30,
+    @Request() req: RequestWithUser,
+  ) {
+    return this.vehiclesService.getExpiringDocuments(req.user.operatorId, days);
+  }
+
   /**
    * GET /vehicles
    * Obtener todos los vehículos con filtros y paginación
@@ -190,19 +221,6 @@ export class VehiclesController {
     await this.vehiclesService.removeDocument(req.user.operatorId, documentId);
   }
 
-  /**
-   * GET /vehicles/documents/expiring
-   * Obtener documentos próximos a vencer
-   */
-  @Get('documents/expiring')
-  @RequirePermission('vehicles', 'read')
-  async getExpiringDocuments(
-    @Query('days', ParseIntPipe) days: number = 30,
-    @Request() req: RequestWithUser,
-  ) {
-    return this.vehiclesService.getExpiringDocuments(req.user.operatorId, days);
-  }
-
   // ============================================================================
   // OPERATIONAL STATUS ENDPOINTS
   // ============================================================================
@@ -257,23 +275,5 @@ export class VehiclesController {
     @Request() req: RequestWithUser,
   ) {
     return this.vehiclesService.getUpcomingOperations(req.user.operatorId, id);
-  }
-
-  // ============================================================================
-  // STATISTICS ENDPOINTS
-  // ============================================================================
-
-  /**
-   * GET /vehicles/stats/overview
-   * Obtener estadísticas generales de la flota
-   */
-  @Get('stats/overview')
-  @RequirePermission('vehicles', 'read')
-  getFleetOverview(@Request() req: RequestWithUser) {
-    // Este método se puede implementar más adelante
-    return {
-      message: 'Fleet overview statistics endpoint',
-      operatorId: req.user.operatorId,
-    };
   }
 }

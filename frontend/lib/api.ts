@@ -622,7 +622,7 @@ export async function getTrucks(
   }
   const queryString = queryParams.toString();
   return authenticatedRequest<PaginatedTrucks>(
-    `/api/trucks${queryString ? `?${queryString}` : ""}`,
+    `/api/vehicles${queryString ? `?${queryString}` : ""}`,
     token
   );
 }
@@ -631,7 +631,7 @@ export async function getTrucks(
  * Get a single truck by ID
  */
 export async function getTruckById(token: string, id: number): Promise<Truck> {
-  return authenticatedRequest<Truck>(`/api/trucks/${id}`, token);
+  return authenticatedRequest<Truck>(`/api/vehicles/${id}`, token);
 }
 
 /**
@@ -641,7 +641,7 @@ export async function createTruck(
   token: string,
   data: CreateTruckInput
 ): Promise<Truck> {
-  return authenticatedRequest<Truck>("/api/trucks", token, {
+  return authenticatedRequest<Truck>("/api/vehicles", token, {
     method: "POST",
     body: JSON.stringify(data),
   });
@@ -655,7 +655,7 @@ export async function updateTruck(
   id: number,
   data: UpdateTruckInput
 ): Promise<Truck> {
-  return authenticatedRequest<Truck>(`/api/trucks/${id}`, token, {
+  return authenticatedRequest<Truck>(`/api/vehicles/${id}`, token, {
     method: "PUT",
     body: JSON.stringify(data),
   });
@@ -668,9 +668,13 @@ export async function deleteTruck(
   token: string,
   id: number
 ): Promise<{ message: string }> {
-  return authenticatedRequest<{ message: string }>(`/api/trucks/${id}`, token, {
-    method: "DELETE",
-  });
+  return authenticatedRequest<{ message: string }>(
+    `/api/vehicles/${id}`,
+    token,
+    {
+      method: "DELETE",
+    }
+  );
 }
 
 // ============================================================================
@@ -685,7 +689,7 @@ export async function getTruckDocuments(
   truckId: number
 ): Promise<TruckDocument[]> {
   return authenticatedRequest<TruckDocument[]>(
-    `/api/trucks/${truckId}/documents`,
+    `/api/vehicles/${truckId}/documents`,
     token
   );
 }
@@ -697,7 +701,7 @@ export async function createTruckDocument(
   token: string,
   data: CreateTruckDocumentInput
 ): Promise<TruckDocument> {
-  return authenticatedRequest<TruckDocument>("/api/trucks/documents", token, {
+  return authenticatedRequest<TruckDocument>("/api/vehicles/documents", token, {
     method: "POST",
     body: JSON.stringify(data),
   });
@@ -712,7 +716,7 @@ export async function updateTruckDocument(
   data: UpdateTruckDocumentInput
 ): Promise<TruckDocument> {
   return authenticatedRequest<TruckDocument>(
-    `/api/trucks/documents/${documentId}`,
+    `/api/vehicles/documents/${documentId}`,
     token,
     {
       method: "PUT",
@@ -729,7 +733,7 @@ export async function deleteTruckDocument(
   documentId: number
 ): Promise<{ message: string }> {
   return authenticatedRequest<{ message: string }>(
-    `/api/trucks/documents/${documentId}`,
+    `/api/vehicles/documents/${documentId}`,
     token,
     {
       method: "DELETE",
@@ -745,7 +749,7 @@ export async function getExpiringDocuments(
   days: number = 30
 ): Promise<TruckDocument[]> {
   return authenticatedRequest<TruckDocument[]>(
-    `/api/trucks/documents/expiring?days=${days}`,
+    `/api/vehicles/documents/expiring?days=${days}`,
     token
   );
 }
@@ -762,7 +766,7 @@ export async function getTruckOperationalStatus(
   truckId: number
 ): Promise<{ status: string; notes?: string }> {
   return authenticatedRequest<{ status: string; notes?: string }>(
-    `/api/trucks/${truckId}/operational-status`,
+    `/api/vehicles/${truckId}/operational-status`,
     token
   );
 }
@@ -776,7 +780,7 @@ export async function getTruckOperationHistory(
   limit: number = 10
 ): Promise<TruckOperation[]> {
   return authenticatedRequest<TruckOperation[]>(
-    `/api/trucks/${truckId}/operations/history?limit=${limit}`,
+    `/api/vehicles/${truckId}/operations/history?limit=${limit}`,
     token
   );
 }
@@ -789,7 +793,7 @@ export async function getTruckUpcomingOperations(
   truckId: number
 ): Promise<TruckOperation[]> {
   return authenticatedRequest<TruckOperation[]>(
-    `/api/trucks/${truckId}/operations/upcoming`,
+    `/api/vehicles/${truckId}/operations/upcoming`,
     token
   );
 }
@@ -801,7 +805,7 @@ export async function getTrucksStatsOverview(
   token: string
 ): Promise<TruckStatistics> {
   return authenticatedRequest<TruckStatistics>(
-    "/api/trucks/stats/overview",
+    "/api/vehicles/stats/overview",
     token
   );
 }
