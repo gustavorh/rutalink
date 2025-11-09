@@ -1,6 +1,5 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { OperationTrackingData } from "@/types/operation-tracking";
 
@@ -23,196 +22,320 @@ export function OperationOverviewTab({
 
   return (
     <div className="space-y-4">
-      {/* Basic Information */}
-      <Card className="bg-card border-border">
-        <CardHeader>
-          <CardTitle className="text-lg text-foreground">
-            Información General
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <InfoField
-            label="Número de Operación"
-            value={operation.operationNumber}
-          />
-          <InfoField
-            label="Tipo"
-            value={getOperationTypeLabel(operation.operationType)}
-          />
-          <InfoField label="Estado" value={<Badge>{operation.status}</Badge>} />
-          <InfoField
-            label="Etapa Actual"
-            value={getCurrentStageLabel(operation.currentStage)}
-          />
-        </CardContent>
-      </Card>
+      {/* Basic Information - Compact single row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 rounded-lg bg-card/50 border border-border/50">
+        <InfoField
+          label="Número de Operación"
+          value={operation.operationNumber}
+        />
+        <InfoField
+          label="Tipo"
+          value={getOperationTypeLabel(operation.operationType)}
+        />
+        <InfoField
+          label="Estado"
+          value={
+            <Badge className="font-normal" variant="secondary">
+              {operation.status}
+            </Badge>
+          }
+        />
+        <InfoField
+          label="Etapa Actual"
+          value={getCurrentStageLabel(operation.currentStage)}
+        />
+      </div>
 
-      {/* Route Information */}
-      <Card className="bg-card border-border">
-        <CardHeader>
-          <CardTitle className="text-lg text-foreground">Ruta</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex items-center gap-3">
-            <div className="flex-1">
-              <div className="text-sm text-muted-foreground">Origen</div>
-              <div className="text-foreground font-medium">
-                {operation.origin}
-              </div>
-            </div>
-            <svg
-              className="w-6 h-6 text-primary"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 7l5 5m0 0l-5 5m5-5H6"
-              />
-            </svg>
-            <div className="flex-1">
-              <div className="text-sm text-muted-foreground">Destino</div>
-              <div className="text-foreground font-medium">
-                {operation.destination}
-              </div>
+      {/* Route Information - Simplified horizontal layout */}
+      <div className="p-4 rounded-lg bg-card/50 border border-border/50">
+        <h3 className="text-sm font-medium text-foreground mb-3">Ruta</h3>
+        <div className="flex items-center gap-3">
+          <div className="flex-1">
+            <div className="text-xs text-muted-foreground mb-0.5">Origen</div>
+            <div className="text-sm text-foreground font-medium">
+              {operation.origin}
             </div>
           </div>
-          {route && <InfoField label="Ruta Asignada" value={route.name} />}
-          {route?.distance && (
-            <InfoField label="Distancia" value={`${route.distance} km`} />
+          <svg
+            className="w-5 h-5 text-primary/60 flex-shrink-0"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M13 7l5 5m0 0l-5 5m5-5H6"
+            />
+          </svg>
+          <div className="flex-1">
+            <div className="text-xs text-muted-foreground mb-0.5">Destino</div>
+            <div className="text-sm text-foreground font-medium">
+              {operation.destination}
+            </div>
+          </div>
+          {route?.name && (
+            <>
+              <div className="h-8 w-px bg-border/50" />
+              <div className="flex-1">
+                <div className="text-xs text-muted-foreground mb-0.5">
+                  Ruta Asignada
+                </div>
+                <div className="text-sm text-foreground font-medium">
+                  {route.name}
+                </div>
+              </div>
+            </>
           )}
-        </CardContent>
-      </Card>
+          {route?.distance && (
+            <>
+              <div className="h-8 w-px bg-border/50" />
+              <div>
+                <div className="text-xs text-muted-foreground mb-0.5">
+                  Distancia
+                </div>
+                <div className="text-sm text-foreground font-medium">
+                  {route.distance} km
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
 
-      {/* Participants */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Participants - More compact cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {/* Driver */}
+        <div className="p-3 rounded-lg bg-card/50 border border-border/50">
+          <h3 className="text-xs font-medium text-muted-foreground mb-2.5">
+            Conductor
+          </h3>
+          <div className="space-y-1.5">
+            <div>
+              <div className="text-xs text-muted-foreground/80">Nombre</div>
+              <div className="text-sm text-foreground font-medium">
+                {driver.name}
+              </div>
+            </div>
+            <div>
+              <div className="text-xs text-muted-foreground/80">
+                Tipo de Licencia
+              </div>
+              <div className="text-sm text-foreground font-medium">
+                {driver.licenseType}
+              </div>
+            </div>
+            {driver.phone && (
+              <div>
+                <div className="text-xs text-muted-foreground/80">Teléfono</div>
+                <div className="text-sm text-foreground font-medium">
+                  {driver.phone}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Vehicle */}
+        <div className="p-3 rounded-lg bg-card/50 border border-border/50">
+          <h3 className="text-xs font-medium text-muted-foreground mb-2.5">
+            Vehículo
+          </h3>
+          <div className="space-y-1.5">
+            <div>
+              <div className="text-xs text-muted-foreground/80">Patente</div>
+              <div className="text-sm text-foreground font-medium">
+                {vehicle.plateNumber}
+              </div>
+            </div>
+            <div>
+              <div className="text-xs text-muted-foreground/80">Tipo</div>
+              <div className="text-sm text-foreground font-medium">
+                {vehicle.type}
+              </div>
+            </div>
+            {vehicle.brand && vehicle.model && (
+              <div>
+                <div className="text-xs text-muted-foreground/80">
+                  Marca/Modelo
+                </div>
+                <div className="text-sm text-foreground font-medium">
+                  {vehicle.brand} {vehicle.model}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Client */}
         {client && (
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <CardTitle className="text-lg text-foreground">Cliente</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <InfoField label="Empresa" value={client.businessName} />
+          <div className="p-3 rounded-lg bg-card/50 border border-border/50">
+            <h3 className="text-xs font-medium text-muted-foreground mb-2.5">
+              Cliente
+            </h3>
+            <div className="space-y-1.5">
+              <div>
+                <div className="text-xs text-muted-foreground/80">Empresa</div>
+                <div className="text-sm text-foreground font-medium">
+                  {client.businessName}
+                </div>
+              </div>
               {client.contactName && (
-                <InfoField label="Contacto" value={client.contactName} />
+                <div>
+                  <div className="text-xs text-muted-foreground/80">
+                    Contacto
+                  </div>
+                  <div className="text-sm text-foreground font-medium">
+                    {client.contactName}
+                  </div>
+                </div>
               )}
               {client.contactPhone && (
-                <InfoField label="Teléfono" value={client.contactPhone} />
+                <div>
+                  <div className="text-xs text-muted-foreground/80">
+                    Teléfono
+                  </div>
+                  <div className="text-sm text-foreground font-medium">
+                    {client.contactPhone}
+                  </div>
+                </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
 
         {/* Provider */}
         {provider && (
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <CardTitle className="text-lg text-foreground">
-                Proveedor
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <InfoField label="Empresa" value={provider.businessName} />
+          <div className="p-3 rounded-lg bg-card/50 border border-border/50">
+            <h3 className="text-xs font-medium text-muted-foreground mb-2.5">
+              Proveedor
+            </h3>
+            <div className="space-y-1.5">
+              <div>
+                <div className="text-xs text-muted-foreground/80">Empresa</div>
+                <div className="text-sm text-foreground font-medium">
+                  {provider.businessName}
+                </div>
+              </div>
               {provider.contactName && (
-                <InfoField label="Contacto" value={provider.contactName} />
+                <div>
+                  <div className="text-xs text-muted-foreground/80">
+                    Contacto
+                  </div>
+                  <div className="text-sm text-foreground font-medium">
+                    {provider.contactName}
+                  </div>
+                </div>
               )}
               {provider.contactPhone && (
-                <InfoField label="Teléfono" value={provider.contactPhone} />
+                <div>
+                  <div className="text-xs text-muted-foreground/80">
+                    Teléfono
+                  </div>
+                  <div className="text-sm text-foreground font-medium">
+                    {provider.contactPhone}
+                  </div>
+                </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
-
-        {/* Driver */}
-        <Card className="bg-card border-border">
-          <CardHeader>
-            <CardTitle className="text-lg text-foreground">Conductor</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <InfoField label="Nombre" value={driver.name} />
-            <InfoField label="Tipo de Licencia" value={driver.licenseType} />
-            {driver.phone && (
-              <InfoField label="Teléfono" value={driver.phone} />
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Vehicle */}
-        <Card className="bg-card border-border">
-          <CardHeader>
-            <CardTitle className="text-lg text-foreground">Vehículo</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <InfoField label="Patente" value={vehicle.plateNumber} />
-            <InfoField label="Tipo" value={vehicle.type} />
-            {vehicle.brand && vehicle.model && (
-              <InfoField
-                label="Marca/Modelo"
-                value={`${vehicle.brand} ${vehicle.model}`}
-              />
-            )}
-          </CardContent>
-        </Card>
       </div>
 
-      {/* Schedule */}
-      <Card className="bg-card border-border">
-        <CardHeader>
-          <CardTitle className="text-lg text-foreground">
-            Programación
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Schedule - Horizontal compact layout */}
+      <div className="p-4 rounded-lg bg-card/50 border border-border/50">
+        <h3 className="text-sm font-medium text-foreground mb-3">
+          Programación
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <div className="text-sm font-medium text-foreground mb-2">
+            <div className="text-xs font-medium text-muted-foreground mb-2">
               Fechas Programadas
             </div>
-            <InfoField
-              label="Inicio"
-              value={new Date(operation.scheduledStartDate).toLocaleString(
-                "es-CL"
+            <div className="space-y-1.5">
+              <div>
+                <div className="text-xs text-muted-foreground/80">Inicio</div>
+                <div className="text-sm text-foreground font-medium">
+                  {new Date(operation.scheduledStartDate).toLocaleString(
+                    "es-CL",
+                    {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    }
+                  )}
+                </div>
+              </div>
+              {operation.scheduledEndDate && (
+                <div>
+                  <div className="text-xs text-muted-foreground/80">Fin</div>
+                  <div className="text-sm text-foreground font-medium">
+                    {new Date(operation.scheduledEndDate).toLocaleString(
+                      "es-CL",
+                      {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      }
+                    )}
+                  </div>
+                </div>
               )}
-            />
-            {operation.scheduledEndDate && (
-              <InfoField
-                label="Fin"
-                value={new Date(operation.scheduledEndDate).toLocaleString(
-                  "es-CL"
-                )}
-              />
-            )}
+            </div>
           </div>
           <div>
-            <div className="text-sm font-medium text-foreground mb-2">
+            <div className="text-xs font-medium text-muted-foreground mb-2">
               Fechas Reales
             </div>
-            {operation.actualStartDate ? (
-              <InfoField
-                label="Inicio Real"
-                value={new Date(operation.actualStartDate).toLocaleString(
-                  "es-CL"
-                )}
-              />
-            ) : (
-              <div className="text-sm text-muted-foreground">
-                Aún no ha iniciado
-              </div>
-            )}
-            {operation.actualEndDate && (
-              <InfoField
-                label="Fin Real"
-                value={new Date(operation.actualEndDate).toLocaleString(
-                  "es-CL"
-                )}
-              />
-            )}
+            <div className="space-y-1.5">
+              {operation.actualStartDate ? (
+                <div>
+                  <div className="text-xs text-muted-foreground/80">
+                    Inicio Real
+                  </div>
+                  <div className="text-sm text-foreground font-medium">
+                    {new Date(operation.actualStartDate).toLocaleString(
+                      "es-CL",
+                      {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      }
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-xs text-muted-foreground/60">
+                  Aún no ha iniciado
+                </div>
+              )}
+              {operation.actualEndDate && (
+                <div>
+                  <div className="text-xs text-muted-foreground/80">
+                    Fin Real
+                  </div>
+                  <div className="text-sm text-foreground font-medium">
+                    {new Date(operation.actualEndDate).toLocaleString("es-CL", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
@@ -225,8 +348,8 @@ interface InfoFieldProps {
 function InfoField({ label, value }: InfoFieldProps) {
   return (
     <div>
-      <div className="text-sm text-muted-foreground">{label}</div>
-      <div className="text-foreground font-medium">{value}</div>
+      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className="text-sm text-foreground font-medium">{value}</div>
     </div>
   );
 }
