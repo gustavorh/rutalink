@@ -101,6 +101,16 @@ export class OperationsService {
       );
     }
 
+    // Asignar el vehículo al chofer para el tracking de disponibilidad
+    await this.assignDriverToVehicle(
+      {
+        driverId: createOperationDto.driverId,
+        vehicleId: createOperationDto.vehicleId,
+        notes: `Auto-assigned for operation ${createOperationDto.operationNumber}`,
+      },
+      userId,
+    );
+
     const [newOperation] = await this.db.insert(schema.operations).values({
       ...createOperationDto,
       scheduledStartDate: new Date(createOperationDto.scheduledStartDate),
@@ -263,7 +273,104 @@ export class OperationsService {
     updateOperationDto: UpdateOperationDto,
     userId: number,
   ) {
-    await this.getOperationById(id);
+    const operation = await this.getOperationById(id);
+
+    // Si se está actualizando el chofer o el vehículo, crear nueva asignación
+    if (updateOperationDto.driverId && updateOperationDto.vehicleId) {
+      // Verificar que el chofer y vehículo existen y pertenecen al mismo operador
+      const [driver, vehicle] = await Promise.all([
+        this.db
+          .select()
+          .from(schema.drivers)
+          .where(eq(schema.drivers.id, updateOperationDto.driverId))
+          .limit(1),
+        this.db
+          .select()
+          .from(schema.vehicles)
+          .where(eq(schema.vehicles.id, updateOperationDto.vehicleId))
+          .limit(1),
+      ]);
+
+      if (driver.length === 0) {
+        throw new NotFoundException(
+          `Driver with ID ${updateOperationDto.driverId} not found`,
+        );
+      }
+
+      if (vehicle.length === 0) {
+        throw new NotFoundException(
+          `Vehicle with ID ${updateOperationDto.vehicleId} not found`,
+        );
+      }
+
+      // Verificar que pertenecen al mismo operador que la operación
+      if (
+        driver[0].operatorId !== operation.operation.operatorId ||
+        vehicle[0].operatorId !== operation.operation.operatorId
+      ) {
+        throw new BadRequestException(
+          'Driver and vehicle must belong to the same operator as the operation',
+        );
+      }
+
+      // Asignar el vehículo al chofer
+      await this.assignDriverToVehicle(
+        {
+          driverId: updateOperationDto.driverId,
+          vehicleId: updateOperationDto.vehicleId,
+          notes: `Auto-assigned for operation ${operation.operation.operationNumber} (updated)`,
+        },
+        userId,
+      );
+    } else if (updateOperationDto.driverId || updateOperationDto.vehicleId) {
+      // Si solo se actualiza uno de los dos, usar el valor existente para el otro
+      const driverId =
+        updateOperationDto.driverId || operation.operation.driverId;
+      const vehicleId =
+        updateOperationDto.vehicleId || operation.operation.vehicleId;
+
+      // Verificar que ambos existen
+      const [driver, vehicle] = await Promise.all([
+        this.db
+          .select()
+          .from(schema.drivers)
+          .where(eq(schema.drivers.id, driverId))
+          .limit(1),
+        this.db
+          .select()
+          .from(schema.vehicles)
+          .where(eq(schema.vehicles.id, vehicleId))
+          .limit(1),
+      ]);
+
+      if (driver.length === 0) {
+        throw new NotFoundException(`Driver with ID ${driverId} not found`);
+      }
+
+      if (vehicle.length === 0) {
+        throw new NotFoundException(`Vehicle with ID ${vehicleId} not found`);
+      }
+
+      // Verificar que pertenecen al mismo operador
+      if (
+        driver[0].operatorId !== operation.operation.operatorId ||
+        vehicle[0].operatorId !== operation.operation.operatorId
+      ) {
+        throw new BadRequestException(
+          'Driver and vehicle must belong to the same operator as the operation',
+        );
+      }
+
+      // Asignar el vehículo al chofer
+      await this.assignDriverToVehicle(
+        {
+          driverId,
+          vehicleId,
+          notes: `Auto-assigned for operation ${operation.operation.operationNumber} (updated)`,
+        },
+        userId,
+      );
+    }
 
     await this.db
       .update(schema.operations)
