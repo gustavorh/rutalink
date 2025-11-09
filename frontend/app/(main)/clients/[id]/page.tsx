@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { getToken, isAuthenticated, getUser, logout } from "@/lib/auth";
+import { getToken, isAuthenticated } from "@/lib/auth";
 import {
   getClientById,
   getClientOperations,
@@ -47,6 +47,8 @@ import {
   Package,
   Edit,
   Trash2,
+  Info,
+  BarChart3,
 } from "lucide-react";
 import {
   Dialog,
@@ -56,7 +58,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { DashboardSidebar, DashboardHeader } from "@/components/dashboard";
+
+type TabType = "info" | "stats" | "operations";
 
 export default function ClientDetailPage() {
   const router = useRouter();
@@ -70,6 +73,7 @@ export default function ClientDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabType>("info");
 
   // Pagination for operations
   const [page, setPage] = useState(1);
@@ -130,7 +134,7 @@ export default function ClientDetailPage() {
       if (!token) return;
 
       await deleteClient(token, client.id);
-      router.push("/dashboard/clients");
+      router.push("/clients");
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Error al eliminar cliente"
@@ -187,338 +191,375 @@ export default function ClientDetailPage() {
     );
   };
 
-  const handleLogout = () => {
-    logout();
-  };
-
   if (!mounted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-ui-surface-elevated">
-        <p className="text-foreground">Cargando...</p>
-      </div>
+      <main className="flex-1 overflow-y-auto p-6">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <p className="text-foreground">Cargando...</p>
+        </div>
+      </main>
     );
   }
 
-  const user = getUser();
-  if (!user) {
-    return null;
-  }
-
   return (
-    <div className="flex min-h-screen bg-ui-surface-elevated">
-      {/* Sidebar */}
-      <DashboardSidebar
-        currentPath="/dashboard/clients"
-        onNavigate={(path) => router.push(path)}
-      />
+    <>
+      <main className="flex-1 overflow-y-auto p-6">
+        <div className="max-w-[1400px] mx-auto space-y-6">
+          {/* Back Button */}
+          <Button
+            variant="ghost"
+            onClick={() => router.push("/clients")}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Volver a Clientes
+          </Button>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <DashboardHeader user={user} onLogout={handleLogout} />
-
-        {/* Dashboard Content */}
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-[1400px] mx-auto space-y-6">
-            {/* Back Button */}
-            <Button
-              variant="ghost"
-              onClick={() => router.push("/dashboard/clients")}
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Volver a Clientes
-            </Button>
-
-            {loading ? (
-              <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-                <p className="text-muted-foreground mt-4">Cargando información...</p>
-              </div>
-            ) : error ? (
-              <div className="text-center py-12">
-                <AlertTriangle className="w-12 h-12 text-destructive mx-auto mb-4" />
-                <p className="text-destructive">{error}</p>
-              </div>
-            ) : !client ? (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">Cliente no encontrado</p>
-              </div>
-            ) : (
-              <>
-                {/* Client Header */}
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-                      <Building2 className="w-8 h-8 text-primary" />
-                      {client.businessName}
-                    </h1>
-                    <div className="flex items-center gap-3 mt-2">
-                      <Badge
-                        variant={client.status ? "default" : "outline"}
-                        className={
-                          client.status
-                            ? "bg-success/10 text-success border-success/50"
-                            : "border-slate-500/50 text-muted-foreground"
-                        }
-                      >
-                        {client.status ? "Activo" : "Inactivo"}
-                      </Badge>
-                      {client.industry && (
-                        <Badge
-                          variant="outline"
-                          className="border-primary/50 text-primary"
-                        >
-                          {getIndustryLabel(client.industry)}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={() =>
-                        router.push(`/dashboard/clients/${client.id}/edit`)
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+              <p className="text-muted-foreground mt-4">
+                Cargando información...
+              </p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-12">
+              <AlertTriangle className="w-12 h-12 text-destructive mx-auto mb-4" />
+              <p className="text-destructive">{error}</p>
+            </div>
+          ) : !client ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Cliente no encontrado</p>
+            </div>
+          ) : (
+            <>
+              {/* Client Header */}
+              <div className="flex items-start justify-between">
+                <div>
+                  <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
+                    <Building2 className="w-8 h-8 text-primary" />
+                    {client.businessName}
+                  </h1>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    RUT: {client.taxId || "N/A"}
+                  </p>
+                  <div className="flex items-center gap-3 mt-3">
+                    <Badge
+                      variant={client.status ? "default" : "outline"}
+                      className={
+                        client.status
+                          ? "bg-success/10 text-success border-success/50"
+                          : "border-slate-500/50 text-muted-foreground"
                       }
-                      className="bg-purple-600 hover:bg-purple-700 text-white"
                     >
-                      <Edit className="mr-2 h-4 w-4" />
-                      Editar
-                    </Button>
-                    <Button
-                      onClick={handleDeleteClick}
-                      variant="outline"
-                      className="border-destructive/50 text-destructive hover:bg-destructive/10"
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Eliminar
-                    </Button>
+                      {client.status ? "Activo" : "Inactivo"}
+                    </Badge>
+                    {client.industry && (
+                      <Badge
+                        variant="outline"
+                        className="border-primary/50 text-primary"
+                      >
+                        {getIndustryLabel(client.industry)}
+                      </Badge>
+                    )}
                   </div>
                 </div>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => router.push(`/clients/${client.id}/edit`)}
+                    className="bg-purple-600 hover:bg-purple-700 text-white"
+                  >
+                    <Edit className="mr-2 h-4 w-4" />
+                    Editar
+                  </Button>
+                  <Button
+                    onClick={handleDeleteClick}
+                    variant="outline"
+                    className="border-destructive/50 text-destructive hover:bg-destructive/10"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Eliminar
+                  </Button>
+                </div>
+              </div>
 
-                {/* Client Information Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Contact Information */}
+              {/* Tabs */}
+              <div className="flex gap-2 border-b border-border">
+                <button
+                  onClick={() => setActiveTab("info")}
+                  className={`flex items-center gap-2 px-6 py-3 font-medium transition-colors relative ${
+                    activeTab === "info"
+                      ? "text-primary"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Info className="w-4 h-4" />
+                  Información
+                  {activeTab === "info" && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                  )}
+                </button>
+                <button
+                  onClick={() => setActiveTab("stats")}
+                  className={`flex items-center gap-2 px-6 py-3 font-medium transition-colors relative ${
+                    activeTab === "stats"
+                      ? "text-primary"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <BarChart3 className="w-4 h-4" />
+                  Estadísticas
+                  {activeTab === "stats" && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                  )}
+                </button>
+                <button
+                  onClick={() => setActiveTab("operations")}
+                  className={`flex items-center gap-2 px-6 py-3 font-medium transition-colors relative ${
+                    activeTab === "operations"
+                      ? "text-primary"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Package className="w-4 h-4" />
+                  Operaciones ({total})
+                  {activeTab === "operations" && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                  )}
+                </button>
+              </div>
+
+              {/* Tab Content */}
+              {activeTab === "info" && (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Contact Information */}
+                    <Card className="bg-card border-border">
+                      <CardHeader>
+                        <CardTitle className="text-foreground flex items-center gap-2">
+                          <FileText className="w-5 h-5 text-primary" />
+                          Información de Contacto
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div>
+                          <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
+                            RUT
+                          </p>
+                          <p className="text-foreground font-mono">
+                            {client.taxId || "N/A"}
+                          </p>
+                        </div>
+                        {client.contactName && (
+                          <div>
+                            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
+                              Contacto
+                            </p>
+                            <p className="text-foreground">
+                              {client.contactName}
+                            </p>
+                          </div>
+                        )}
+                        {client.contactEmail && (
+                          <div className="flex items-center gap-2">
+                            <Mail className="w-4 h-4 text-muted-foreground" />
+                            <a
+                              href={`mailto:${client.contactEmail}`}
+                              className="text-primary hover:text-blue-300"
+                            >
+                              {client.contactEmail}
+                            </a>
+                          </div>
+                        )}
+                        {client.contactPhone && (
+                          <div className="flex items-center gap-2">
+                            <Phone className="w-4 h-4 text-muted-foreground" />
+                            <a
+                              href={`tel:${client.contactPhone}`}
+                              className="text-primary hover:text-blue-300"
+                            >
+                              {client.contactPhone}
+                            </a>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    {/* Location Information */}
+                    <Card className="bg-card border-border">
+                      <CardHeader>
+                        <CardTitle className="text-foreground flex items-center gap-2">
+                          <MapPin className="w-5 h-5 text-success" />
+                          Ubicación
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {client.address && (
+                          <div>
+                            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
+                              Dirección
+                            </p>
+                            <p className="text-foreground">{client.address}</p>
+                          </div>
+                        )}
+                        {client.city && (
+                          <div>
+                            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
+                              Ciudad
+                            </p>
+                            <p className="text-foreground">{client.city}</p>
+                          </div>
+                        )}
+                        {client.region && (
+                          <div>
+                            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
+                              Región
+                            </p>
+                            <p className="text-foreground">{client.region}</p>
+                          </div>
+                        )}
+                        {client.country && (
+                          <div>
+                            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
+                              País
+                            </p>
+                            <p className="text-foreground">{client.country}</p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Additional Information */}
+                  {(client.observations || client.notes) && (
+                    <Card className="bg-card border-border">
+                      <CardHeader>
+                        <CardTitle className="text-foreground">
+                          Información Adicional
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {client.observations && (
+                          <div>
+                            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
+                              Observaciones
+                            </p>
+                            <p className="text-foreground">
+                              {client.observations}
+                            </p>
+                          </div>
+                        )}
+                        {client.notes && (
+                          <div>
+                            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
+                              Notas Internas
+                            </p>
+                            <p className="text-foreground">{client.notes}</p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              )}
+
+              {/* Statistics Tab */}
+              {activeTab === "stats" && statistics && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                   <Card className="bg-card border-border">
-                    <CardHeader>
-                      <CardTitle className="text-foreground flex items-center gap-2">
-                        <FileText className="w-5 h-5 text-primary" />
-                        Información de Contacto
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div>
-                        <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
-                          RUT
-                        </p>
-                        <p className="text-foreground font-mono">
-                          {client.taxId || "N/A"}
-                        </p>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs font-medium text-muted-foreground">
+                            Total Operaciones
+                          </p>
+                          <p className="text-2xl font-bold text-foreground mt-1">
+                            {statistics.totalOperations}
+                          </p>
+                        </div>
+                        <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                          <Package className="w-5 h-5 text-primary" />
+                        </div>
                       </div>
-                      {client.contactName && (
-                        <div>
-                          <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
-                            Contacto
-                          </p>
-                          <p className="text-foreground">{client.contactName}</p>
-                        </div>
-                      )}
-                      {client.contactEmail && (
-                        <div className="flex items-center gap-2">
-                          <Mail className="w-4 h-4 text-muted-foreground" />
-                          <a
-                            href={`mailto:${client.contactEmail}`}
-                            className="text-primary hover:text-blue-300"
-                          >
-                            {client.contactEmail}
-                          </a>
-                        </div>
-                      )}
-                      {client.contactPhone && (
-                        <div className="flex items-center gap-2">
-                          <Phone className="w-4 h-4 text-muted-foreground" />
-                          <a
-                            href={`tel:${client.contactPhone}`}
-                            className="text-primary hover:text-blue-300"
-                          >
-                            {client.contactPhone}
-                          </a>
-                        </div>
-                      )}
                     </CardContent>
                   </Card>
 
-                  {/* Location Information */}
                   <Card className="bg-card border-border">
-                    <CardHeader>
-                      <CardTitle className="text-foreground flex items-center gap-2">
-                        <MapPin className="w-5 h-5 text-success" />
-                        Ubicación
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      {client.address && (
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
-                            Dirección
+                          <p className="text-xs font-medium text-muted-foreground">
+                            Completadas
                           </p>
-                          <p className="text-foreground">{client.address}</p>
+                          <p className="text-2xl font-bold text-foreground mt-1">
+                            {statistics.completedOperations}
+                          </p>
                         </div>
-                      )}
-                      {client.city && (
+                        <div className="w-10 h-10 bg-success/10 rounded-lg flex items-center justify-center">
+                          <CheckCircle className="w-5 h-5 text-success" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-card border-border">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
-                            Ciudad
+                          <p className="text-xs font-medium text-muted-foreground">
+                            En Progreso
                           </p>
-                          <p className="text-foreground">{client.city}</p>
+                          <p className="text-2xl font-bold text-foreground mt-1">
+                            {statistics.inProgressOperations}
+                          </p>
                         </div>
-                      )}
-                      {client.region && (
+                        <div className="w-10 h-10 bg-warning/10 rounded-lg flex items-center justify-center">
+                          <Clock className="w-5 h-5 text-warning" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-card border-border">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
-                            Región
+                          <p className="text-xs font-medium text-muted-foreground">
+                            Programadas
                           </p>
-                          <p className="text-foreground">{client.region}</p>
+                          <p className="text-2xl font-bold text-foreground mt-1">
+                            {statistics.scheduledOperations}
+                          </p>
                         </div>
-                      )}
-                      {client.country && (
+                        <div className="w-10 h-10 bg-secondary/10 rounded-lg flex items-center justify-center">
+                          <Calendar className="w-5 h-5 text-secondary" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-card border-border">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
-                            País
+                          <p className="text-xs font-medium text-muted-foreground">
+                            Canceladas
                           </p>
-                          <p className="text-foreground">{client.country}</p>
+                          <p className="text-2xl font-bold text-foreground mt-1">
+                            {statistics.cancelledOperations}
+                          </p>
                         </div>
-                      )}
+                        <div className="w-10 h-10 bg-destructive/10 rounded-lg flex items-center justify-center">
+                          <AlertTriangle className="w-5 h-5 text-destructive" />
+                        </div>
+                      </div>
                     </CardContent>
                   </Card>
                 </div>
+              )}
 
-                {/* Additional Information */}
-                {(client.observations || client.notes) && (
-                  <Card className="bg-card border-border">
-                    <CardHeader>
-                      <CardTitle className="text-foreground">
-                        Información Adicional
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      {client.observations && (
-                        <div>
-                          <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
-                            Observaciones
-                          </p>
-                          <p className="text-foreground">
-                            {client.observations}
-                          </p>
-                        </div>
-                      )}
-                      {client.notes && (
-                        <div>
-                          <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
-                            Notas Internas
-                          </p>
-                          <p className="text-foreground">{client.notes}</p>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Statistics */}
-                {statistics && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                    <Card className="bg-card border-border">
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-xs font-medium text-muted-foreground">
-                              Total Operaciones
-                            </p>
-                            <p className="text-2xl font-bold text-foreground mt-1">
-                              {statistics.totalOperations}
-                            </p>
-                          </div>
-                          <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                            <Package className="w-5 h-5 text-primary" />
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="bg-card border-border">
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-xs font-medium text-muted-foreground">
-                              Completadas
-                            </p>
-                            <p className="text-2xl font-bold text-foreground mt-1">
-                              {statistics.completedOperations}
-                            </p>
-                          </div>
-                          <div className="w-10 h-10 bg-success/10 rounded-lg flex items-center justify-center">
-                            <CheckCircle className="w-5 h-5 text-success" />
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="bg-card border-border">
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-xs font-medium text-muted-foreground">
-                              En Progreso
-                            </p>
-                            <p className="text-2xl font-bold text-foreground mt-1">
-                              {statistics.inProgressOperations}
-                            </p>
-                          </div>
-                          <div className="w-10 h-10 bg-warning/10 rounded-lg flex items-center justify-center">
-                            <Clock className="w-5 h-5 text-warning" />
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="bg-card border-border">
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-xs font-medium text-muted-foreground">
-                              Programadas
-                            </p>
-                            <p className="text-2xl font-bold text-foreground mt-1">
-                              {statistics.scheduledOperations}
-                            </p>
-                          </div>
-                          <div className="w-10 h-10 bg-secondary/10 rounded-lg flex items-center justify-center">
-                            <Calendar className="w-5 h-5 text-secondary" />
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="bg-card border-border">
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-xs font-medium text-muted-foreground">
-                              Canceladas
-                            </p>
-                            <p className="text-2xl font-bold text-foreground mt-1">
-                              {statistics.cancelledOperations}
-                            </p>
-                          </div>
-                          <div className="w-10 h-10 bg-destructive/10 rounded-lg flex items-center justify-center">
-                            <AlertTriangle className="w-5 h-5 text-destructive" />
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                )}
-
-                {/* Operations History */}
+              {/* Operations Tab */}
+              {activeTab === "operations" && (
                 <Card className="bg-card border-border">
                   <CardHeader>
                     <CardTitle className="text-foreground flex items-center gap-2">
@@ -574,9 +615,7 @@ export default function ClientDetailPage() {
                                   key={operation.id}
                                   className="border-b border-border hover:bg-ui-surface-elevated cursor-pointer"
                                   onClick={() =>
-                                    router.push(
-                                      `/dashboard/operations/${operation.id}`
-                                    )
+                                    router.push(`/operations/${operation.id}`)
                                   }
                                 >
                                   <TableCell className="font-mono text-sm text-foreground">
@@ -669,14 +708,18 @@ export default function ClientDetailPage() {
                                     (p >= page - 1 && p <= page + 1)
                                 )
                                 .map((p, index, array) => (
-                                  <div key={p} className="flex items-center">
+                                  <>
                                     {index > 0 &&
                                       array[index - 1] !== p - 1 && (
-                                        <span className="text-muted-foreground px-2">
+                                        <span
+                                          key={`ellipsis-${p}`}
+                                          className="text-muted-foreground px-2"
+                                        >
                                           ...
                                         </span>
                                       )}
                                     <Button
+                                      key={p}
                                       variant={
                                         p === page ? "default" : "outline"
                                       }
@@ -689,7 +732,7 @@ export default function ClientDetailPage() {
                                     >
                                       {p}
                                     </Button>
-                                  </div>
+                                  </>
                                 ))}
                               <Button
                                 variant="outline"
@@ -706,11 +749,11 @@ export default function ClientDetailPage() {
                     )}
                   </CardContent>
                 </Card>
-              </>
-            )}
-          </div>
-        </main>
-      </div>
+              )}
+            </>
+          )}
+        </div>
+      </main>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -721,7 +764,9 @@ export default function ClientDetailPage() {
             </DialogTitle>
             <DialogDescription className="text-muted-foreground">
               ¿Estás seguro de que deseas eliminar al cliente{" "}
-              <strong className="text-foreground">{client?.businessName}</strong>
+              <strong className="text-foreground">
+                {client?.businessName}
+              </strong>
               ? Esta acción marcará el cliente como inactivo.
             </DialogDescription>
           </DialogHeader>
@@ -742,6 +787,6 @@ export default function ClientDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

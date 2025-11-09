@@ -598,12 +598,18 @@ export default function RoutesPage() {
                         <TableHead className="text-muted-foreground">
                           Duración
                         </TableHead>
-                        <TableHead className="text-muted-foreground">Tipo</TableHead>
+                        <TableHead className="text-muted-foreground">
+                          Tipo
+                        </TableHead>
                         <TableHead className="text-muted-foreground">
                           Dificultad
                         </TableHead>
-                        <TableHead className="text-muted-foreground">Peajes</TableHead>
-                        <TableHead className="text-muted-foreground">Estado</TableHead>
+                        <TableHead className="text-muted-foreground">
+                          Peajes
+                        </TableHead>
+                        <TableHead className="text-muted-foreground">
+                          Estado
+                        </TableHead>
                         <TableHead className="text-right text-muted-foreground">
                           Acciones
                         </TableHead>
@@ -743,7 +749,7 @@ export default function RoutesPage() {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() =>
-                                  router.push(`/dashboard/routes/${route.id}`)
+                                  router.push(`/routes/${route.id}`)
                                 }
                                 className="text-muted-foreground hover:text-primary hover:bg-primary/10"
                                 title="Ver detalles"
@@ -801,7 +807,9 @@ export default function RoutesPage() {
                       .map((p, index, array) => (
                         <div key={p} className="flex items-center">
                           {index > 0 && array[index - 1] !== p - 1 && (
-                            <span className="text-muted-foreground px-2">...</span>
+                            <span className="text-muted-foreground px-2">
+                              ...
+                            </span>
                           )}
                           <Button
                             variant={p === page ? "default" : "outline"}
@@ -841,9 +849,9 @@ export default function RoutesPage() {
             </DialogTitle>
             <DialogDescription className="text-muted-foreground">
               ¿Estás seguro de que deseas eliminar la ruta{" "}
-              <strong className="text-foreground">{routeToDelete?.name}</strong>?
-              Esta acción no se puede deshacer y no podrá realizarse si la ruta
-              está siendo usada en operaciones.
+              <strong className="text-foreground">{routeToDelete?.name}</strong>
+              ? Esta acción no se puede deshacer y no podrá realizarse si la
+              ruta está siendo usada en operaciones.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -1016,7 +1024,10 @@ export default function RoutesPage() {
                 </div>
 
                 <div>
-                  <Label htmlFor="estimatedDuration" className="text-foreground">
+                  <Label
+                    htmlFor="estimatedDuration"
+                    className="text-foreground"
+                  >
                     Duración Estimada (min)
                   </Label>
                   <Input

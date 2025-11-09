@@ -684,7 +684,7 @@ export default function TrucksPage() {
                                   variant="ghost"
                                   size="icon"
                                   onClick={() =>
-                                    router.push(`/dashboard/trucks/${truck.id}`)
+                                    router.push(`/trucks/${truck.id}`)
                                   }
                                   className="text-muted-foreground hover:text-primary hover:bg-primary/10"
                                   title="Ver detalles"

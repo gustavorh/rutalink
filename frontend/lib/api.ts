@@ -324,7 +324,7 @@ export async function assignDriverToVehicle(
   data: AssignDriverToVehicleInput
 ): Promise<DriverVehicleAssignmentWithVehicle> {
   return authenticatedRequest<DriverVehicleAssignmentWithVehicle>(
-    `/api/drivers/${driverId}/assign-vehicle`,
+    `/api/operations/assignments`,
     token,
     {
       method: "POST",
@@ -342,7 +342,7 @@ export async function unassignDriverFromVehicle(
   data?: UnassignDriverFromVehicleInput
 ): Promise<DriverVehicleAssignmentWithVehicle> {
   return authenticatedRequest<DriverVehicleAssignmentWithVehicle>(
-    `/api/drivers/assignments/${assignmentId}/unassign`,
+    `/api/operations/assignments/${assignmentId}/unassign`,
     token,
     {
       method: "PUT",
@@ -359,7 +359,7 @@ export async function getDriverVehicleAssignments(
   driverId: number
 ): Promise<DriverVehicleAssignmentWithVehicle[]> {
   return authenticatedRequest<DriverVehicleAssignmentWithVehicle[]>(
-    `/api/drivers/${driverId}/assignments`,
+    `/api/operations/assignments/driver/${driverId}`,
     token
   );
 }
@@ -372,7 +372,7 @@ export async function getActiveDriverVehicleAssignment(
   driverId: number
 ): Promise<DriverVehicleAssignmentWithVehicle | null> {
   return authenticatedRequest<DriverVehicleAssignmentWithVehicle | null>(
-    `/api/drivers/${driverId}/active-assignment`,
+    `/api/operations/assignments/driver/${driverId}/active`,
     token
   );
 }
@@ -399,7 +399,7 @@ export async function getDriverOperations(
   }
   const queryString = queryParams.toString();
   return authenticatedRequest<DriverPaginatedOperations>(
-    `/api/drivers/${driverId}/operations${
+    `/api/operations/driver/${driverId}/history${
       queryString ? `?${queryString}` : ""
     }`,
     token
@@ -414,7 +414,7 @@ export async function getDriverStatistics(
   driverId: number
 ): Promise<DriverStatistics> {
   return authenticatedRequest<DriverStatistics>(
-    `/api/drivers/${driverId}/statistics`,
+    `/api/operations/driver/${driverId}/statistics`,
     token
   );
 }

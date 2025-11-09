@@ -520,7 +520,9 @@ export default function ClientsPage() {
             {loading ? (
               <div className="text-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-                <p className="text-muted-foreground mt-4">Cargando clientes...</p>
+                <p className="text-muted-foreground mt-4">
+                  Cargando clientes...
+                </p>
               </div>
             ) : error ? (
               <div className="text-center py-12">
@@ -530,7 +532,9 @@ export default function ClientsPage() {
             ) : clients.length === 0 ? (
               <div className="text-center py-12">
                 <Building2 className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                <p className="text-muted-foreground">No se encontraron clientes</p>
+                <p className="text-muted-foreground">
+                  No se encontraron clientes
+                </p>
                 <Button
                   onClick={handleCreateClick}
                   className="mt-4 bg-primary hover:bg-primary-dark"
@@ -548,15 +552,21 @@ export default function ClientsPage() {
                         <TableHead className="text-muted-foreground">
                           Razón Social
                         </TableHead>
-                        <TableHead className="text-muted-foreground">RUT</TableHead>
+                        <TableHead className="text-muted-foreground">
+                          RUT
+                        </TableHead>
                         <TableHead className="text-muted-foreground">
                           Contacto
                         </TableHead>
                         <TableHead className="text-muted-foreground">
                           Ubicación
                         </TableHead>
-                        <TableHead className="text-muted-foreground">Rubro</TableHead>
-                        <TableHead className="text-muted-foreground">Estado</TableHead>
+                        <TableHead className="text-muted-foreground">
+                          Rubro
+                        </TableHead>
+                        <TableHead className="text-muted-foreground">
+                          Estado
+                        </TableHead>
                         <TableHead className="text-right text-muted-foreground">
                           Acciones
                         </TableHead>
@@ -660,7 +670,7 @@ export default function ClientsPage() {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() =>
-                                  router.push(`/dashboard/clients/${client.id}`)
+                                  router.push(`/clients/${client.id}`)
                                 }
                                 className="text-muted-foreground hover:text-primary hover:bg-primary/10"
                                 title="Ver detalles"
@@ -718,7 +728,9 @@ export default function ClientsPage() {
                       .map((p, index, array) => (
                         <div key={p} className="flex items-center">
                           {index > 0 && array[index - 1] !== p - 1 && (
-                            <span className="text-muted-foreground px-2">...</span>
+                            <span className="text-muted-foreground px-2">
+                              ...
+                            </span>
                           )}
                           <Button
                             variant={p === page ? "default" : "outline"}

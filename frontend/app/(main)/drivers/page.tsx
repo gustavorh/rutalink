@@ -381,7 +381,9 @@ export default function DriversPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground">Activos</p>
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Activos
+                  </p>
                   <p className="text-2xl font-bold text-foreground mt-1">
                     {activeDrivers}
                   </p>
@@ -571,7 +573,9 @@ export default function DriversPage() {
             {loading ? (
               <div className="text-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-                <p className="text-muted-foreground mt-4">Cargando choferes...</p>
+                <p className="text-muted-foreground mt-4">
+                  Cargando choferes...
+                </p>
               </div>
             ) : error ? (
               <div className="text-center py-12">
@@ -581,7 +585,9 @@ export default function DriversPage() {
             ) : drivers.length === 0 ? (
               <div className="text-center py-12">
                 <Users className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                <p className="text-muted-foreground">No se encontraron choferes</p>
+                <p className="text-muted-foreground">
+                  No se encontraron choferes
+                </p>
                 <Button
                   onClick={handleCreateClick}
                   className="mt-4 bg-primary hover:bg-primary-dark"
@@ -596,7 +602,9 @@ export default function DriversPage() {
                   <Table>
                     <TableHeader>
                       <TableRow className="border-b border-border hover:bg-transparent">
-                        <TableHead className="text-muted-foreground">RUT</TableHead>
+                        <TableHead className="text-muted-foreground">
+                          RUT
+                        </TableHead>
                         <TableHead className="text-muted-foreground">
                           Nombre Completo
                         </TableHead>
@@ -609,8 +617,12 @@ export default function DriversPage() {
                         <TableHead className="text-muted-foreground">
                           Vigencia
                         </TableHead>
-                        <TableHead className="text-muted-foreground">Tipo</TableHead>
-                        <TableHead className="text-muted-foreground">Estado</TableHead>
+                        <TableHead className="text-muted-foreground">
+                          Tipo
+                        </TableHead>
+                        <TableHead className="text-muted-foreground">
+                          Estado
+                        </TableHead>
                         <TableHead className="text-right text-muted-foreground">
                           Acciones
                         </TableHead>
@@ -725,9 +737,7 @@ export default function DriversPage() {
                                   variant="ghost"
                                   size="icon"
                                   onClick={() =>
-                                    router.push(
-                                      `/dashboard/drivers/${driver.id}`
-                                    )
+                                    router.push(`/drivers/${driver.id}`)
                                   }
                                   className="text-muted-foreground hover:text-primary hover:bg-primary/10"
                                   title="Ver detalles"
@@ -786,7 +796,9 @@ export default function DriversPage() {
                       .map((p, index, array) => (
                         <div key={p} className="flex items-center">
                           {index > 0 && array[index - 1] !== p - 1 && (
-                            <span className="text-muted-foreground px-2">...</span>
+                            <span className="text-muted-foreground px-2">
+                              ...
+                            </span>
                           )}
                           <Button
                             variant={p === page ? "default" : "outline"}

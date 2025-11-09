@@ -386,7 +386,10 @@ export default function ProvidersPage() {
                   <p className="text-2xl font-bold text-foreground mt-1">
                     {avgRating}
                     {avgRating !== "N/A" && (
-                      <span className="text-sm text-muted-foreground"> / 5</span>
+                      <span className="text-sm text-muted-foreground">
+                        {" "}
+                        / 5
+                      </span>
                     )}
                   </p>
                 </div>
@@ -544,7 +547,9 @@ export default function ProvidersPage() {
             {loading ? (
               <div className="text-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-                <p className="text-muted-foreground mt-4">Cargando proveedores...</p>
+                <p className="text-muted-foreground mt-4">
+                  Cargando proveedores...
+                </p>
               </div>
             ) : error ? (
               <div className="text-center py-12">
@@ -554,7 +559,9 @@ export default function ProvidersPage() {
             ) : providers.length === 0 ? (
               <div className="text-center py-12">
                 <Truck className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                <p className="text-muted-foreground">No se encontraron proveedores</p>
+                <p className="text-muted-foreground">
+                  No se encontraron proveedores
+                </p>
                 <Button
                   onClick={handleCreateClick}
                   className="mt-4 bg-primary hover:bg-primary-dark"
@@ -572,7 +579,9 @@ export default function ProvidersPage() {
                         <TableHead className="text-muted-foreground">
                           Razón Social
                         </TableHead>
-                        <TableHead className="text-muted-foreground">RUT</TableHead>
+                        <TableHead className="text-muted-foreground">
+                          RUT
+                        </TableHead>
                         <TableHead className="text-muted-foreground">
                           Contacto
                         </TableHead>
@@ -582,11 +591,15 @@ export default function ProvidersPage() {
                         <TableHead className="text-muted-foreground">
                           Tipo de Servicio
                         </TableHead>
-                        <TableHead className="text-muted-foreground">Flota</TableHead>
+                        <TableHead className="text-muted-foreground">
+                          Flota
+                        </TableHead>
                         <TableHead className="text-muted-foreground">
                           Calificación
                         </TableHead>
-                        <TableHead className="text-muted-foreground">Estado</TableHead>
+                        <TableHead className="text-muted-foreground">
+                          Estado
+                        </TableHead>
                         <TableHead className="text-right text-muted-foreground">
                           Acciones
                         </TableHead>
@@ -718,9 +731,7 @@ export default function ProvidersPage() {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() =>
-                                  router.push(
-                                    `/dashboard/providers/${provider.id}`
-                                  )
+                                  router.push(`/providers/${provider.id}`)
                                 }
                                 className="text-muted-foreground hover:text-primary hover:bg-primary/10"
                                 title="Ver detalles"
@@ -778,7 +789,9 @@ export default function ProvidersPage() {
                       .map((p, index, array) => (
                         <div key={p} className="flex items-center">
                           {index > 0 && array[index - 1] !== p - 1 && (
-                            <span className="text-muted-foreground px-2">...</span>
+                            <span className="text-muted-foreground px-2">
+                              ...
+                            </span>
                           )}
                           <Button
                             variant={p === page ? "default" : "outline"}
