@@ -131,17 +131,6 @@ export function DashboardSidebar({
               >
                 Programación de Operaciones
               </div>
-              {/* Módulo de Administración y Control de Operaciones */}
-              <div
-                onClick={() => onNavigate("/dashboard/#")}
-                className={`px-3 py-2 text-xs cursor-pointer rounded transition-colors ${
-                  isActive("/dashboard/operations/admin")
-                    ? "bg-primary/20 text-primary border-l-2 border-primary font-medium"
-                    : "text-muted-foreground hover:text-foreground hover:bg-ui-surface-hover"
-                }`}
-              >
-                Administración y Control de Operaciones
-              </div>
               <div
                 onClick={() => onNavigate("/dashboard")}
                 className={`px-3 py-2 text-xs cursor-pointer rounded transition-colors ${
