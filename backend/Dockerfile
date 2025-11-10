@@ -12,11 +12,19 @@ COPY package*.json ./
 # Install ALL dependencies (including devDependencies needed for build)
 RUN npm ci && npm cache clean --force
 
+# Copy TypeScript configuration
+COPY tsconfig*.json ./
+COPY nest-cli.json ./
+
 # Copy source code
-COPY . .
+COPY src ./src
+COPY drizzle ./drizzle
 
 # Build the application
 RUN npm run build
+
+# Verify dist folder was created
+RUN ls -la dist/
 
 # Production stage
 FROM node:20-alpine AS production
