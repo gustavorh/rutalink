@@ -89,6 +89,15 @@ services:
       - backend
     networks:
       - rutalink-network
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.routers.rutalink-frontend.rule=Host(`rutalink.gustavorh.com`)"
+      - "traefik.http.routers.rutalink-frontend.entrypoints=websecure"
+      - "traefik.http.routers.rutalink-frontend.tls=true"
+      - "traefik.http.routers.rutalink-frontend.tls.certresolver=cloudflare"
+      - "traefik.http.services.rutalink-frontend.loadbalancer.server.port=3000"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000"]
       interval: 30s
@@ -99,6 +108,8 @@ services:
 networks:
   rutalink-network:
     driver: bridge
+  proxy:
+    external: true
 
 volumes:
   mysql_data:
