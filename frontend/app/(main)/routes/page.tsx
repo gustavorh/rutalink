@@ -11,21 +11,7 @@ import type {
   UpdateRouteInput,
 } from "@/types/routes";
 import { ROUTE_TYPES, DIFFICULTY_LEVELS } from "@/types/routes";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -40,20 +26,14 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import {
   Plus,
-  Search,
   Edit,
   Trash2,
   Eye,
   Route as RouteIcon,
-  AlertTriangle,
   CheckCircle,
-  Filter,
-  Download,
   MapPin,
-  Clock,
   Navigation,
   FileText,
-  DollarSign,
 } from "lucide-react";
 import {
   Dialog,
@@ -63,6 +43,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DataTable,
+  DataTableColumn,
+  DataTableFilter,
+  DataTableAction,
+} from "@/components/ui/data-table";
 
 export default function RoutesPage() {
   const router = useRouter();
@@ -283,6 +269,194 @@ export default function RoutesPage() {
     return `${mins}m`;
   };
 
+  // Table Columns Configuration
+  const tableColumns: DataTableColumn<Route>[] = [
+    {
+      key: "name",
+      header: "Nombre del Tramo",
+      accessor: (route) => (
+        <div>
+          <div className="font-medium text-foreground">{route.name}</div>
+          {route.code && (
+            <div className="text-xs text-muted-foreground mt-1">
+              Código: {route.code}
+            </div>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "route",
+      header: "Ruta",
+      accessor: (route) => (
+        <div className="text-sm space-y-1">
+          <div className="flex items-center gap-1 text-foreground">
+            <MapPin className="w-3 h-3 text-success" />
+            <span className="font-medium">{route.origin}</span>
+          </div>
+          <div className="flex items-center gap-1 text-foreground">
+            <Navigation className="w-3 h-3 text-destructive" />
+            <span className="font-medium">{route.destination}</span>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "details",
+      header: "Detalles",
+      accessor: (route) => (
+        <div className="text-sm space-y-1">
+          {route.distance && (
+            <div className="text-foreground">
+              <span className="font-medium">{route.distance} km</span>
+            </div>
+          )}
+          {route.estimatedDuration && (
+            <div className="text-muted-foreground text-xs">
+              {formatDuration(route.estimatedDuration)}
+            </div>
+          )}
+          {!route.distance && !route.estimatedDuration && (
+            <span className="text-muted-foreground text-xs">N/A</span>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "routeType",
+      header: "Tipo",
+      accessor: (route) =>
+        route.routeType ? (
+          <Badge variant="outline" className="border-primary/50 text-primary">
+            {getRouteTypeLabel(route.routeType)}
+          </Badge>
+        ) : (
+          <span className="text-muted-foreground text-xs">N/A</span>
+        ),
+    },
+    {
+      key: "difficulty",
+      header: "Dificultad",
+      accessor: (route) =>
+        route.difficulty ? (
+          <span
+            className={`font-medium ${getDifficultyColor(route.difficulty)}`}
+          >
+            {getDifficultyLabel(route.difficulty)}
+          </span>
+        ) : (
+          <span className="text-muted-foreground text-xs">N/A</span>
+        ),
+    },
+    {
+      key: "tolls",
+      header: "Peajes",
+      accessor: (route) =>
+        route.tollsRequired ? (
+          <div className="text-sm">
+            <div className="text-warning font-medium">Sí</div>
+            {route.estimatedTollCost && (
+              <div className="text-muted-foreground text-xs">
+                ${route.estimatedTollCost.toLocaleString("es-CL")}
+              </div>
+            )}
+          </div>
+        ) : (
+          <span className="text-muted-foreground text-xs">No</span>
+        ),
+    },
+    {
+      key: "status",
+      header: "Estado",
+      accessor: (route) => (
+        <Badge
+          variant={route.status ? "default" : "outline"}
+          className={
+            route.status
+              ? "bg-success/10 text-success border-success/50"
+              : "border-slate-500/50 text-muted-foreground"
+          }
+        >
+          {route.status ? "Activa" : "Inactiva"}
+        </Badge>
+      ),
+    },
+  ];
+
+  // Table Filters Configuration
+  const tableFilters: DataTableFilter[] = [
+    {
+      id: "status",
+      label: "Estado",
+      type: "select",
+      value: statusFilter,
+      onChange: setStatusFilter,
+      placeholder: "Estado",
+      options: [
+        { value: "all", label: "Todos los estados" },
+        { value: "active", label: "Activa" },
+        { value: "inactive", label: "Inactiva" },
+      ],
+    },
+    {
+      id: "routeType",
+      label: "Tipo de Ruta",
+      type: "select",
+      value: routeTypeFilter,
+      onChange: setRouteTypeFilter,
+      placeholder: "Tipo de ruta",
+      options: [
+        { value: "all", label: "Todos los tipos" },
+        ...ROUTE_TYPES.map((type) => ({
+          value: type.value,
+          label: type.label,
+        })),
+      ],
+    },
+    {
+      id: "difficulty",
+      label: "Dificultad",
+      type: "select",
+      value: difficultyFilter,
+      onChange: setDifficultyFilter,
+      placeholder: "Dificultad",
+      options: [
+        { value: "all", label: "Todas las dificultades" },
+        ...DIFFICULTY_LEVELS.map((level) => ({
+          value: level.value,
+          label: level.label,
+        })),
+      ],
+    },
+  ];
+
+  // Table Actions Configuration
+  const tableActions: DataTableAction<Route>[] = [
+    {
+      label: "Ver Detalles",
+      icon: <Eye className="h-4 w-4" />,
+      onClick: () => {
+        /* TODO: Implement view details */
+      },
+      variant: "ghost",
+      className: "text-muted-foreground hover:text-foreground",
+    },
+    {
+      label: "Editar",
+      icon: <Edit className="h-4 w-4" />,
+      onClick: handleEditClick,
+      variant: "ghost",
+      className: "text-primary hover:text-primary-dark",
+    },
+    {
+      label: "Eliminar",
+      icon: <Trash2 className="h-4 w-4" />,
+      onClick: handleDeleteClick,
+      variant: "ghost",
+      className: "text-destructive hover:text-red-700",
+    },
+  ];
+
   if (!mounted) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-ui-surface-elevated">
@@ -314,7 +488,7 @@ export default function RoutesPage() {
 
   return (
     <main className="flex-1 overflow-y-auto p-6">
-      <div className="max-w-[1400px] mx-auto space-y-6">
+      <div className="w-full space-y-6">
         {/* Page Header with Stats */}
         <div className="flex items-center justify-between">
           <div>
@@ -415,429 +589,58 @@ export default function RoutesPage() {
           </Card>
         </div>
 
-        {/* Filters Card */}
-        <Card className="bg-card border-border">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="text-foreground flex items-center gap-2">
-                <Filter className="w-5 h-5 text-primary" />
-                Filtros de Búsqueda
-              </CardTitle>
-              <CardDescription className="text-muted-foreground">
-                Filtra y busca rutas según tus criterios
-              </CardDescription>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowFilters(!showFilters)}
-              className="border-border text-foreground hover:bg-ui-surface-elevated"
-            >
-              {showFilters ? "Ocultar" : "Mostrar"} Filtros
-            </Button>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {/* Search Bar - Always Visible */}
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Buscar por nombre, código, origen o destino..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                    className="pl-10 bg-ui-surface-elevated border-border text-foreground placeholder-muted-foreground focus:border-primary"
-                  />
-                </div>
-                <Button
-                  onClick={handleSearch}
-                  className="bg-primary hover:bg-primary-dark"
-                >
-                  Buscar
-                </Button>
-              </div>
-
-              {/* Additional Filters */}
-              {showFilters && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-border">
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground mb-2 block">
-                      Estado
-                    </label>
-                    <Select
-                      value={statusFilter}
-                      onValueChange={setStatusFilter}
-                    >
-                      <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground">
-                        <SelectValue placeholder="Estado" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Todos los estados</SelectItem>
-                        <SelectItem value="active">Activa</SelectItem>
-                        <SelectItem value="inactive">Inactiva</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground mb-2 block">
-                      Tipo de Ruta
-                    </label>
-                    <Select
-                      value={routeTypeFilter}
-                      onValueChange={setRouteTypeFilter}
-                    >
-                      <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground">
-                        <SelectValue placeholder="Tipo de ruta" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Todos los tipos</SelectItem>
-                        {ROUTE_TYPES.map((type) => (
-                          <SelectItem key={type.value} value={type.value}>
-                            {type.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground mb-2 block">
-                      Dificultad
-                    </label>
-                    <Select
-                      value={difficultyFilter}
-                      onValueChange={setDifficultyFilter}
-                    >
-                      <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground">
-                        <SelectValue placeholder="Dificultad" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">
-                          Todas las dificultades
-                        </SelectItem>
-                        {DIFFICULTY_LEVELS.map((level) => (
-                          <SelectItem key={level.value} value={level.value}>
-                            {level.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Routes Table */}
-        <Card className="bg-card border-border">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="text-foreground flex items-center gap-2">
-                <FileText className="w-5 h-5 text-primary" />
-                Listado de Rutas
-              </CardTitle>
-              <CardDescription className="text-muted-foreground">
-                Total de {total} rutas registradas
-              </CardDescription>
-            </div>
-            <div className="flex gap-2">
+        {/* Data Table */}
+        <DataTable
+          data={routes}
+          columns={tableColumns}
+          pagination={{
+            page,
+            limit,
+            total,
+            totalPages,
+          }}
+          onPageChange={setPage}
+          searchValue={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Buscar por nombre, código, origen o destino..."
+          onSearchSubmit={handleSearch}
+          filters={tableFilters}
+          showFilters={showFilters}
+          onToggleFilters={() => setShowFilters(!showFilters)}
+          onClearFilters={() => {
+            setStatusFilter("all");
+            setRouteTypeFilter("all");
+            setDifficultyFilter("all");
+            setSearch("");
+          }}
+          actions={tableActions}
+          loading={loading}
+          error={error}
+          emptyState={
+            <div className="text-center py-12">
+              <RouteIcon className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+              <p className="text-muted-foreground">No se encontraron rutas</p>
               <Button
-                variant="outline"
-                size="sm"
-                className="border-border text-foreground hover:bg-ui-surface-elevated"
-                onClick={() => {
-                  /* TODO: Implement export functionality */
-                }}
+                onClick={handleCreateClick}
+                className="mt-4 bg-primary hover:bg-primary-dark"
               >
-                <Download className="mr-2 h-4 w-4" />
-                Exportar
+                <Plus className="mr-2 h-4 w-4" />
+                Agregar Primera Ruta
               </Button>
             </div>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-                <p className="text-muted-foreground mt-4">Cargando rutas...</p>
-              </div>
-            ) : error ? (
-              <div className="text-center py-12">
-                <AlertTriangle className="w-12 h-12 text-destructive mx-auto mb-4" />
-                <p className="text-destructive">{error}</p>
-              </div>
-            ) : routes.length === 0 ? (
-              <div className="text-center py-12">
-                <RouteIcon className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                <p className="text-muted-foreground">No se encontraron rutas</p>
-                <Button
-                  onClick={handleCreateClick}
-                  className="mt-4 bg-primary hover:bg-primary-dark"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Agregar Primera Ruta
-                </Button>
-              </div>
-            ) : (
-              <>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="border-b border-border hover:bg-transparent">
-                        <TableHead className="text-muted-foreground">
-                          Nombre / Código
-                        </TableHead>
-                        <TableHead className="text-muted-foreground">
-                          Origen → Destino
-                        </TableHead>
-                        <TableHead className="text-muted-foreground">
-                          Distancia
-                        </TableHead>
-                        <TableHead className="text-muted-foreground">
-                          Duración
-                        </TableHead>
-                        <TableHead className="text-muted-foreground">
-                          Tipo
-                        </TableHead>
-                        <TableHead className="text-muted-foreground">
-                          Dificultad
-                        </TableHead>
-                        <TableHead className="text-muted-foreground">
-                          Peajes
-                        </TableHead>
-                        <TableHead className="text-muted-foreground">
-                          Estado
-                        </TableHead>
-                        <TableHead className="text-right text-muted-foreground">
-                          Acciones
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {routes.map((route) => (
-                        <TableRow
-                          key={route.id}
-                          className="border-b border-border hover:bg-ui-surface-elevated"
-                        >
-                          <TableCell>
-                            <div>
-                              <div className="font-medium text-foreground">
-                                {route.name}
-                              </div>
-                              {route.code && (
-                                <div className="text-xs text-muted-foreground mt-1 font-mono">
-                                  {route.code}
-                                </div>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="text-sm space-y-1">
-                              <div className="flex items-center gap-1 text-foreground">
-                                <MapPin className="w-3 h-3 text-success" />
-                                <span className="truncate max-w-[150px]">
-                                  {route.origin}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-1 text-muted-foreground">
-                                <MapPin className="w-3 h-3 text-destructive" />
-                                <span className="truncate max-w-[150px]">
-                                  {route.destination}
-                                </span>
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {route.distance ? (
-                              <div className="flex items-center gap-1 text-foreground">
-                                <Navigation className="w-3 h-3 text-primary" />
-                                <span className="font-medium">
-                                  {route.distance} km
-                                </span>
-                              </div>
-                            ) : (
-                              <span className="text-muted-foreground text-xs">
-                                N/A
-                              </span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {route.estimatedDuration ? (
-                              <div className="flex items-center gap-1 text-foreground">
-                                <Clock className="w-3 h-3 text-secondary" />
-                                <span className="font-medium">
-                                  {formatDuration(route.estimatedDuration)}
-                                </span>
-                              </div>
-                            ) : (
-                              <span className="text-muted-foreground text-xs">
-                                N/A
-                              </span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {route.routeType ? (
-                              <Badge
-                                variant="outline"
-                                className="border-primary/50 text-primary"
-                              >
-                                {getRouteTypeLabel(route.routeType)}
-                              </Badge>
-                            ) : (
-                              <span className="text-muted-foreground text-xs">
-                                N/A
-                              </span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {route.difficulty ? (
-                              <span
-                                className={`font-medium ${getDifficultyColor(
-                                  route.difficulty
-                                )}`}
-                              >
-                                {getDifficultyLabel(route.difficulty)}
-                              </span>
-                            ) : (
-                              <span className="text-muted-foreground text-xs">
-                                N/A
-                              </span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {route.tollsRequired ? (
-                              <div className="space-y-1">
-                                <Badge
-                                  variant="outline"
-                                  className="border-yellow-500/50 text-warning"
-                                >
-                                  Sí
-                                </Badge>
-                                {route.estimatedTollCost && (
-                                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                    <DollarSign className="w-3 h-3" />$
-                                    {route.estimatedTollCost}
-                                  </div>
-                                )}
-                              </div>
-                            ) : (
-                              <Badge
-                                variant="outline"
-                                className="border-slate-500/50 text-muted-foreground"
-                              >
-                                No
-                              </Badge>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              variant={route.status ? "default" : "outline"}
-                              className={
-                                route.status
-                                  ? "bg-success/10 text-success border-success/50"
-                                  : "border-slate-500/50 text-muted-foreground"
-                              }
-                            >
-                              {route.status ? "Activa" : "Inactiva"}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-2">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() =>
-                                  router.push(`/routes/${route.id}`)
-                                }
-                                className="text-muted-foreground hover:text-primary hover:bg-primary/10"
-                                title="Ver detalles"
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleEditClick(route)}
-                                className="text-muted-foreground hover:text-secondary hover:bg-secondary/10"
-                                title="Editar"
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDeleteClick(route)}
-                                className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                                title="Eliminar"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-
-                {/* Pagination */}
-                <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
-                  <p className="text-sm text-muted-foreground">
-                    Mostrando {(page - 1) * limit + 1} a{" "}
-                    {Math.min(page * limit, total)} de {total} rutas
-                  </p>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => setPage(page - 1)}
-                      disabled={page === 1}
-                      className="border-border text-foreground hover:bg-ui-surface-elevated disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Anterior
-                    </Button>
-                    {Array.from({ length: totalPages }, (_, i) => i + 1)
-                      .filter(
-                        (p) =>
-                          p === 1 ||
-                          p === totalPages ||
-                          (p >= page - 1 && p <= page + 1)
-                      )
-                      .map((p, index, array) => (
-                        <div key={p} className="flex items-center">
-                          {index > 0 && array[index - 1] !== p - 1 && (
-                            <span className="text-muted-foreground px-2">
-                              ...
-                            </span>
-                          )}
-                          <Button
-                            variant={p === page ? "default" : "outline"}
-                            onClick={() => setPage(p)}
-                            className={
-                              p === page
-                                ? "bg-primary hover:bg-primary-dark text-white"
-                                : "border-border text-foreground hover:bg-ui-surface-elevated"
-                            }
-                          >
-                            {p}
-                          </Button>
-                        </div>
-                      ))}
-                    <Button
-                      variant="outline"
-                      onClick={() => setPage(page + 1)}
-                      disabled={page === totalPages}
-                      className="border-border text-foreground hover:bg-ui-surface-elevated disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Siguiente
-                    </Button>
-                  </div>
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
+          }
+          title={
+            <>
+              <FileText className="w-5 h-5 text-primary" />
+              Listado de Rutas
+            </>
+          }
+          description={`Total de ${total} rutas registradas`}
+          onExport={() => {
+            /* TODO: Implement export functionality */
+          }}
+          getRowKey={(route) => route.id}
+        />
       </div>
 
       {/* Delete Confirmation Dialog */}
@@ -1129,7 +932,7 @@ export default function RoutesPage() {
                       htmlFor="estimatedTollCost"
                       className="text-foreground"
                     >
-                      Costo Estimado de Peajes
+                      Costo Estimado de Peajes ($)
                     </Label>
                     <Input
                       id="estimatedTollCost"

@@ -436,34 +436,25 @@ export default function DashboardPage() {
                 Administración y Control de Operaciones
               </p>
             </div>
-            <div className="flex items-center gap-3 bg-card border border-border rounded-lg px-4 py-2">
-              <div className="flex h-2.5 w-2.5 relative">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
-              </div>
-              <span className="text-sm font-medium text-foreground">
-                Sistema Activo
-              </span>
-            </div>
           </div>
         </div>
 
         {/* Key Metrics Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {/* Total Active Operations */}
-          <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20 hover:shadow-lg hover:shadow-blue-500/10 transition-all duration-300">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-muted-foreground mb-1">
+          <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20 hover:shadow-md hover:shadow-blue-500/10 transition-all duration-200 hover:scale-[1.02]">
+            <CardContent className="p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium text-muted-foreground mb-1.5">
                     Operaciones Activas
                   </p>
-                  <p className="text-4xl font-bold text-foreground mb-2">
+                  <p className="text-3xl font-bold text-foreground mb-1 leading-none">
                     {stats.activeOperations}
                   </p>
-                  <div className="flex items-center gap-2 text-xs text-blue-500">
+                  <div className="flex items-center gap-1.5 text-[10px] text-blue-500">
                     <svg
-                      className="w-4 h-4"
+                      className="w-3 h-3 flex-shrink-0"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -475,12 +466,14 @@ export default function DashboardPage() {
                         d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
                       />
                     </svg>
-                    <span>Total de {stats.totalOperations} registradas</span>
+                    <span className="truncate">
+                      Total de {stats.totalOperations} registradas
+                    </span>
                   </div>
                 </div>
-                <div className="p-4 bg-blue-500/20 rounded-xl">
+                <div className="p-2.5 bg-blue-500/20 rounded-lg flex-shrink-0">
                   <svg
-                    className="w-8 h-8 text-blue-500"
+                    className="w-6 h-6 text-blue-500"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -497,20 +490,24 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          {/* In Transit */}
-          <Card className="bg-gradient-to-br from-yellow-500/10 to-yellow-600/5 border-yellow-500/20 hover:shadow-lg hover:shadow-yellow-500/10 transition-all duration-300">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-muted-foreground mb-1">
+          {/* In Transit - HIGHLIGHTED AS CRITICAL */}
+          <Card className="bg-gradient-to-br from-yellow-500/15 to-yellow-600/5 border-yellow-500/30 hover:shadow-md hover:shadow-yellow-500/20 transition-all duration-200 hover:scale-[1.02] ring-1 ring-yellow-500/20">
+            <CardContent className="p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-yellow-600 dark:text-yellow-400 mb-1.5 flex items-center gap-1">
                     En Tránsito
+                    <span className="inline-flex h-1.5 w-1.5 relative">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-yellow-500"></span>
+                    </span>
                   </p>
-                  <p className="text-4xl font-bold text-foreground mb-2">
+                  <p className="text-3xl font-bold text-foreground mb-1 leading-none">
                     {stats.inTransit}
                   </p>
-                  <div className="flex items-center gap-2 text-xs text-yellow-500">
+                  <div className="flex items-center gap-1.5 text-[10px] text-yellow-500 font-medium">
                     <svg
-                      className="w-4 h-4"
+                      className="w-3 h-3 flex-shrink-0"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -522,12 +519,12 @@ export default function DashboardPage() {
                         d="M13 10V3L4 14h7v7l9-11h-7z"
                       />
                     </svg>
-                    <span>Operaciones en curso</span>
+                    <span className="truncate">Operaciones en curso</span>
                   </div>
                 </div>
-                <div className="p-4 bg-yellow-500/20 rounded-xl">
+                <div className="p-2.5 bg-yellow-500/30 rounded-lg flex-shrink-0">
                   <svg
-                    className="w-8 h-8 text-yellow-500"
+                    className="w-6 h-6 text-yellow-600 dark:text-yellow-400"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -545,19 +542,19 @@ export default function DashboardPage() {
           </Card>
 
           {/* Pending Closure */}
-          <Card className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border-purple-500/20 hover:shadow-lg hover:shadow-purple-500/10 transition-all duration-300">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-muted-foreground mb-1">
+          <Card className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border-purple-500/20 hover:shadow-md hover:shadow-purple-500/10 transition-all duration-200 hover:scale-[1.02]">
+            <CardContent className="p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium text-muted-foreground mb-1.5">
                     Pendientes de Cierre
                   </p>
-                  <p className="text-4xl font-bold text-foreground mb-2">
+                  <p className="text-3xl font-bold text-foreground mb-1 leading-none">
                     {stats.pendingClosure}
                   </p>
-                  <div className="flex items-center gap-2 text-xs text-purple-500">
+                  <div className="flex items-center gap-1.5 text-[10px] text-purple-500">
                     <svg
-                      className="w-4 h-4"
+                      className="w-3 h-3 flex-shrink-0"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -569,12 +566,12 @@ export default function DashboardPage() {
                         d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                       />
                     </svg>
-                    <span>Por confirmar o iniciar</span>
+                    <span className="truncate">Por confirmar o iniciar</span>
                   </div>
                 </div>
-                <div className="p-4 bg-purple-500/20 rounded-xl">
+                <div className="p-2.5 bg-purple-500/20 rounded-lg flex-shrink-0">
                   <svg
-                    className="w-8 h-8 text-purple-500"
+                    className="w-6 h-6 text-purple-500"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -592,19 +589,19 @@ export default function DashboardPage() {
           </Card>
 
           {/* Completed */}
-          <Card className="bg-gradient-to-br from-green-500/10 to-green-600/5 border-green-500/20 hover:shadow-lg hover:shadow-green-500/10 transition-all duration-300">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-muted-foreground mb-1">
+          <Card className="bg-gradient-to-br from-green-500/10 to-green-600/5 border-green-500/20 hover:shadow-md hover:shadow-green-500/10 transition-all duration-200 hover:scale-[1.02]">
+            <CardContent className="p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium text-muted-foreground mb-1.5">
                     Completadas
                   </p>
-                  <p className="text-4xl font-bold text-foreground mb-2">
+                  <p className="text-3xl font-bold text-foreground mb-1 leading-none">
                     {stats.completed}
                   </p>
-                  <div className="flex items-center gap-2 text-xs text-green-500">
+                  <div className="flex items-center gap-1.5 text-[10px] text-green-500">
                     <svg
-                      className="w-4 h-4"
+                      className="w-3 h-3 flex-shrink-0"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -616,12 +613,12 @@ export default function DashboardPage() {
                         d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                       />
                     </svg>
-                    <span>Operaciones finalizadas</span>
+                    <span className="truncate">Operaciones finalizadas</span>
                   </div>
                 </div>
-                <div className="p-4 bg-green-500/20 rounded-xl">
+                <div className="p-2.5 bg-green-500/20 rounded-lg flex-shrink-0">
                   <svg
-                    className="w-8 h-8 text-green-500"
+                    className="w-6 h-6 text-green-500"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -639,210 +636,275 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        {/* Filters Section */}
+        {/* Operations Table with Integrated Filters */}
         <Card className="bg-card border-border shadow-lg">
           <CardHeader className="pb-4">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <CardTitle className="text-foreground text-xl flex items-center gap-2">
-                <svg
-                  className="w-6 h-6 text-primary"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+            <div className="flex flex-col gap-4">
+              {/* Header Row */}
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <CardTitle className="text-foreground text-xl flex items-center gap-2">
+                    <svg
+                      className="w-6 h-6 text-primary"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                      />
+                    </svg>
+                    Operaciones
+                    <span className="text-sm font-normal text-muted-foreground">
+                      ({filteredOperations.length} resultados)
+                    </span>
+                    {activeFiltersCount > 0 && (
+                      <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-primary text-white">
+                        {activeFiltersCount} filtros
+                      </span>
+                    )}
+                  </CardTitle>
+                </div>
+
+                {/* Actions Row */}
+                <div className="flex items-center gap-3">
+                  {/* Last Update Timestamp */}
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground bg-ui-surface-elevated px-3 py-2 rounded-lg border border-border">
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <span>
+                      Última actualización:{" "}
+                      {new Date(lastFetchTimeRef.current).toLocaleTimeString(
+                        "es-CL",
+                        {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          second: "2-digit",
+                        }
+                      )}
+                    </span>
+                  </div>
+
+                  {/* Clear Filters Button */}
+                  {activeFiltersCount > 0 && (
+                    <button
+                      onClick={clearFilters}
+                      className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground px-3 py-2 rounded-lg border border-border hover:border-primary transition-all duration-200"
+                      aria-label="Limpiar todos los filtros"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                      Limpiar
+                    </button>
+                  )}
+
+                  {/* Refresh Button */}
+                  <button
+                    onClick={() => refreshOperations()}
+                    disabled={loading}
+                    className="flex items-center gap-2 text-sm text-primary hover:text-purple-300 px-4 py-2 rounded-lg border border-primary hover:border-purple-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    aria-label="Actualizar lista de operaciones"
+                  >
+                    <svg
+                      className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                      />
+                    </svg>
+                    <span className="hidden sm:inline">Actualizar</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Filters Section */}
+              <div className="space-y-4">
+                {/* Search Bar */}
+                <div className="relative">
+                  <label htmlFor="search-operations" className="sr-only">
+                    Buscar operaciones
+                  </label>
+                  <svg
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
+                  <input
+                    id="search-operations"
+                    type="text"
+                    placeholder="Buscar por número, origen, destino, cliente, proveedor, vehículo..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-12 pr-4 py-3 bg-ui-surface-elevated border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
+                    aria-describedby="search-help"
                   />
-                </svg>
-                Filtros Avanzados
-                {activeFiltersCount > 0 && (
-                  <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-primary text-white">
-                    {activeFiltersCount}
+                  <span id="search-help" className="sr-only">
+                    Ingrese términos de búsqueda para filtrar operaciones en
+                    tiempo real
                   </span>
-                )}
-              </CardTitle>
-              {activeFiltersCount > 0 && (
-                <button
-                  onClick={clearFilters}
-                  className="text-sm text-muted-foreground hover:text-foreground px-4 py-2 rounded-lg border border-border hover:border-primary transition-all duration-200"
-                >
-                  Limpiar Filtros
-                </button>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent>
-            {/* Search Bar */}
-            <div className="mb-6">
-              <div className="relative">
-                <svg
-                  className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-                <input
-                  type="text"
-                  placeholder="Buscar por número, origen, destino, cliente, proveedor, vehículo..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 bg-ui-surface-elevated border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
-                />
+                </div>
+
+                {/* Filter Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Status Filter */}
+                  <div>
+                    <label
+                      htmlFor="filter-status"
+                      className="block text-sm font-medium text-muted-foreground mb-2"
+                    >
+                      Estado
+                    </label>
+                    <select
+                      id="filter-status"
+                      value={filters.status || ""}
+                      onChange={(e) =>
+                        handleFilterChange("status", e.target.value)
+                      }
+                      className="w-full px-4 py-3 bg-ui-surface-elevated border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
+                      disabled={loading}
+                      aria-label="Filtrar por estado de operación"
+                    >
+                      <option value="">Todos los estados</option>
+                      {filterOptions.statuses.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Client Filter */}
+                  <div>
+                    <label
+                      htmlFor="filter-client"
+                      className="block text-sm font-medium text-muted-foreground mb-2"
+                    >
+                      Cliente
+                    </label>
+                    <select
+                      id="filter-client"
+                      value={filters.clientId || ""}
+                      onChange={(e) =>
+                        handleFilterChange(
+                          "clientId",
+                          e.target.value ? Number(e.target.value) : null
+                        )
+                      }
+                      className="w-full px-4 py-3 bg-ui-surface-elevated border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
+                      disabled={loading}
+                      aria-label="Filtrar por cliente"
+                    >
+                      <option value="">Todos los clientes</option>
+                      {filterOptions.clients.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Provider Filter */}
+                  <div>
+                    <label
+                      htmlFor="filter-provider"
+                      className="block text-sm font-medium text-muted-foreground mb-2"
+                    >
+                      Proveedor
+                    </label>
+                    <select
+                      id="filter-provider"
+                      value={filters.providerId || ""}
+                      onChange={(e) =>
+                        handleFilterChange(
+                          "providerId",
+                          e.target.value ? Number(e.target.value) : null
+                        )
+                      }
+                      className="w-full px-4 py-3 bg-ui-surface-elevated border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
+                      disabled={loading}
+                      aria-label="Filtrar por proveedor"
+                    >
+                      <option value="">Todos los proveedores</option>
+                      {filterOptions.providers.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Vehicle Filter */}
+                  <div>
+                    <label
+                      htmlFor="filter-vehicle"
+                      className="block text-sm font-medium text-muted-foreground mb-2"
+                    >
+                      Maquinaria / Vehículo
+                    </label>
+                    <select
+                      id="filter-vehicle"
+                      value={filters.vehicleId || ""}
+                      onChange={(e) =>
+                        handleFilterChange(
+                          "vehicleId",
+                          e.target.value ? Number(e.target.value) : null
+                        )
+                      }
+                      className="w-full px-4 py-3 bg-ui-surface-elevated border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
+                      disabled={loading}
+                      aria-label="Filtrar por vehículo o maquinaria"
+                    >
+                      <option value="">Todos los vehículos</option>
+                      {filterOptions.vehicles.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
               </div>
             </div>
-
-            {/* Filter Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* Status Filter */}
-              <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-2">
-                  Estado
-                </label>
-                <select
-                  value={filters.status || ""}
-                  onChange={(e) => handleFilterChange("status", e.target.value)}
-                  className="w-full px-4 py-3 bg-ui-surface-elevated border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
-                  disabled={loading}
-                >
-                  <option value="">Todos los estados</option>
-                  {filterOptions.statuses.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Client Filter */}
-              <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-2">
-                  Cliente
-                </label>
-                <select
-                  value={filters.clientId || ""}
-                  onChange={(e) =>
-                    handleFilterChange(
-                      "clientId",
-                      e.target.value ? Number(e.target.value) : null
-                    )
-                  }
-                  className="w-full px-4 py-3 bg-ui-surface-elevated border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
-                  disabled={loading}
-                >
-                  <option value="">Todos los clientes</option>
-                  {filterOptions.clients.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Provider Filter */}
-              <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-2">
-                  Proveedor
-                </label>
-                <select
-                  value={filters.providerId || ""}
-                  onChange={(e) =>
-                    handleFilterChange(
-                      "providerId",
-                      e.target.value ? Number(e.target.value) : null
-                    )
-                  }
-                  className="w-full px-4 py-3 bg-ui-surface-elevated border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
-                  disabled={loading}
-                >
-                  <option value="">Todos los proveedores</option>
-                  {filterOptions.providers.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Vehicle Filter (Maquinaria) */}
-              <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-2">
-                  Maquinaria / Vehículo
-                </label>
-                <select
-                  value={filters.vehicleId || ""}
-                  onChange={(e) =>
-                    handleFilterChange(
-                      "vehicleId",
-                      e.target.value ? Number(e.target.value) : null
-                    )
-                  }
-                  className="w-full px-4 py-3 bg-ui-surface-elevated border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
-                  disabled={loading}
-                >
-                  <option value="">Todos los vehículos</option>
-                  {filterOptions.vehicles.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Operations Table */}
-        <Card className="bg-card border-border shadow-lg">
-          <CardHeader className="flex flex-row items-center justify-between pb-4">
-            <CardTitle className="text-foreground text-xl flex items-center gap-2">
-              <svg
-                className="w-6 h-6 text-primary"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                />
-              </svg>
-              Operaciones
-              <span className="text-sm font-normal text-muted-foreground">
-                ({filteredOperations.length} resultados)
-              </span>
-            </CardTitle>
-            <button
-              onClick={() => refreshOperations()}
-              disabled={loading}
-              className="flex items-center gap-2 text-sm text-primary hover:text-purple-300 px-4 py-2 rounded-lg border border-primary hover:border-purple-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <svg
-                className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                />
-              </svg>
-              Actualizar
-            </button>
           </CardHeader>
           <CardContent>
             {loading ? (

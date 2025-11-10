@@ -16,20 +16,13 @@ import type {
 } from "@/types/drivers";
 import { LICENSE_TYPES } from "@/types/drivers";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  DataTable,
+  type DataTableColumn,
+  type DataTableFilter,
+  type DataTableAction,
+  type PaginationInfo,
+} from "@/components/ui/data-table";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,7 +37,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import {
   Plus,
-  Search,
   Edit,
   Trash2,
   Eye,
@@ -53,8 +45,6 @@ import {
   AlertTriangle,
   CheckCircle,
   Clock,
-  Filter,
-  Download,
   Users,
   Save,
 } from "lucide-react";
@@ -114,6 +104,9 @@ export default function DriversPage() {
   const [total, setTotal] = useState(0);
   const limit = 10;
 
+  // Last update timestamp
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+
   useEffect(() => {
     if (!isAuthenticated()) {
       router.push("/login");
@@ -152,6 +145,7 @@ export default function DriversPage() {
       setDrivers(response.data);
       setTotalPages(response.pagination.totalPages);
       setTotal(response.pagination.total);
+      setLastUpdate(new Date());
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al cargar choferes");
     } finally {
@@ -334,6 +328,211 @@ export default function DriversPage() {
     isLicenseExpired(d.licenseExpirationDate)
   ).length;
 
+  // Define table columns
+  const columns: DataTableColumn<Driver>[] = [
+    {
+      key: "rut",
+      header: "RUT",
+      accessor: (driver) => (
+        <span className="font-mono text-sm">{driver.rut}</span>
+      ),
+    },
+    {
+      key: "name",
+      header: "Nombre Completo",
+      accessor: (driver) => (
+        <div>
+          <div className="font-medium text-foreground">
+            {driver.firstName} {driver.lastName}
+          </div>
+          {driver.isExternal && driver.externalCompany && (
+            <div className="text-xs text-muted-foreground mt-1">
+              {driver.externalCompany}
+            </div>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "contact",
+      header: "Contacto",
+      accessor: (driver) => (
+        <div className="text-sm space-y-1">
+          {driver.email && (
+            <div className="text-muted-foreground">{driver.email}</div>
+          )}
+          {driver.phone && (
+            <div className="text-muted-foreground">{driver.phone}</div>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "license",
+      header: "Licencia",
+      accessor: (driver) => (
+        <Badge variant="outline" className="border-primary/50 text-primary">
+          {driver.licenseType}
+        </Badge>
+      ),
+    },
+    {
+      key: "expiration",
+      header: "Vigencia",
+      accessor: (driver) => {
+        const licenseStatus = getLicenseStatus(driver.licenseExpirationDate);
+        return (
+          <div className="flex items-center gap-2">
+            {licenseStatus.status === "expired" && (
+              <AlertTriangle className="w-4 h-4 text-destructive" />
+            )}
+            {licenseStatus.status === "expiring" && (
+              <Clock className="w-4 h-4 text-warning" />
+            )}
+            {licenseStatus.status === "valid" && (
+              <CheckCircle className="w-4 h-4 text-success" />
+            )}
+            <div>
+              <div
+                className={`text-sm ${
+                  licenseStatus.status === "expired"
+                    ? "text-destructive"
+                    : licenseStatus.status === "expiring"
+                    ? "text-warning"
+                    : "text-success"
+                }`}
+              >
+                {licenseStatus.label}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {formatDate(driver.licenseExpirationDate)}
+              </div>
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      key: "type",
+      header: "Tipo",
+      accessor: (driver) => (
+        <Badge
+          variant={driver.isExternal ? "outline" : "default"}
+          className={
+            driver.isExternal
+              ? "border-orange-500/50 text-orange-400"
+              : "bg-primary/10 text-primary border-primary/50"
+          }
+        >
+          {driver.isExternal ? "Externo" : "Interno"}
+        </Badge>
+      ),
+    },
+    {
+      key: "status",
+      header: "Estado",
+      accessor: (driver) => (
+        <Badge
+          variant={driver.status ? "default" : "outline"}
+          className={
+            driver.status
+              ? "bg-success/10 text-success border-success/50"
+              : "border-slate-500/50 text-muted-foreground"
+          }
+        >
+          {driver.status ? "Activo" : "Inactivo"}
+        </Badge>
+      ),
+    },
+  ];
+
+  // Define table actions
+  const actions: DataTableAction<Driver>[] = [
+    {
+      label: "Ver detalles",
+      icon: <Eye className="h-4 w-4" />,
+      onClick: (driver) => router.push(`/drivers/${driver.id}`),
+      className: "text-muted-foreground hover:text-primary hover:bg-primary/10",
+      title: "Ver detalles",
+    },
+    {
+      label: "Editar",
+      icon: <Edit className="h-4 w-4" />,
+      onClick: handleEditClick,
+      className: "text-muted-foreground hover:text-primary hover:bg-primary/10",
+      title: "Editar",
+    },
+    {
+      label: "Eliminar",
+      icon: <Trash2 className="h-4 w-4" />,
+      onClick: handleDeleteClick,
+      className:
+        "text-muted-foreground hover:text-destructive hover:bg-destructive/10",
+      title: "Eliminar",
+    },
+  ];
+
+  // Define filters
+  const filters: DataTableFilter[] = [
+    {
+      id: "status-filter",
+      label: "Estado",
+      type: "select",
+      value: statusFilter,
+      onChange: setStatusFilter,
+      options: [
+        { value: "all", label: "Todos los estados" },
+        { value: "active", label: "Activo" },
+        { value: "inactive", label: "Inactivo" },
+      ],
+      ariaLabel: "Filtrar por estado del chofer",
+    },
+    {
+      id: "external-filter",
+      label: "Tipo de Chofer",
+      type: "select",
+      value: isExternalFilter,
+      onChange: setIsExternalFilter,
+      options: [
+        { value: "all", label: "Todos" },
+        { value: "internal", label: "Interno" },
+        { value: "external", label: "Externo" },
+      ],
+      ariaLabel: "Filtrar por tipo de chofer",
+    },
+    {
+      id: "license-type-filter",
+      label: "Tipo de Licencia",
+      type: "select",
+      value: licenseTypeFilter,
+      onChange: setLicenseTypeFilter,
+      options: [
+        { value: "all", label: "Todas las licencias" },
+        ...LICENSE_TYPES.map((type) => ({
+          value: type.value,
+          label: type.value,
+        })),
+      ],
+      ariaLabel: "Filtrar por tipo de licencia",
+    },
+  ];
+
+  // Define pagination
+  const pagination: PaginationInfo = {
+    page,
+    limit,
+    total,
+    totalPages,
+  };
+
+  const handleClearFilters = () => {
+    setSearch("");
+    setStatusFilter("all");
+    setIsExternalFilter("all");
+    setLicenseTypeFilter("all");
+    setPage(1);
+  };
+
   return (
     <main className="flex-1 overflow-y-auto p-6">
       <div className="max-w-[1400px] mx-auto space-y-6">
@@ -432,401 +631,48 @@ export default function DriversPage() {
           </Card>
         </div>
 
-        {/* Filters Card */}
-        <Card className="bg-card border-border">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="text-foreground flex items-center gap-2">
-                <Filter className="w-5 h-5 text-primary" />
-                Filtros de Búsqueda
-              </CardTitle>
-              <CardDescription className="text-muted-foreground">
-                Filtra y busca choferes según tus criterios
-              </CardDescription>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowFilters(!showFilters)}
-              className="border-border text-foreground hover:bg-ui-surface-elevated"
-            >
-              {showFilters ? "Ocultar" : "Mostrar"} Filtros
-            </Button>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {/* Search Bar - Always Visible */}
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Buscar por nombre, RUT, email..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                    className="pl-10 bg-ui-surface-elevated border-border text-foreground placeholder-muted-foreground focus:border-primary"
-                  />
-                </div>
-                <Button
-                  onClick={handleSearch}
-                  className="bg-primary hover:bg-primary-dark"
-                >
-                  Buscar
-                </Button>
-              </div>
-
-              {/* Additional Filters */}
-              {showFilters && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-border">
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground mb-2 block">
-                      Estado
-                    </label>
-                    <Select
-                      value={statusFilter}
-                      onValueChange={setStatusFilter}
-                    >
-                      <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground">
-                        <SelectValue placeholder="Estado" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Todos los estados</SelectItem>
-                        <SelectItem value="active">Activo</SelectItem>
-                        <SelectItem value="inactive">Inactivo</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground mb-2 block">
-                      Tipo de Chofer
-                    </label>
-                    <Select
-                      value={isExternalFilter}
-                      onValueChange={setIsExternalFilter}
-                    >
-                      <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground">
-                        <SelectValue placeholder="Tipo" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Todos</SelectItem>
-                        <SelectItem value="internal">Interno</SelectItem>
-                        <SelectItem value="external">Externo</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground mb-2 block">
-                      Tipo de Licencia
-                    </label>
-                    <Select
-                      value={licenseTypeFilter}
-                      onValueChange={setLicenseTypeFilter}
-                    >
-                      <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground">
-                        <SelectValue placeholder="Licencia" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Todas las licencias</SelectItem>
-                        {LICENSE_TYPES.map((type) => (
-                          <SelectItem key={type.value} value={type.value}>
-                            {type.value}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Drivers Table */}
-        <Card className="bg-card border-border">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="text-foreground flex items-center gap-2">
-                <FileText className="w-5 h-5 text-primary" />
-                Listado de Choferes
-              </CardTitle>
-              <CardDescription className="text-muted-foreground">
-                Total de {total} choferes registrados
-              </CardDescription>
-            </div>
-            <div className="flex gap-2">
+        {/* Data Table with Integrated Filters */}
+        <DataTable
+          data={drivers}
+          columns={columns}
+          actions={actions}
+          pagination={pagination}
+          onPageChange={setPage}
+          searchValue={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Buscar por nombre, RUT, email..."
+          onSearchSubmit={handleSearch}
+          filters={filters}
+          showFilters={showFilters}
+          onToggleFilters={() => setShowFilters(!showFilters)}
+          onClearFilters={handleClearFilters}
+          loading={loading}
+          error={error}
+          title="Listado de Choferes"
+          description={`Total de ${total} choferes registrados`}
+          icon={<FileText className="w-5 h-5 text-primary" />}
+          lastUpdate={lastUpdate}
+          onRefresh={fetchDrivers}
+          onExport={() => {
+            /* TODO: Implement export functionality */
+          }}
+          getRowKey={(driver) => driver.id}
+          emptyState={
+            <div className="text-center py-12">
+              <Users className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+              <p className="text-muted-foreground">
+                No se encontraron choferes
+              </p>
               <Button
-                variant="outline"
-                size="sm"
-                className="border-border text-foreground hover:bg-ui-surface-elevated"
-                onClick={() => {
-                  /* TODO: Implement export functionality */
-                }}
+                onClick={handleCreateClick}
+                className="mt-4 bg-primary hover:bg-primary-dark"
               >
-                <Download className="mr-2 h-4 w-4" />
-                Exportar
+                <Plus className="mr-2 h-4 w-4" />
+                Agregar Primer Chofer
               </Button>
             </div>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-                <p className="text-muted-foreground mt-4">
-                  Cargando choferes...
-                </p>
-              </div>
-            ) : error ? (
-              <div className="text-center py-12">
-                <AlertTriangle className="w-12 h-12 text-destructive mx-auto mb-4" />
-                <p className="text-destructive">{error}</p>
-              </div>
-            ) : drivers.length === 0 ? (
-              <div className="text-center py-12">
-                <Users className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                <p className="text-muted-foreground">
-                  No se encontraron choferes
-                </p>
-                <Button
-                  onClick={handleCreateClick}
-                  className="mt-4 bg-primary hover:bg-primary-dark"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Agregar Primer Chofer
-                </Button>
-              </div>
-            ) : (
-              <>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="border-b border-border hover:bg-transparent">
-                        <TableHead className="text-muted-foreground">
-                          RUT
-                        </TableHead>
-                        <TableHead className="text-muted-foreground">
-                          Nombre Completo
-                        </TableHead>
-                        <TableHead className="text-muted-foreground">
-                          Contacto
-                        </TableHead>
-                        <TableHead className="text-muted-foreground">
-                          Licencia
-                        </TableHead>
-                        <TableHead className="text-muted-foreground">
-                          Vigencia
-                        </TableHead>
-                        <TableHead className="text-muted-foreground">
-                          Tipo
-                        </TableHead>
-                        <TableHead className="text-muted-foreground">
-                          Estado
-                        </TableHead>
-                        <TableHead className="text-right text-muted-foreground">
-                          Acciones
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {drivers.map((driver) => {
-                        const licenseStatus = getLicenseStatus(
-                          driver.licenseExpirationDate
-                        );
-                        return (
-                          <TableRow
-                            key={driver.id}
-                            className="border-b border-border hover:bg-ui-surface-elevated"
-                          >
-                            <TableCell className="font-mono text-sm text-foreground">
-                              {driver.rut}
-                            </TableCell>
-                            <TableCell>
-                              <div>
-                                <div className="font-medium text-foreground">
-                                  {driver.firstName} {driver.lastName}
-                                </div>
-                                {driver.isExternal &&
-                                  driver.externalCompany && (
-                                    <div className="text-xs text-muted-foreground mt-1">
-                                      {driver.externalCompany}
-                                    </div>
-                                  )}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="text-sm space-y-1">
-                                {driver.email && (
-                                  <div className="text-muted-foreground">
-                                    {driver.email}
-                                  </div>
-                                )}
-                                {driver.phone && (
-                                  <div className="text-muted-foreground">
-                                    {driver.phone}
-                                  </div>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge
-                                variant="outline"
-                                className="border-primary/50 text-primary"
-                              >
-                                {driver.licenseType}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                {licenseStatus.status === "expired" && (
-                                  <AlertTriangle className="w-4 h-4 text-destructive" />
-                                )}
-                                {licenseStatus.status === "expiring" && (
-                                  <Clock className="w-4 h-4 text-warning" />
-                                )}
-                                {licenseStatus.status === "valid" && (
-                                  <CheckCircle className="w-4 h-4 text-success" />
-                                )}
-                                <div>
-                                  <div
-                                    className={`text-sm ${
-                                      licenseStatus.status === "expired"
-                                        ? "text-destructive"
-                                        : licenseStatus.status === "expiring"
-                                        ? "text-warning"
-                                        : "text-success"
-                                    }`}
-                                  >
-                                    {licenseStatus.label}
-                                  </div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {formatDate(driver.licenseExpirationDate)}
-                                  </div>
-                                </div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge
-                                variant={
-                                  driver.isExternal ? "outline" : "default"
-                                }
-                                className={
-                                  driver.isExternal
-                                    ? "border-orange-500/50 text-orange-400"
-                                    : "bg-primary/10 text-primary border-primary/50"
-                                }
-                              >
-                                {driver.isExternal ? "Externo" : "Interno"}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Badge
-                                variant={driver.status ? "default" : "outline"}
-                                className={
-                                  driver.status
-                                    ? "bg-success/10 text-success border-success/50"
-                                    : "border-slate-500/50 text-muted-foreground"
-                                }
-                              >
-                                {driver.status ? "Activo" : "Inactivo"}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex justify-end gap-2">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() =>
-                                    router.push(`/drivers/${driver.id}`)
-                                  }
-                                  className="text-muted-foreground hover:text-primary hover:bg-primary/10"
-                                  title="Ver detalles"
-                                >
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleEditClick(driver)}
-                                  className="text-muted-foreground hover:text-primary hover:bg-primary/10"
-                                  title="Editar"
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleDeleteClick(driver)}
-                                  className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                                  title="Eliminar"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
-
-                {/* Pagination */}
-                <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
-                  <p className="text-sm text-muted-foreground">
-                    Mostrando {(page - 1) * limit + 1} a{" "}
-                    {Math.min(page * limit, total)} de {total} choferes
-                  </p>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => setPage(page - 1)}
-                      disabled={page === 1}
-                      className="border-border text-foreground hover:bg-ui-surface-elevated disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Anterior
-                    </Button>
-                    {Array.from({ length: totalPages }, (_, i) => i + 1)
-                      .filter(
-                        (p) =>
-                          p === 1 ||
-                          p === totalPages ||
-                          (p >= page - 1 && p <= page + 1)
-                      )
-                      .map((p, index, array) => (
-                        <div key={p} className="flex items-center">
-                          {index > 0 && array[index - 1] !== p - 1 && (
-                            <span className="text-muted-foreground px-2">
-                              ...
-                            </span>
-                          )}
-                          <Button
-                            variant={p === page ? "default" : "outline"}
-                            onClick={() => setPage(p)}
-                            className={
-                              p === page
-                                ? "bg-primary hover:bg-primary-dark text-white"
-                                : "border-border text-foreground hover:bg-ui-surface-elevated"
-                            }
-                          >
-                            {p}
-                          </Button>
-                        </div>
-                      ))}
-                    <Button
-                      variant="outline"
-                      onClick={() => setPage(page + 1)}
-                      disabled={page === totalPages}
-                      className="border-border text-foreground hover:bg-ui-surface-elevated disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Siguiente
-                    </Button>
-                  </div>
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
+          }
+        />
       </div>
 
       {/* Delete Confirmation Dialog */}

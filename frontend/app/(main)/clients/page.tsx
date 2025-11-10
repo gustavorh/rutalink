@@ -16,21 +16,7 @@ import type {
   UpdateClientInput,
 } from "@/types/clients";
 import { INDUSTRIES } from "@/types/clients";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -45,15 +31,11 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import {
   Plus,
-  Search,
   Edit,
   Trash2,
   Eye,
   Building2,
-  AlertTriangle,
   CheckCircle,
-  Filter,
-  Download,
   TrendingUp,
   Building,
   FileText,
@@ -66,6 +48,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DataTable,
+  type DataTableColumn,
+  type DataTableFilter,
+  type DataTableAction,
+} from "@/components/ui/data-table";
 
 export default function ClientsPage() {
   const router = useRouter();
@@ -267,6 +255,172 @@ export default function ClientsPage() {
     return found ? found.label : industry;
   };
 
+  const handleClearFilters = () => {
+    setStatusFilter("all");
+    setIndustryFilter("all");
+    setPage(1);
+  };
+
+  // Define table columns
+  const columns: DataTableColumn<Client>[] = [
+    {
+      key: "businessName",
+      header: "Razón Social",
+      accessor: (client) => (
+        <div>
+          <div className="font-medium text-foreground">
+            {client.businessName}
+          </div>
+          {client.observations && (
+            <div className="text-xs text-muted-foreground mt-1 truncate max-w-[200px]">
+              {client.observations}
+            </div>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "taxId",
+      header: "RUT",
+      accessor: (client) => (
+        <span className="font-mono text-sm text-foreground">
+          {client.taxId || "N/A"}
+        </span>
+      ),
+    },
+    {
+      key: "contact",
+      header: "Contacto",
+      accessor: (client) => (
+        <div className="text-sm space-y-1">
+          {client.contactName && (
+            <div className="text-foreground">{client.contactName}</div>
+          )}
+          {client.contactEmail && (
+            <div className="text-muted-foreground text-xs">
+              {client.contactEmail}
+            </div>
+          )}
+          {client.contactPhone && (
+            <div className="text-muted-foreground text-xs">
+              {client.contactPhone}
+            </div>
+          )}
+          {!client.contactName &&
+            !client.contactEmail &&
+            !client.contactPhone && (
+              <div className="text-muted-foreground text-xs">Sin contacto</div>
+            )}
+        </div>
+      ),
+    },
+    {
+      key: "location",
+      header: "Ubicación",
+      accessor: (client) => (
+        <div className="text-sm space-y-1">
+          {client.city && <div className="text-foreground">{client.city}</div>}
+          {client.region && (
+            <div className="text-muted-foreground text-xs">{client.region}</div>
+          )}
+          {!client.city && !client.region && (
+            <div className="text-muted-foreground text-xs">N/A</div>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "industry",
+      header: "Rubro",
+      accessor: (client) =>
+        client.industry ? (
+          <Badge variant="outline" className="border-primary/50 text-primary">
+            {getIndustryLabel(client.industry)}
+          </Badge>
+        ) : (
+          <span className="text-muted-foreground text-xs">Sin clasificar</span>
+        ),
+    },
+    {
+      key: "status",
+      header: "Estado",
+      accessor: (client) => (
+        <Badge
+          variant={client.status ? "default" : "outline"}
+          className={
+            client.status
+              ? "bg-success/10 text-success border-success/50"
+              : "border-slate-500/50 text-muted-foreground"
+          }
+        >
+          {client.status ? "Activo" : "Inactivo"}
+        </Badge>
+      ),
+    },
+  ];
+
+  // Define table filters
+  const filters: DataTableFilter[] = [
+    {
+      id: "status",
+      label: "Estado",
+      type: "select",
+      options: [
+        { value: "all", label: "Todos los estados" },
+        { value: "active", label: "Activo" },
+        { value: "inactive", label: "Inactivo" },
+      ],
+      value: statusFilter,
+      onChange: setStatusFilter,
+      ariaLabel: "Filtrar por estado",
+    },
+    {
+      id: "industry",
+      label: "Rubro / Industria",
+      type: "select",
+      options: [
+        { value: "all", label: "Todos los rubros" },
+        ...INDUSTRIES.map((industry) => ({
+          value: industry.value,
+          label: industry.label,
+        })),
+      ],
+      value: industryFilter,
+      onChange: setIndustryFilter,
+      ariaLabel: "Filtrar por rubro",
+    },
+  ];
+
+  // Define row actions
+  const actions: DataTableAction<Client>[] = [
+    {
+      label: "Ver detalles",
+      icon: <Eye className="h-4 w-4" />,
+      onClick: (client) => router.push(`/clients/${client.id}`),
+      variant: "ghost",
+      className: "text-muted-foreground hover:text-primary hover:bg-primary/10",
+      title: "Ver detalles",
+    },
+    {
+      label: "Editar",
+      icon: <Edit className="h-4 w-4" />,
+      onClick: handleEditClick,
+      variant: "ghost",
+      className:
+        "text-muted-foreground hover:text-secondary hover:bg-secondary/10",
+      title: "Editar",
+    },
+    {
+      label: "Eliminar",
+      icon: <Trash2 className="h-4 w-4" />,
+      onClick: handleDeleteClick,
+      variant: "ghost",
+      className:
+        "text-muted-foreground hover:text-destructive hover:bg-destructive/10",
+      title: "Eliminar",
+    },
+  ];
+
   if (!mounted) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-ui-surface-elevated">
@@ -395,370 +549,52 @@ export default function ClientsPage() {
           </Card>
         </div>
 
-        {/* Filters Card */}
-        <Card className="bg-card border-border">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="text-foreground flex items-center gap-2">
-                <Filter className="w-5 h-5 text-primary" />
-                Filtros de Búsqueda
-              </CardTitle>
-              <CardDescription className="text-muted-foreground">
-                Filtra y busca clientes según tus criterios
-              </CardDescription>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowFilters(!showFilters)}
-              className="border-border text-foreground hover:bg-ui-surface-elevated"
-            >
-              {showFilters ? "Ocultar" : "Mostrar"} Filtros
-            </Button>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {/* Search Bar - Always Visible */}
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Buscar por razón social, RUT, contacto..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                    className="pl-10 bg-ui-surface-elevated border-border text-foreground placeholder-muted-foreground focus:border-primary"
-                  />
-                </div>
-                <Button
-                  onClick={handleSearch}
-                  className="bg-primary hover:bg-primary-dark"
-                >
-                  Buscar
-                </Button>
-              </div>
-
-              {/* Additional Filters */}
-              {showFilters && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-border">
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground mb-2 block">
-                      Estado
-                    </label>
-                    <Select
-                      value={statusFilter}
-                      onValueChange={setStatusFilter}
-                    >
-                      <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground">
-                        <SelectValue placeholder="Estado" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Todos los estados</SelectItem>
-                        <SelectItem value="active">Activo</SelectItem>
-                        <SelectItem value="inactive">Inactivo</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground mb-2 block">
-                      Rubro / Industria
-                    </label>
-                    <Select
-                      value={industryFilter}
-                      onValueChange={setIndustryFilter}
-                    >
-                      <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground">
-                        <SelectValue placeholder="Rubro" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Todos los rubros</SelectItem>
-                        {INDUSTRIES.map((industry) => (
-                          <SelectItem
-                            key={industry.value}
-                            value={industry.value}
-                          >
-                            {industry.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Clients Table */}
-        <Card className="bg-card border-border">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="text-foreground flex items-center gap-2">
-                <FileText className="w-5 h-5 text-primary" />
-                Listado de Clientes
-              </CardTitle>
-              <CardDescription className="text-muted-foreground">
-                Total de {total} clientes registrados
-              </CardDescription>
-            </div>
-            <div className="flex gap-2">
+        {/* Clients DataTable */}
+        <DataTable
+          data={clients}
+          columns={columns}
+          pagination={{
+            page,
+            limit,
+            total,
+            totalPages,
+          }}
+          onPageChange={setPage}
+          searchValue={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Buscar por razón social, RUT, contacto..."
+          onSearchSubmit={handleSearch}
+          filters={filters}
+          showFilters={showFilters}
+          onToggleFilters={() => setShowFilters(!showFilters)}
+          onClearFilters={handleClearFilters}
+          actions={actions}
+          loading={loading}
+          error={error}
+          emptyState={
+            <div className="text-center py-12">
+              <Building2 className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+              <p className="text-muted-foreground">
+                No se encontraron clientes
+              </p>
               <Button
-                variant="outline"
-                size="sm"
-                className="border-border text-foreground hover:bg-ui-surface-elevated"
-                onClick={() => {
-                  /* TODO: Implement export functionality */
-                }}
+                onClick={handleCreateClick}
+                className="mt-4 bg-primary hover:bg-primary-dark"
               >
-                <Download className="mr-2 h-4 w-4" />
-                Exportar
+                <Plus className="mr-2 h-4 w-4" />
+                Agregar Primer Cliente
               </Button>
             </div>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-                <p className="text-muted-foreground mt-4">
-                  Cargando clientes...
-                </p>
-              </div>
-            ) : error ? (
-              <div className="text-center py-12">
-                <AlertTriangle className="w-12 h-12 text-destructive mx-auto mb-4" />
-                <p className="text-destructive">{error}</p>
-              </div>
-            ) : clients.length === 0 ? (
-              <div className="text-center py-12">
-                <Building2 className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                <p className="text-muted-foreground">
-                  No se encontraron clientes
-                </p>
-                <Button
-                  onClick={handleCreateClick}
-                  className="mt-4 bg-primary hover:bg-primary-dark"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Agregar Primer Cliente
-                </Button>
-              </div>
-            ) : (
-              <>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="border-b border-border hover:bg-transparent">
-                        <TableHead className="text-muted-foreground">
-                          Razón Social
-                        </TableHead>
-                        <TableHead className="text-muted-foreground">
-                          RUT
-                        </TableHead>
-                        <TableHead className="text-muted-foreground">
-                          Contacto
-                        </TableHead>
-                        <TableHead className="text-muted-foreground">
-                          Ubicación
-                        </TableHead>
-                        <TableHead className="text-muted-foreground">
-                          Rubro
-                        </TableHead>
-                        <TableHead className="text-muted-foreground">
-                          Estado
-                        </TableHead>
-                        <TableHead className="text-right text-muted-foreground">
-                          Acciones
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {clients.map((client) => (
-                        <TableRow
-                          key={client.id}
-                          className="border-b border-border hover:bg-ui-surface-elevated"
-                        >
-                          <TableCell>
-                            <div>
-                              <div className="font-medium text-foreground">
-                                {client.businessName}
-                              </div>
-                              {client.observations && (
-                                <div className="text-xs text-muted-foreground mt-1 truncate max-w-[200px]">
-                                  {client.observations}
-                                </div>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell className="font-mono text-sm text-foreground">
-                            {client.taxId || "N/A"}
-                          </TableCell>
-                          <TableCell>
-                            <div className="text-sm space-y-1">
-                              {client.contactName && (
-                                <div className="text-foreground">
-                                  {client.contactName}
-                                </div>
-                              )}
-                              {client.contactEmail && (
-                                <div className="text-muted-foreground text-xs">
-                                  {client.contactEmail}
-                                </div>
-                              )}
-                              {client.contactPhone && (
-                                <div className="text-muted-foreground text-xs">
-                                  {client.contactPhone}
-                                </div>
-                              )}
-                              {!client.contactName &&
-                                !client.contactEmail &&
-                                !client.contactPhone && (
-                                  <div className="text-muted-foreground text-xs">
-                                    Sin contacto
-                                  </div>
-                                )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="text-sm space-y-1">
-                              {client.city && (
-                                <div className="text-foreground">
-                                  {client.city}
-                                </div>
-                              )}
-                              {client.region && (
-                                <div className="text-muted-foreground text-xs">
-                                  {client.region}
-                                </div>
-                              )}
-                              {!client.city && !client.region && (
-                                <div className="text-muted-foreground text-xs">
-                                  N/A
-                                </div>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {client.industry ? (
-                              <Badge
-                                variant="outline"
-                                className="border-primary/50 text-primary"
-                              >
-                                {getIndustryLabel(client.industry)}
-                              </Badge>
-                            ) : (
-                              <span className="text-muted-foreground text-xs">
-                                Sin clasificar
-                              </span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              variant={client.status ? "default" : "outline"}
-                              className={
-                                client.status
-                                  ? "bg-success/10 text-success border-success/50"
-                                  : "border-slate-500/50 text-muted-foreground"
-                              }
-                            >
-                              {client.status ? "Activo" : "Inactivo"}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-2">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() =>
-                                  router.push(`/clients/${client.id}`)
-                                }
-                                className="text-muted-foreground hover:text-primary hover:bg-primary/10"
-                                title="Ver detalles"
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleEditClick(client)}
-                                className="text-muted-foreground hover:text-secondary hover:bg-secondary/10"
-                                title="Editar"
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDeleteClick(client)}
-                                className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                                title="Eliminar"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-
-                {/* Pagination */}
-                <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
-                  <p className="text-sm text-muted-foreground">
-                    Mostrando {(page - 1) * limit + 1} a{" "}
-                    {Math.min(page * limit, total)} de {total} clientes
-                  </p>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => setPage(page - 1)}
-                      disabled={page === 1}
-                      className="border-border text-foreground hover:bg-ui-surface-elevated disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Anterior
-                    </Button>
-                    {Array.from({ length: totalPages }, (_, i) => i + 1)
-                      .filter(
-                        (p) =>
-                          p === 1 ||
-                          p === totalPages ||
-                          (p >= page - 1 && p <= page + 1)
-                      )
-                      .map((p, index, array) => (
-                        <div key={p} className="flex items-center">
-                          {index > 0 && array[index - 1] !== p - 1 && (
-                            <span className="text-muted-foreground px-2">
-                              ...
-                            </span>
-                          )}
-                          <Button
-                            variant={p === page ? "default" : "outline"}
-                            onClick={() => setPage(p)}
-                            className={
-                              p === page
-                                ? "bg-primary hover:bg-primary-dark text-white"
-                                : "border-border text-foreground hover:bg-ui-surface-elevated"
-                            }
-                          >
-                            {p}
-                          </Button>
-                        </div>
-                      ))}
-                    <Button
-                      variant="outline"
-                      onClick={() => setPage(page + 1)}
-                      disabled={page === totalPages}
-                      className="border-border text-foreground hover:bg-ui-surface-elevated disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Siguiente
-                    </Button>
-                  </div>
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
+          }
+          title={
+            <>
+              <FileText className="w-5 h-5 text-primary" />
+              Listado de Clientes
+            </>
+          }
+          description={`Total de ${total} clientes registrados`}
+          getRowKey={(client) => client.id}
+        />
       </div>
 
       {/* Delete Confirmation Dialog */}
