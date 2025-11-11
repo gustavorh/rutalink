@@ -5,12 +5,19 @@
 // ============================================================================
 // ENUMS - Imported from api-types.ts to avoid duplication
 // ============================================================================
-export {
+import {
   VehicleType,
   CapacityUnit,
   OperationalStatus,
   DocumentType,
 } from "@/lib/api-types";
+
+export {
+  VehicleType,
+  CapacityUnit,
+  OperationalStatus,
+  DocumentType,
+};
 
 // ============================================================================
 // CONSTANTS

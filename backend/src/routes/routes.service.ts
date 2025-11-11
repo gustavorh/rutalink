@@ -84,7 +84,7 @@ export class RoutesService {
 
     return {
       data,
-      meta: {
+      pagination: {
         page,
         limit,
         total,
