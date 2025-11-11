@@ -116,13 +116,27 @@ export async function authenticatedRequest<T>(
   token: string,
   options: RequestInit = {}
 ): Promise<T> {
-  return apiRequest<T>(endpoint, {
-    ...options,
-    headers: {
-      ...options.headers,
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  try {
+    return await apiRequest<T>(endpoint, {
+      ...options,
+      headers: {
+        ...options.headers,
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  } catch (error) {
+    // Handle session expiration - redirect to login
+    if (error instanceof ApiError && error.status === 401) {
+      // Only redirect if we're in the browser
+      if (typeof window !== "undefined") {
+        // Dynamic import to avoid circular dependency
+        const { clearAuth } = await import("./auth");
+        clearAuth();
+        window.location.href = "/login";
+      }
+    }
+    throw error;
+  }
 }
 
 // ============================================================================

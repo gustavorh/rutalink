@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -25,6 +25,9 @@ export default function LoginPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sessionExpiredMsg, setSessionExpiredMsg] = useState<string | null>(
+    null
+  );
 
   const {
     register,
@@ -33,6 +36,23 @@ export default function LoginPage() {
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   });
+
+  // Check for session expiration message
+  useEffect(() => {
+    const redirectPath = sessionStorage.getItem("redirectAfterLogin");
+    if (redirectPath) {
+      setSessionExpiredMsg(
+        "Tu sesión ha expirado por inactividad. Por favor inicia sesión nuevamente."
+      );
+    }
+
+    // Clear the message after 10 seconds
+    const timer = setTimeout(() => {
+      setSessionExpiredMsg(null);
+    }, 10000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
@@ -44,8 +64,15 @@ export default function LoginPage() {
       // Store authentication data
       storeAuth(response);
 
-      // Redirect to dashboard or home
-      router.push("/dashboard");
+      // Check if there's a redirect path stored from session expiration
+      const redirectPath = sessionStorage.getItem("redirectAfterLogin");
+      if (redirectPath) {
+        sessionStorage.removeItem("redirectAfterLogin");
+        router.push(redirectPath);
+      } else {
+        // Redirect to dashboard or home
+        router.push("/dashboard");
+      }
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.status === 401) {
@@ -148,6 +175,12 @@ export default function LoginPage() {
 
           {/* Form */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            {sessionExpiredMsg && (
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                <p className="text-sm text-amber-800">{sessionExpiredMsg}</p>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="username" className="text-sm text-slate-700">
                 Nombre de Usuario o Correo Electrónico:
