@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import type { LiveOperation } from "@/types/dashboard";
 import type { FilterOption } from "@/types/dashboard";
-import type { UpdateOperationInput } from "@/types/operations";
+import type { UpdateOperationDto } from "@/lib/api-types";
 import { updateOperation } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 
@@ -75,7 +75,7 @@ export function EditOperationModal({
         throw new Error("No authentication token found");
       }
 
-      const updateData: UpdateOperationInput = {
+      const updateData: UpdateOperationDto = {
         clientId: formData.clientId || undefined,
         providerId: formData.providerId || undefined,
         routeId: formData.routeId || undefined,

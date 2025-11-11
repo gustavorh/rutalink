@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { getToken, getUser } from "@/lib/auth";
 import { getUserById, updateUser } from "@/lib/api";
-import type { User, UpdateUserInput } from "@/types/users";
+import type { User } from "@/types/users";
+import type { UpdateUserDto } from "@/lib/api-types";
 import { PersonalDetailsTab, SecurityTab, HelpTab } from "@/components/profile";
 
 export default function ProfilePage() {
@@ -41,7 +42,7 @@ export default function ProfilePage() {
     loadUserData();
   }, [loadUserData]);
 
-  const handleUpdateUser = async (data: UpdateUserInput) => {
+  const handleUpdateUser = async (data: UpdateUserDto) => {
     try {
       const token = getToken();
       if (!token || !user) return;

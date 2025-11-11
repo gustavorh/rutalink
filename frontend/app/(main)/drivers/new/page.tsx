@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { getToken, isAuthenticated, getUser } from "@/lib/auth";
 import { createDriver, updateDriver, getDriverById } from "@/lib/api";
-import type { CreateDriverInput, UpdateDriverInput } from "@/types/drivers";
+import type { CreateDriverDto, UpdateDriverDto } from "@/lib/api-types";
 import { LICENSE_TYPES } from "@/types/drivers";
 import {
   Card,
@@ -35,7 +35,7 @@ export default function DriverFormPage() {
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [formData, setFormData] = useState<CreateDriverInput>({
+  const [formData, setFormData] = useState<CreateDriverDto>({
     operatorId: 0,
     rut: "",
     firstName: "",
@@ -126,7 +126,7 @@ export default function DriverFormPage() {
   };
 
   const handleChange = (
-    field: keyof CreateDriverInput,
+    field: keyof CreateDriverDto,
     value: string | boolean
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -156,12 +156,12 @@ export default function DriverFormPage() {
       }
 
       if (isEdit && driverId) {
-        const updateData: UpdateDriverInput = { ...formData };
+        const updateData: UpdateDriverDto = { ...formData };
         // Remove fields that shouldn't be updated
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { operatorId, rut, ...cleanData } =
-          updateData as CreateDriverInput;
-        await updateDriver(token, driverId, cleanData);
+          updateData as CreateDriverDto;
+        await updateDriver(token, driverId, cleanData as UpdateDriverDto);
       } else {
         await createDriver(token, formData);
       }

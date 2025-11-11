@@ -9,12 +9,12 @@ import {
   createOperator,
   updateOperator,
 } from "@/lib/api";
+import type { Operator } from "@/types/operators";
 import type {
-  Operator,
-  OperatorQueryParams,
-  CreateOperatorInput,
-  UpdateOperatorInput,
-} from "@/types/operators";
+  CreateOperatorDto,
+  UpdateOperatorDto,
+  OperatorQueryDto,
+} from "@/lib/api-types";
 import {
   Card,
   CardContent,
@@ -48,14 +48,13 @@ import {
   Users,
   Shield,
 } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DeleteConfirmationDialog } from "@/components/ui/delete-confirmation-dialog";
+import { StatisticsCard } from "@/components/ui/statistics-card";
+import { PageHeader } from "@/components/ui/page-header";
+import { LoadingState } from "@/components/ui/loading-state";
+import { FormDialog } from "@/components/ui/form-dialog";
+import { FormSection } from "@/components/ui/form-section";
+import { usePagination } from "@/lib/hooks/use-pagination";
 
 export default function OperatorsPage() {
   const router = useRouter();
@@ -71,7 +70,7 @@ export default function OperatorsPage() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [operatorToEdit, setOperatorToEdit] = useState<Operator | null>(null);
   const [formData, setFormData] = useState<
-    CreateOperatorInput | UpdateOperatorInput
+    CreateOperatorDto | UpdateOperatorDto
   >({
     name: "",
     rut: "",
@@ -83,13 +82,17 @@ export default function OperatorsPage() {
 
   // Filters
   const [search, setSearch] = useState("");
-  const [showFilters, setShowFilters] = useState(false);
 
   // Pagination
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
-  const limit = 10;
+  const {
+    page,
+    setPage,
+    total,
+    setTotal,
+    totalPages,
+    setTotalPages,
+    pagination,
+  } = usePagination({ initialLimit: 10 });
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -112,9 +115,9 @@ export default function OperatorsPage() {
         return;
       }
 
-      const params: OperatorQueryParams = {
-        page,
-        limit,
+      const params: OperatorQueryDto = {
+        page: page.toString(),
+        limit: pagination.limit.toString(),
       };
 
       if (search) params.search = search;
@@ -197,13 +200,13 @@ export default function OperatorsPage() {
         await updateOperator(
           token,
           operatorToEdit.id,
-          formData as UpdateOperatorInput
+          formData as UpdateOperatorDto
         );
         setEditDialogOpen(false);
         setOperatorToEdit(null);
       } else {
         // Create new operator
-        await createOperator(token, formData as CreateOperatorInput);
+        await createOperator(token, formData as CreateOperatorDto);
         setCreateDialogOpen(false);
       }
 
@@ -218,11 +221,7 @@ export default function OperatorsPage() {
   };
 
   if (!mounted) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-ui-surface-elevated">
-        <p className="text-foreground">Cargando...</p>
-      </div>
-    );
+    return <LoadingState />;
   }
 
   const user = getUser();
@@ -237,81 +236,43 @@ export default function OperatorsPage() {
   return (
     <main className="flex-1 overflow-y-auto p-6">
       <div className="max-w-[1400px] mx-auto space-y-6">
-        {/* Page Header with Stats */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <Building2 className="w-6 h-6 text-primary" />
-              Gestión de Organizaciones
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Administración de organizaciones multi-tenancy
-            </p>
-          </div>
-          <Button
-            onClick={handleCreateClick}
-            className="bg-primary hover:bg-primary-dark text-white"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Nueva Organización
-          </Button>
-        </div>
+        {/* Page Header */}
+        <PageHeader
+          title="Gestión de Organizaciones"
+          description="Administración de organizaciones multi-tenancy"
+          icon={<Building2 className="w-6 h-6" />}
+          actionLabel={
+            <>
+              <Plus className="mr-2 h-4 w-4" />
+              Nueva Organización
+            </>
+          }
+          onAction={handleCreateClick}
+        />
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="bg-card border-border">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Total Organizaciones
-                  </p>
-                  <p className="text-2xl font-bold text-foreground mt-1">
-                    {total}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                  <Building2 className="w-6 h-6 text-primary" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card border-border">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Organizaciones Activas
-                  </p>
-                  <p className="text-2xl font-bold text-foreground mt-1">
-                    {activeOperators}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-success/10 rounded-lg flex items-center justify-center">
-                  <CheckCircle className="w-6 h-6 text-success" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card border-border">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Organizaciones Super
-                  </p>
-                  <p className="text-2xl font-bold text-foreground mt-1">
-                    {superOperators}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-orange-500/10 rounded-lg flex items-center justify-center">
-                  <Shield className="w-6 h-6 text-orange-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <StatisticsCard
+            value={total}
+            label="Total Organizaciones"
+            icon={<Building2 className="w-6 h-6" />}
+            iconBgColor="bg-primary/10"
+            iconColor="text-primary"
+          />
+          <StatisticsCard
+            value={activeOperators}
+            label="Organizaciones Activas"
+            icon={<CheckCircle className="w-6 h-6" />}
+            iconBgColor="bg-success/10"
+            iconColor="text-success"
+          />
+          <StatisticsCard
+            value={superOperators}
+            label="Organizaciones Super"
+            icon={<Shield className="w-6 h-6" />}
+            iconBgColor="bg-orange-500/10"
+            iconColor="text-orange-400"
+          />
         </div>
 
         {/* Filters Card */}
@@ -326,14 +287,6 @@ export default function OperatorsPage() {
                 Filtra y busca organizaciones
               </CardDescription>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowFilters(!showFilters)}
-              className="border-border text-foreground hover:bg-ui-surface-elevated"
-            >
-              {showFilters ? "Ocultar" : "Mostrar"} Filtros
-            </Button>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -555,8 +508,12 @@ export default function OperatorsPage() {
                 {/* Pagination */}
                 <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
                   <p className="text-sm text-muted-foreground">
-                    Mostrando {(page - 1) * limit + 1} a{" "}
-                    {Math.min(page * limit, total)} de {total} organizaciones
+                    Mostrando {(pagination.page - 1) * pagination.limit + 1} a{" "}
+                    {Math.min(
+                      pagination.page * pagination.limit,
+                      pagination.total
+                    )}{" "}
+                    de {pagination.total} organizaciones
                   </p>
                   <div className="flex gap-2">
                     <Button
@@ -597,7 +554,7 @@ export default function OperatorsPage() {
                     <Button
                       variant="outline"
                       onClick={() => setPage(page + 1)}
-                      disabled={page === totalPages}
+                      disabled={pagination.page === pagination.totalPages}
                       className="border-border text-foreground hover:bg-ui-surface-elevated disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Siguiente
@@ -611,40 +568,17 @@ export default function OperatorsPage() {
       </div>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="bg-card border-border">
-          <DialogHeader>
-            <DialogTitle className="text-foreground">
-              Confirmar Eliminación
-            </DialogTitle>
-            <DialogDescription className="text-muted-foreground">
-              ¿Estás seguro de que deseas eliminar la organización{" "}
-              <strong className="text-foreground">
-                {operatorToDelete?.name}
-              </strong>
-              ? Esta acción marcará la organización como inactiva.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setDeleteDialogOpen(false)}
-              className="border-border text-foreground hover:bg-ui-surface-elevated"
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleDeleteConfirm}
-              className="bg-red-600 hover:bg-red-700 text-white"
-            >
-              Eliminar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DeleteConfirmationDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDeleteConfirm}
+        itemName={operatorToDelete?.name}
+        itemType="organización"
+        description={`¿Estás seguro de que deseas eliminar la organización ${operatorToDelete?.name}? Esta acción marcará la organización como inactiva.`}
+      />
 
       {/* Create/Edit Operator Dialog */}
-      <Dialog
+      <FormDialog
         open={createDialogOpen || editDialogOpen}
         onOpenChange={(open) => {
           if (!open) {
@@ -653,151 +587,114 @@ export default function OperatorsPage() {
             setOperatorToEdit(null);
           }
         }}
+        title={editDialogOpen ? "Editar Organización" : "Nueva Organización"}
+        description={
+          editDialogOpen
+            ? "Actualiza la información de la organización"
+            : "Completa la información de la nueva organización"
+        }
+        onSubmit={handleFormSubmit}
+        loading={formLoading}
+        submitLabel={
+          editDialogOpen ? "Actualizar Organización" : "Crear Organización"
+        }
+        maxWidth="2xl"
+        onCancel={() => {
+          setCreateDialogOpen(false);
+          setEditDialogOpen(false);
+          setOperatorToEdit(null);
+        }}
       >
-        <DialogContent className="bg-card border-border max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-foreground">
-              {editDialogOpen ? "Editar Organización" : "Nueva Organización"}
-            </DialogTitle>
-            <DialogDescription className="text-muted-foreground">
-              {editDialogOpen
-                ? "Actualiza la información de la organización"
-                : "Completa la información de la nueva organización"}
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleFormSubmit} className="space-y-4">
-            {/* Basic Information */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium text-foreground border-b border-border pb-2">
-                Información Básica
-              </h3>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2">
-                  <Label htmlFor="name" className="text-foreground">
-                    Nombre de la Organización *
-                  </Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
-                    required
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                    placeholder="Ej: Transporte ABC Ltda."
-                  />
-                </div>
-
-                <div className="col-span-2">
-                  <Label htmlFor="rut" className="text-foreground">
-                    RUT
-                  </Label>
-                  <Input
-                    id="rut"
-                    value={formData.rut}
-                    onChange={(e) =>
-                      setFormData({ ...formData, rut: e.target.value })
-                    }
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                    placeholder="12.345.678-9"
-                    maxLength={12}
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Formato: 12.345.678-9
-                  </p>
-                </div>
-
-                <div className="col-span-2">
-                  <Label htmlFor="expiration" className="text-foreground">
-                    Fecha de Expiración
-                  </Label>
-                  <Input
-                    id="expiration"
-                    type="date"
-                    value={formData.expiration}
-                    onChange={(e) =>
-                      setFormData({ ...formData, expiration: e.target.value })
-                    }
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Fecha límite de operación de la organización
-                  </p>
-                </div>
-
-                <div className="col-span-2 flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="super"
-                    checked={formData.super}
-                    onChange={(e) =>
-                      setFormData({ ...formData, super: e.target.checked })
-                    }
-                    className="rounded border-border bg-ui-surface-elevated text-primary focus:ring-blue-500"
-                  />
-                  <Label
-                    htmlFor="super"
-                    className="text-foreground cursor-pointer"
-                  >
-                    Organización Super (acceso completo al sistema)
-                  </Label>
-                </div>
-
-                <div className="col-span-2 flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="status"
-                    checked={formData.status}
-                    onChange={(e) =>
-                      setFormData({ ...formData, status: e.target.checked })
-                    }
-                    className="rounded border-border bg-ui-surface-elevated text-primary focus:ring-blue-500"
-                  />
-                  <Label
-                    htmlFor="status"
-                    className="text-foreground cursor-pointer"
-                  >
-                    Organización Activa
-                  </Label>
-                </div>
-              </div>
+        <FormSection title="Información Básica">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2">
+              <Label htmlFor="name" className="text-foreground">
+                Nombre de la Organización *
+              </Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+                required
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+                placeholder="Ej: Transporte ABC Ltda."
+              />
             </div>
 
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setCreateDialogOpen(false);
-                  setEditDialogOpen(false);
-                  setOperatorToEdit(null);
-                }}
-                className="border-border text-foreground hover:bg-ui-surface-elevated"
-                disabled={formLoading}
+            <div className="col-span-2">
+              <Label htmlFor="rut" className="text-foreground">
+                RUT
+              </Label>
+              <Input
+                id="rut"
+                value={formData.rut}
+                onChange={(e) =>
+                  setFormData({ ...formData, rut: e.target.value })
+                }
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+                placeholder="12.345.678-9"
+                maxLength={12}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Formato: 12.345.678-9
+              </p>
+            </div>
+
+            <div className="col-span-2">
+              <Label htmlFor="expiration" className="text-foreground">
+                Fecha de Expiración
+              </Label>
+              <Input
+                id="expiration"
+                type="date"
+                value={formData.expiration || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, expiration: e.target.value })
+                }
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Fecha límite de operación de la organización
+              </p>
+            </div>
+
+            <div className="col-span-2 flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="super"
+                checked={formData.super}
+                onChange={(e) =>
+                  setFormData({ ...formData, super: e.target.checked })
+                }
+                className="rounded border-border bg-ui-surface-elevated text-primary focus:ring-blue-500"
+              />
+              <Label htmlFor="super" className="text-foreground cursor-pointer">
+                Organización Super (acceso completo al sistema)
+              </Label>
+            </div>
+
+            <div className="col-span-2 flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="status"
+                checked={formData.status}
+                onChange={(e) =>
+                  setFormData({ ...formData, status: e.target.checked })
+                }
+                className="rounded border-border bg-ui-surface-elevated text-primary focus:ring-blue-500"
+              />
+              <Label
+                htmlFor="status"
+                className="text-foreground cursor-pointer"
               >
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                className="bg-primary hover:bg-primary-dark text-white"
-                disabled={formLoading}
-              >
-                {formLoading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Guardando...
-                  </>
-                ) : editDialogOpen ? (
-                  "Actualizar Organización"
-                ) : (
-                  "Crear Organización"
-                )}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+                Organización Activa
+              </Label>
+            </div>
+          </div>
+        </FormSection>
+      </FormDialog>
     </main>
   );
 }

@@ -114,52 +114,6 @@ export interface OperationWithDetails {
 // OPERATION REQUEST INPUT TYPES
 // ============================================================================
 
-export interface CreateOperationInput {
-  operatorId: number;
-  clientId?: number;
-  providerId?: number;
-  routeId?: number;
-  driverId: number;
-  vehicleId: number;
-  operationNumber: string;
-  operationType: (typeof OPERATION_TYPES)[number]["value"];
-  origin: string;
-  destination: string;
-  scheduledStartDate: string; // ISO 8601 date string
-  scheduledEndDate?: string; // ISO 8601 date string
-  distance?: number;
-  cargoDescription?: string;
-  cargoWeight?: number;
-  // Campos adicionales para el módulo
-  machineryType?: (typeof MACHINERY_TYPES)[number]["value"];
-  machineryCode?: string;
-  machineryDescription?: string;
-  siteConditions?: string; // Condiciones especiales del lugar
-  specialInstructions?: string; // Instrucciones especiales
-  requiresConfirmation?: boolean;
-  estimatedDuration?: number; // minutos
-  notes?: string;
-}
-
-export interface UpdateOperationInput {
-  clientId?: number;
-  providerId?: number;
-  routeId?: number;
-  driverId?: number;
-  vehicleId?: number;
-  operationType?: (typeof OPERATION_TYPES)[number]["value"];
-  origin?: string;
-  destination?: string;
-  scheduledStartDate?: string;
-  scheduledEndDate?: string;
-  actualStartDate?: string;
-  actualEndDate?: string;
-  distance?: number;
-  status?: (typeof OPERATION_STATUS)[number]["value"];
-  cargoDescription?: string;
-  cargoWeight?: number;
-  notes?: string;
-}
 
 // ============================================================================
 // TRANSPORT ASSIGNMENT TYPES
@@ -181,41 +135,11 @@ export interface TransportAssignment {
   updatedAt: string;
 }
 
-export interface AssignTransportProviderInput {
-  operationId: number;
-  providerId: number;
-  instructions?: string;
-  notifyProvider?: boolean;
-  assignedVehicle?: string;
-  assignedDriver?: string;
-}
-
-export interface ConfirmTransportAssignmentInput {
-  assignedVehicle?: string;
-  assignedDriver?: string;
-  estimatedArrival?: string;
-  notes?: string;
-}
 
 // ============================================================================
 // QUERY PARAMETERS
 // ============================================================================
 
-export interface OperationQueryParams {
-  operatorId?: number;
-  clientId?: number;
-  providerId?: number;
-  routeId?: number;
-  driverId?: number;
-  vehicleId?: number;
-  status?: string;
-  operationType?: string;
-  startDate?: string; // ISO 8601 date string
-  endDate?: string; // ISO 8601 date string
-  search?: string;
-  page?: number;
-  limit?: number;
-}
 
 // ============================================================================
 // PAGINATION

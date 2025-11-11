@@ -12,11 +12,13 @@ import {
 import type {
   Client,
   ClientQueryParams,
-  CreateClientInput,
-  UpdateClientInput,
 } from "@/types/clients";
+import type {
+  CreateClientDto,
+  UpdateClientDto,
+  ClientQueryDto,
+} from "@/lib/api-types";
 import { INDUSTRIES } from "@/types/clients";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -40,14 +42,15 @@ import {
   Building,
   FileText,
 } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DeleteConfirmationDialog } from "@/components/ui/delete-confirmation-dialog";
+import { StatisticsCard } from "@/components/ui/statistics-card";
+import { PageHeader } from "@/components/ui/page-header";
+import { LoadingState } from "@/components/ui/loading-state";
+import { EmptyState } from "@/components/ui/empty-state";
+import { FormDialog } from "@/components/ui/form-dialog";
+import { FormSection } from "@/components/ui/form-section";
+import { usePagination } from "@/lib/hooks/use-pagination";
+import { useFilters } from "@/lib/hooks/use-filters";
 import {
   DataTable,
   type DataTableColumn,
@@ -67,7 +70,7 @@ export default function ClientsPage() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [clientToEdit, setClientToEdit] = useState<Client | null>(null);
   const [formData, setFormData] = useState<
-    CreateClientInput | UpdateClientInput
+    CreateClientDto | UpdateClientDto
   >({
     businessName: "",
     taxId: "",
@@ -87,15 +90,29 @@ export default function ClientsPage() {
 
   // Filters
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [industryFilter, setIndustryFilter] = useState<string>("all");
-  const [showFilters, setShowFilters] = useState(false);
+  const {
+    filters: filterState,
+    setFilter,
+    showFilters,
+    toggleFilters,
+    clearFilters: clearAllFilters,
+  } = useFilters({
+    initialFilters: {
+      status: "all",
+      industry: "all",
+    },
+  });
 
   // Pagination
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
-  const limit = 10;
+  const {
+    page,
+    setPage,
+    total,
+    setTotal,
+    totalPages,
+    setTotalPages,
+    pagination,
+  } = usePagination({ initialLimit: 10 });
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -105,7 +122,7 @@ export default function ClientsPage() {
     setMounted(true);
     fetchClients();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, search, statusFilter, industryFilter]);
+  }, [page, search, filterState.status, filterState.industry]);
 
   const fetchClients = async () => {
     try {
@@ -118,16 +135,17 @@ export default function ClientsPage() {
         return;
       }
 
-      const params: ClientQueryParams = {
+      const params: ClientQueryDto = {
         operatorId: user.operatorId,
         page,
-        limit,
+        limit: pagination.limit,
       };
 
       if (search) params.search = search;
-      if (statusFilter !== "all")
-        params.status = statusFilter === "active" ? true : false;
-      if (industryFilter !== "all") params.industry = industryFilter;
+      if (filterState.status !== "all")
+        params.status = filterState.status === "active" ? true : false;
+      if (filterState.industry !== "all")
+        params.industry = filterState.industry;
 
       const response = await getClients(token, params);
       setClients(response.data);
@@ -227,14 +245,14 @@ export default function ClientsPage() {
         await updateClient(
           token,
           clientToEdit.id,
-          formData as UpdateClientInput
+          formData as UpdateClientDto
         );
         setEditDialogOpen(false);
         setClientToEdit(null);
       } else {
         // Create new client
-        const createData: CreateClientInput = {
-          ...(formData as CreateClientInput),
+        const createData: CreateClientDto = {
+          ...(formData as CreateClientDto),
           operatorId: user.operatorId,
         };
         await createClient(token, createData);
@@ -256,8 +274,8 @@ export default function ClientsPage() {
   };
 
   const handleClearFilters = () => {
-    setStatusFilter("all");
-    setIndustryFilter("all");
+    setSearch("");
+    clearAllFilters();
     setPage(1);
   };
 
@@ -370,8 +388,8 @@ export default function ClientsPage() {
         { value: "active", label: "Activo" },
         { value: "inactive", label: "Inactivo" },
       ],
-      value: statusFilter,
-      onChange: setStatusFilter,
+      value: filterState.status,
+      onChange: (value) => setFilter("status", value),
       ariaLabel: "Filtrar por estado",
     },
     {
@@ -385,8 +403,8 @@ export default function ClientsPage() {
           label: industry.label,
         })),
       ],
-      value: industryFilter,
-      onChange: setIndustryFilter,
+      value: filterState.industry,
+      onChange: (value) => setFilter("industry", value),
       ariaLabel: "Filtrar por rubro",
     },
   ];
@@ -422,11 +440,7 @@ export default function ClientsPage() {
   ];
 
   if (!mounted) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-ui-surface-elevated">
-        <p className="text-foreground">Cargando...</p>
-      </div>
-    );
+    return <LoadingState />;
   }
 
   const user = getUser();
@@ -448,117 +462,61 @@ export default function ClientsPage() {
   return (
     <main className="flex-1 overflow-y-auto p-6">
       <div className="max-w-[1400px] mx-auto space-y-6">
-        {/* Page Header with Stats */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <Building2 className="w-6 h-6 text-primary" />
-              Mantenedor de Clientes
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Gestión de información comercial y operativa de clientes
-            </p>
-          </div>
-          <Button
-            onClick={handleCreateClick}
-            className="bg-primary hover:bg-primary-dark text-white"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Nuevo Cliente
-          </Button>
-        </div>
+        {/* Page Header */}
+        <PageHeader
+          title="Mantenedor de Clientes"
+          description="Gestión de información comercial y operativa de clientes"
+          icon={<Building2 className="w-6 h-6" />}
+          actionLabel={
+            <>
+              <Plus className="mr-2 h-4 w-4" />
+              Nuevo Cliente
+            </>
+          }
+          onAction={handleCreateClick}
+        />
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-card border-border">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Total Clientes
-                  </p>
-                  <p className="text-2xl font-bold text-foreground mt-1">
-                    {total}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                  <Building2 className="w-6 h-6 text-primary" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card border-border">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Clientes Activos
-                  </p>
-                  <p className="text-2xl font-bold text-foreground mt-1">
-                    {activeClients}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-success/10 rounded-lg flex items-center justify-center">
-                  <CheckCircle className="w-6 h-6 text-success" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card border-border">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Rubros Registrados
-                  </p>
-                  <p className="text-2xl font-bold text-foreground mt-1">
-                    {Object.keys(clientsByIndustry).length}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center">
-                  <Building className="w-6 h-6 text-secondary" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card border-border">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Rubro Principal
-                  </p>
-                  <p className="text-sm font-bold text-foreground mt-1">
-                    {topIndustry ? getIndustryLabel(topIndustry[0]) : "N/A"}
-                  </p>
-                  {topIndustry && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {topIndustry[1]} cliente
-                      {topIndustry[1] !== 1 ? "s" : ""}
-                    </p>
-                  )}
-                </div>
-                <div className="w-12 h-12 bg-orange-500/10 rounded-lg flex items-center justify-center">
-                  <TrendingUp className="w-6 h-6 text-orange-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <StatisticsCard
+            value={total}
+            label="Total Clientes"
+            icon={<Building2 className="w-6 h-6" />}
+            iconBgColor="bg-primary/10"
+            iconColor="text-primary"
+          />
+          <StatisticsCard
+            value={activeClients}
+            label="Clientes Activos"
+            icon={<CheckCircle className="w-6 h-6" />}
+            iconBgColor="bg-success/10"
+            iconColor="text-success"
+          />
+          <StatisticsCard
+            value={Object.keys(clientsByIndustry).length}
+            label="Rubros Registrados"
+            icon={<Building className="w-6 h-6" />}
+            iconBgColor="bg-secondary/10"
+            iconColor="text-secondary"
+          />
+          <StatisticsCard
+            value={
+              topIndustry
+                ? `${getIndustryLabel(topIndustry[0])} (${topIndustry[1]})`
+                : "N/A"
+            }
+            label="Rubro Principal"
+            icon={<TrendingUp className="w-6 h-6" />}
+            iconBgColor="bg-orange-500/10"
+            iconColor="text-orange-400"
+          />
         </div>
 
         {/* Clients DataTable */}
         <DataTable
           data={clients}
           columns={columns}
-          pagination={{
-            page,
-            limit,
-            total,
-            totalPages,
-          }}
+          pagination={pagination}
           onPageChange={setPage}
           searchValue={search}
           onSearchChange={setSearch}
@@ -566,25 +524,23 @@ export default function ClientsPage() {
           onSearchSubmit={handleSearch}
           filters={filters}
           showFilters={showFilters}
-          onToggleFilters={() => setShowFilters(!showFilters)}
+          onToggleFilters={toggleFilters}
           onClearFilters={handleClearFilters}
           actions={actions}
           loading={loading}
           error={error}
           emptyState={
-            <div className="text-center py-12">
-              <Building2 className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-              <p className="text-muted-foreground">
-                No se encontraron clientes
-              </p>
-              <Button
-                onClick={handleCreateClick}
-                className="mt-4 bg-primary hover:bg-primary-dark"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Agregar Primer Cliente
-              </Button>
-            </div>
+            <EmptyState
+              icon={<Building2 className="w-12 h-12 text-slate-600" />}
+              title="No se encontraron clientes"
+              actionLabel={
+                <>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Agregar Primer Cliente
+                </>
+              }
+              onAction={handleCreateClick}
+            />
           }
           title={
             <>
@@ -598,40 +554,17 @@ export default function ClientsPage() {
       </div>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="bg-card border-border">
-          <DialogHeader>
-            <DialogTitle className="text-foreground">
-              Confirmar Eliminación
-            </DialogTitle>
-            <DialogDescription className="text-muted-foreground">
-              ¿Estás seguro de que deseas eliminar al cliente{" "}
-              <strong className="text-foreground">
-                {clientToDelete?.businessName}
-              </strong>
-              ? Esta acción marcará el cliente como inactivo.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setDeleteDialogOpen(false)}
-              className="border-border text-foreground hover:bg-ui-surface-elevated"
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleDeleteConfirm}
-              className="bg-red-600 hover:bg-red-700 text-white"
-            >
-              Eliminar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DeleteConfirmationDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDeleteConfirm}
+        itemName={clientToDelete?.businessName}
+        itemType="cliente"
+        description={`¿Estás seguro de que deseas eliminar al cliente ${clientToDelete?.businessName}? Esta acción marcará el cliente como inactivo.`}
+      />
 
       {/* Create/Edit Client Dialog */}
-      <Dialog
+      <FormDialog
         open={createDialogOpen || editDialogOpen}
         onOpenChange={(open) => {
           if (!open) {
@@ -640,24 +573,23 @@ export default function ClientsPage() {
             setClientToEdit(null);
           }
         }}
+        title={editDialogOpen ? "Editar Cliente" : "Nuevo Cliente"}
+        description={
+          editDialogOpen
+            ? "Actualiza la información del cliente"
+            : "Completa la información del nuevo cliente"
+        }
+        onSubmit={handleFormSubmit}
+        loading={formLoading}
+        submitLabel={editDialogOpen ? "Actualizar Cliente" : "Crear Cliente"}
+        maxWidth="2xl"
+        onCancel={() => {
+          setCreateDialogOpen(false);
+          setEditDialogOpen(false);
+          setClientToEdit(null);
+        }}
       >
-        <DialogContent className="bg-card border-border max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-foreground">
-              {editDialogOpen ? "Editar Cliente" : "Nuevo Cliente"}
-            </DialogTitle>
-            <DialogDescription className="text-muted-foreground">
-              {editDialogOpen
-                ? "Actualiza la información del cliente"
-                : "Completa la información del nuevo cliente"}
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleFormSubmit} className="space-y-4">
-            {/* Business Information */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium text-foreground border-b border-border pb-2">
-                Información Comercial
-              </h3>
+        <FormSection title="Información Comercial">
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
@@ -717,13 +649,9 @@ export default function ClientsPage() {
                   </Select>
                 </div>
               </div>
-            </div>
+        </FormSection>
 
-            {/* Contact Information */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium text-foreground border-b border-border pb-2">
-                Información de Contacto
-              </h3>
+        <FormSection title="Información de Contacto">
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
@@ -772,13 +700,9 @@ export default function ClientsPage() {
                   />
                 </div>
               </div>
-            </div>
+        </FormSection>
 
-            {/* Location Information */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium text-foreground border-b border-border pb-2">
-                Ubicación
-              </h3>
+        <FormSection title="Ubicación">
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
@@ -826,13 +750,9 @@ export default function ClientsPage() {
                   />
                 </div>
               </div>
-            </div>
+        </FormSection>
 
-            {/* Additional Information */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium text-foreground border-b border-border pb-2">
-                Información Adicional
-              </h3>
+        <FormSection title="Información Adicional">
 
               <div className="space-y-4">
                 <div>
@@ -885,42 +805,8 @@ export default function ClientsPage() {
                   </Label>
                 </div>
               </div>
-            </div>
-
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setCreateDialogOpen(false);
-                  setEditDialogOpen(false);
-                  setClientToEdit(null);
-                }}
-                className="border-border text-foreground hover:bg-ui-surface-elevated"
-                disabled={formLoading}
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                className="bg-primary hover:bg-primary-dark text-white"
-                disabled={formLoading}
-              >
-                {formLoading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Guardando...
-                  </>
-                ) : editDialogOpen ? (
-                  "Actualizar Cliente"
-                ) : (
-                  "Crear Cliente"
-                )}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+        </FormSection>
+      </FormDialog>
     </main>
   );
 }

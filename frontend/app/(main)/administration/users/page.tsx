@@ -10,12 +10,12 @@ import {
   updateUser,
   getRoles,
 } from "@/lib/api";
+import type { User } from "@/types/users";
 import type {
-  User,
-  UserQueryParams,
-  CreateUserInput,
-  UpdateUserInput,
-} from "@/types/users";
+  CreateUserDto,
+  UpdateUserDto,
+  UserQueryDto,
+} from "@/lib/api-types";
 import type { Role } from "@/types/roles";
 import {
   Card,
@@ -54,14 +54,13 @@ import {
   Filter,
   UserCheck,
 } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DeleteConfirmationDialog } from "@/components/ui/delete-confirmation-dialog";
+import { StatisticsCard } from "@/components/ui/statistics-card";
+import { PageHeader } from "@/components/ui/page-header";
+import { LoadingState } from "@/components/ui/loading-state";
+import { FormDialog } from "@/components/ui/form-dialog";
+import { FormSection } from "@/components/ui/form-section";
+import { usePagination } from "@/lib/hooks/use-pagination";
 
 export default function UsersPage() {
   const router = useRouter();
@@ -75,7 +74,7 @@ export default function UsersPage() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [userToEdit, setUserToEdit] = useState<User | null>(null);
-  const [formData, setFormData] = useState<CreateUserInput | UpdateUserInput>({
+  const [formData, setFormData] = useState<CreateUserDto | UpdateUserDto>({
     username: "",
     email: "",
     password: "",
@@ -85,10 +84,15 @@ export default function UsersPage() {
   });
   const [formLoading, setFormLoading] = useState(false);
   const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
-  const limit = 10;
+  const {
+    page,
+    setPage,
+    total,
+    setTotal,
+    totalPages,
+    setTotalPages,
+    pagination,
+  } = usePagination({ initialLimit: 10 });
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -112,9 +116,9 @@ export default function UsersPage() {
         return;
       }
 
-      const params: UserQueryParams = {
+      const params: UserQueryDto = {
         page,
-        limit,
+        limit: pagination.limit,
       };
 
       if (search) params.search = search;
@@ -208,12 +212,12 @@ export default function UsersPage() {
 
       if (editDialogOpen && userToEdit) {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { password, ...updateData } = formData as CreateUserInput;
-        await updateUser(token, userToEdit.id, updateData as UpdateUserInput);
+        const { password, ...updateData } = formData as CreateUserDto;
+        await updateUser(token, userToEdit.id, updateData as UpdateUserDto);
         setEditDialogOpen(false);
         setUserToEdit(null);
       } else {
-        await createUser(token, formData as CreateUserInput);
+        await createUser(token, formData as CreateUserDto);
         setCreateDialogOpen(false);
       }
       fetchUsers();
@@ -225,11 +229,7 @@ export default function UsersPage() {
   };
 
   if (!mounted) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-ui-surface-elevated">
-        <p className="text-foreground">Cargando...</p>
-      </div>
-    );
+    return <LoadingState />;
   }
 
   const user = getUser();
@@ -240,61 +240,34 @@ export default function UsersPage() {
   return (
     <main className="flex-1 overflow-y-auto p-6">
       <div className="max-w-[1400px] mx-auto space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <UsersIcon className="w-6 h-6 text-primary" />
-              Gestión de Usuarios
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Administración de usuarios de la organización
-            </p>
-          </div>
-          <Button
-            onClick={handleCreateClick}
-            className="bg-primary hover:bg-primary-dark text-white"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Nuevo Usuario
-          </Button>
-        </div>
+        <PageHeader
+          title="Gestión de Usuarios"
+          description="Administración de usuarios de la organización"
+          icon={<UsersIcon className="w-6 h-6" />}
+          actionLabel={
+            <>
+              <Plus className="mr-2 h-4 w-4" />
+              Nuevo Usuario
+            </>
+          }
+          onAction={handleCreateClick}
+        />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card className="bg-card border-border">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Total Usuarios
-                  </p>
-                  <p className="text-2xl font-bold text-foreground mt-1">
-                    {total}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                  <UsersIcon className="w-6 h-6 text-primary" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card border-border">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Usuarios Activos
-                  </p>
-                  <p className="text-2xl font-bold text-foreground mt-1">
-                    {activeUsers}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-success/10 rounded-lg flex items-center justify-center">
-                  <UserCheck className="w-6 h-6 text-success" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <StatisticsCard
+            value={total}
+            label="Total Usuarios"
+            icon={<UsersIcon className="w-6 h-6" />}
+            iconBgColor="bg-primary/10"
+            iconColor="text-primary"
+          />
+          <StatisticsCard
+            value={activeUsers}
+            label="Usuarios Activos"
+            icon={<UserCheck className="w-6 h-6" />}
+            iconBgColor="bg-success/10"
+            iconColor="text-success"
+          />
         </div>
 
         <Card className="bg-card border-border">
@@ -467,8 +440,12 @@ export default function UsersPage() {
 
                 <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
                   <p className="text-sm text-muted-foreground">
-                    Mostrando {(page - 1) * limit + 1} a{" "}
-                    {Math.min(page * limit, total)} de {total} usuarios
+                    Mostrando {(pagination.page - 1) * pagination.limit + 1} a{" "}
+                    {Math.min(
+                      pagination.page * pagination.limit,
+                      pagination.total
+                    )}{" "}
+                    de {pagination.total} usuarios
                   </p>
                   <div className="flex gap-2">
                     <Button
@@ -482,7 +459,7 @@ export default function UsersPage() {
                     <Button
                       variant="outline"
                       onClick={() => setPage(page + 1)}
-                      disabled={page === totalPages}
+                      disabled={pagination.page === pagination.totalPages}
                       className="border-border text-foreground hover:bg-ui-surface-elevated"
                     >
                       Siguiente
@@ -496,40 +473,20 @@ export default function UsersPage() {
       </div>
 
       {/* Delete Dialog */}
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="bg-card border-border">
-          <DialogHeader>
-            <DialogTitle className="text-foreground">
-              Confirmar Eliminación
-            </DialogTitle>
-            <DialogDescription className="text-muted-foreground">
-              ¿Estás seguro de que deseas eliminar al usuario{" "}
-              <strong className="text-foreground">
-                {userToDelete?.firstName} {userToDelete?.lastName}
-              </strong>
-              ?
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setDeleteDialogOpen(false)}
-              className="border-border text-foreground hover:bg-ui-surface-elevated"
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleDeleteConfirm}
-              className="bg-red-600 hover:bg-red-700 text-white"
-            >
-              Eliminar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DeleteConfirmationDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDeleteConfirm}
+        itemName={
+          userToDelete
+            ? `${userToDelete.firstName} ${userToDelete.lastName}`
+            : undefined
+        }
+        itemType="usuario"
+      />
 
       {/* Create/Edit Dialog */}
-      <Dialog
+      <FormDialog
         open={createDialogOpen || editDialogOpen}
         onOpenChange={(open) => {
           if (!open) {
@@ -538,170 +495,141 @@ export default function UsersPage() {
             setUserToEdit(null);
           }
         }}
+        title={editDialogOpen ? "Editar Usuario" : "Nuevo Usuario"}
+        description={
+          editDialogOpen
+            ? "Actualiza la información del usuario"
+            : "Completa la información del nuevo usuario"
+        }
+        onSubmit={handleFormSubmit}
+        loading={formLoading}
+        submitLabel={editDialogOpen ? "Actualizar Usuario" : "Crear Usuario"}
+        maxWidth="2xl"
+        onCancel={() => {
+          setCreateDialogOpen(false);
+          setEditDialogOpen(false);
+          setUserToEdit(null);
+        }}
       >
-        <DialogContent className="bg-card border-border max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-foreground">
-              {editDialogOpen ? "Editar Usuario" : "Nuevo Usuario"}
-            </DialogTitle>
-            <DialogDescription className="text-muted-foreground">
-              {editDialogOpen
-                ? "Actualiza la información del usuario"
-                : "Completa la información del nuevo usuario"}
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleFormSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="firstName" className="text-foreground">
-                  Nombre *
-                </Label>
-                <Input
-                  id="firstName"
-                  value={formData.firstName}
-                  onChange={(e) =>
-                    setFormData({ ...formData, firstName: e.target.value })
-                  }
-                  required
-                  className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="lastName" className="text-foreground">
-                  Apellido *
-                </Label>
-                <Input
-                  id="lastName"
-                  value={formData.lastName}
-                  onChange={(e) =>
-                    setFormData({ ...formData, lastName: e.target.value })
-                  }
-                  required
-                  className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="username" className="text-foreground">
-                  Usuario *
-                </Label>
-                <Input
-                  id="username"
-                  value={formData.username}
-                  onChange={(e) =>
-                    setFormData({ ...formData, username: e.target.value })
-                  }
-                  required
-                  className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="email" className="text-foreground">
-                  Email *
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
-                  required
-                  className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                />
-              </div>
-              {!editDialogOpen && (
-                <div className="col-span-2">
-                  <Label htmlFor="password" className="text-foreground">
-                    Contraseña *
-                  </Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={(formData as CreateUserInput).password}
-                    onChange={(e) =>
-                      setFormData({ ...formData, password: e.target.value })
-                    }
-                    required
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                  />
-                </div>
-              )}
+        <FormSection title="Información del Usuario">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="firstName" className="text-foreground">
+                Nombre *
+              </Label>
+              <Input
+                id="firstName"
+                value={formData.firstName}
+                onChange={(e) =>
+                  setFormData({ ...formData, firstName: e.target.value })
+                }
+                required
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="lastName" className="text-foreground">
+                Apellido *
+              </Label>
+              <Input
+                id="lastName"
+                value={formData.lastName}
+                onChange={(e) =>
+                  setFormData({ ...formData, lastName: e.target.value })
+                }
+                required
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="username" className="text-foreground">
+                Usuario *
+              </Label>
+              <Input
+                id="username"
+                value={formData.username}
+                onChange={(e) =>
+                  setFormData({ ...formData, username: e.target.value })
+                }
+                required
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="email" className="text-foreground">
+                Email *
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
+                required
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+              />
+            </div>
+            {!editDialogOpen && (
               <div className="col-span-2">
-                <Label htmlFor="roleId" className="text-foreground">
-                  Rol *
+                <Label htmlFor="password" className="text-foreground">
+                  Contraseña *
                 </Label>
-                <Select
-                  value={formData.roleId?.toString() || ""}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, roleId: parseInt(value) })
-                  }
-                >
-                  <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground mt-1">
-                    <SelectValue placeholder="Seleccionar rol" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {roles.map((role) => (
-                      <SelectItem key={role.id} value={role.id.toString()}>
-                        {role.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="col-span-2 flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="status"
-                  checked={formData.status}
+                <Input
+                  id="password"
+                  type="password"
+                  value={(formData as CreateUserDto).password}
                   onChange={(e) =>
-                    setFormData({ ...formData, status: e.target.checked })
+                    setFormData({ ...formData, password: e.target.value })
                   }
-                  className="rounded border-border bg-ui-surface-elevated text-primary focus:ring-blue-500"
+                  required
+                  className="bg-ui-surface-elevated border-border text-foreground mt-1"
                 />
-                <Label
-                  htmlFor="status"
-                  className="text-foreground cursor-pointer"
-                >
-                  Usuario Activo
-                </Label>
               </div>
+            )}
+            <div className="col-span-2">
+              <Label htmlFor="roleId" className="text-foreground">
+                Rol *
+              </Label>
+              <Select
+                value={formData.roleId?.toString() || ""}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, roleId: parseInt(value) })
+                }
+              >
+                <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground mt-1">
+                  <SelectValue placeholder="Seleccionar rol" />
+                </SelectTrigger>
+                <SelectContent>
+                  {roles.map((role) => (
+                    <SelectItem key={role.id} value={role.id.toString()}>
+                      {role.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setCreateDialogOpen(false);
-                  setEditDialogOpen(false);
-                  setUserToEdit(null);
-                }}
-                className="border-border text-foreground hover:bg-ui-surface-elevated"
-                disabled={formLoading}
+            <div className="col-span-2 flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="status"
+                checked={formData.status}
+                onChange={(e) =>
+                  setFormData({ ...formData, status: e.target.checked })
+                }
+                className="rounded border-border bg-ui-surface-elevated text-primary focus:ring-blue-500"
+              />
+              <Label
+                htmlFor="status"
+                className="text-foreground cursor-pointer"
               >
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                className="bg-primary hover:bg-primary-dark text-white"
-                disabled={formLoading}
-              >
-                {formLoading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Guardando...
-                  </>
-                ) : editDialogOpen ? (
-                  "Actualizar Usuario"
-                ) : (
-                  "Crear Usuario"
-                )}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+                Usuario Activo
+              </Label>
+            </div>
+          </div>
+        </FormSection>
+      </FormDialog>
     </main>
   );
 }

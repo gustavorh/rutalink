@@ -38,39 +38,6 @@ export interface User {
   };
 }
 
-// Create user input - matches database schema
-export interface CreateUserInput {
-  operatorId: number;
-  roleId: number;
-  username: string;
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  status?: boolean;
-}
-
-// Update user input - matches database schema
-export interface UpdateUserInput {
-  roleId?: number;
-  username?: string;
-  email?: string;
-  password?: string;
-  firstName?: string;
-  lastName?: string;
-  status?: boolean;
-}
-
-// User query parameters
-export interface UserQueryParams {
-  operatorId?: number;
-  roleId?: number;
-  search?: string;
-  status?: boolean;
-  department?: string;
-  page?: number;
-  limit?: number;
-}
 
 // Paginated users response
 export interface PaginatedUsers {

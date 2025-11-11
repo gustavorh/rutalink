@@ -33,41 +33,6 @@ export interface Driver {
   updatedBy: number;
 }
 
-export interface CreateDriverInput {
-  operatorId: number;
-  rut: string;
-  firstName: string;
-  lastName: string;
-  email?: string;
-  phone?: string;
-  emergencyContactName?: string;
-  emergencyContactPhone?: string;
-  licenseType: string;
-  licenseNumber: string;
-  licenseExpirationDate: string;
-  dateOfBirth?: string;
-  address?: string;
-  city?: string;
-  region?: string;
-  status?: boolean;
-  isExternal?: boolean;
-  externalCompany?: string;
-  notes?: string;
-}
-
-export type UpdateDriverInput = Partial<
-  Omit<CreateDriverInput, "operatorId" | "rut">
->;
-
-export interface DriverQueryParams {
-  operatorId?: number;
-  search?: string;
-  status?: boolean;
-  isExternal?: boolean;
-  licenseType?: string;
-  page?: number;
-  limit?: number;
-}
 
 export interface PaginatedDrivers {
   data: Driver[];
@@ -110,25 +75,6 @@ export interface DriverDocument {
   updatedBy: number;
 }
 
-export interface CreateDriverDocumentInput {
-  driverId: number;
-  documentType: DocumentType;
-  documentName: string;
-  fileName: string;
-  filePath: string;
-  fileSize?: number;
-  mimeType?: string;
-  issueDate?: string;
-  expirationDate?: string;
-  notes?: string;
-}
-
-export interface UpdateDriverDocumentInput {
-  documentName?: string;
-  issueDate?: string;
-  expirationDate?: string;
-  notes?: string;
-}
 
 // ============================================================================
 // VEHICLE TYPES
@@ -154,33 +100,6 @@ export interface Vehicle {
   updatedBy: number;
 }
 
-export interface CreateVehicleInput {
-  operatorId: number;
-  plateNumber: string;
-  brand?: string;
-  model?: string;
-  year?: number;
-  vehicleType: string;
-  capacity?: number;
-  capacityUnit?: string;
-  vin?: string;
-  color?: string;
-  status?: boolean;
-  notes?: string;
-}
-
-export type UpdateVehicleInput = Partial<
-  Omit<CreateVehicleInput, "operatorId" | "plateNumber">
->;
-
-export interface VehicleQueryParams {
-  operatorId?: number;
-  search?: string;
-  status?: boolean;
-  vehicleType?: string;
-  page?: number;
-  limit?: number;
-}
 
 export interface PaginatedVehicles {
   data: Vehicle[];
@@ -215,15 +134,6 @@ export interface DriverVehicleAssignmentWithVehicle {
   vehicle: Vehicle;
 }
 
-export interface AssignDriverToVehicleInput {
-  driverId: number;
-  vehicleId: number;
-  notes?: string;
-}
-
-export interface UnassignDriverFromVehicleInput {
-  notes?: string;
-}
 
 // ============================================================================
 // OPERATION TYPES
@@ -265,42 +175,6 @@ export interface OperationWithDetails {
   vehicle: Vehicle;
 }
 
-export interface CreateOperationInput {
-  operatorId: number;
-  driverId: number;
-  vehicleId: number;
-  operationNumber: string;
-  operationType: string;
-  origin: string;
-  destination: string;
-  scheduledStartDate: string;
-  scheduledEndDate?: string;
-  distance?: number;
-  cargoDescription?: string;
-  cargoWeight?: number;
-  notes?: string;
-}
-
-export interface UpdateOperationInput
-  extends Partial<
-    Omit<CreateOperationInput, "operatorId" | "operationNumber">
-  > {
-  actualStartDate?: string;
-  actualEndDate?: string;
-  status?: OperationStatus;
-}
-
-export interface OperationQueryParams {
-  operatorId?: number;
-  driverId?: number;
-  vehicleId?: number;
-  status?: OperationStatus;
-  operationType?: string;
-  startDate?: string;
-  endDate?: string;
-  page?: number;
-  limit?: number;
-}
 
 export interface PaginatedOperations {
   data: OperationWithDetails[];

@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { getToken, isAuthenticated, getUser, logout } from "@/lib/auth";
 import { getTruckById, updateTruck } from "@/lib/api";
-import type { Truck, UpdateTruckInput } from "@/types/trucks";
+import type { Truck } from "@/types/trucks";
+import type { UpdateVehicleDto } from "@/lib/api-types";
 import {
   VEHICLE_TYPES,
   CAPACITY_UNITS,
@@ -42,7 +43,7 @@ export default function EditTruckPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState<UpdateTruckInput>({
+  const [formData, setFormData] = useState<UpdateVehicleDto>({
     plateNumber: "",
     brand: "",
     model: "",

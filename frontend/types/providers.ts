@@ -53,58 +53,6 @@ export interface Provider {
 // PROVIDER INPUT TYPES
 // ============================================================================
 
-export interface CreateProviderInput {
-  operatorId: number;
-  businessName: string;
-  taxId?: string;
-  contactName?: string;
-  contactEmail?: string;
-  contactPhone?: string;
-  address?: string;
-  city?: string;
-  region?: string;
-  country?: string;
-  businessType?: (typeof BUSINESS_TYPES)[number]["value"];
-  serviceTypes?: string;
-  fleetSize?: number;
-  status?: boolean;
-  rating?: number;
-  observations?: string;
-  notes?: string;
-}
-
-export interface UpdateProviderInput {
-  businessName?: string;
-  taxId?: string;
-  contactName?: string;
-  contactEmail?: string;
-  contactPhone?: string;
-  address?: string;
-  city?: string;
-  region?: string;
-  country?: string;
-  businessType?: (typeof BUSINESS_TYPES)[number]["value"];
-  serviceTypes?: string;
-  fleetSize?: number;
-  status?: boolean;
-  rating?: number;
-  observations?: string;
-  notes?: string;
-}
-
-// ============================================================================
-// QUERY PARAMETERS
-// ============================================================================
-
-export interface ProviderQueryParams {
-  operatorId?: number;
-  search?: string;
-  status?: boolean;
-  businessType?: string;
-  minRating?: number;
-  page?: number;
-  limit?: number;
-}
 
 // ============================================================================
 // PAGINATION

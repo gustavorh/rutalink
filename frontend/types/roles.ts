@@ -64,28 +64,6 @@ export interface Role {
   userCount?: number; // Computed by backend
 }
 
-// Create role input - matches database schema
-export interface CreateRoleInput {
-  name: string;
-  operatorId: number;
-  permissions?: string[]; // Will be stored in roleGrants table
-}
-
-// Update role input - matches database schema
-export interface UpdateRoleInput {
-  name?: string;
-  permissions?: string[]; // Will update roleGrants table
-}
-
-// Role query parameters
-export interface RoleQueryParams {
-  operatorId?: number;
-  search?: string;
-  status?: boolean;
-  isSystemRole?: boolean;
-  page?: number;
-  limit?: number;
-}
 
 // Paginated roles response
 export interface PaginatedRoles {

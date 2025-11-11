@@ -4,12 +4,12 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getToken, isAuthenticated, getUser } from "@/lib/auth";
 import { getTrucks, deleteTruck, createTruck, updateTruck } from "@/lib/api";
+import type { Truck } from "@/types/trucks";
 import type {
-  Truck,
-  TruckQueryParams,
-  CreateTruckInput,
-  UpdateTruckInput,
-} from "@/types/trucks";
+  CreateVehicleDto,
+  UpdateVehicleDto,
+  VehicleQueryDto,
+} from "@/lib/api-types";
 import {
   VEHICLE_TYPES,
   OPERATIONAL_STATUS,
@@ -24,7 +24,6 @@ import {
   type DataTableAction,
   type PaginationInfo,
 } from "@/components/ui/data-table";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -50,14 +49,15 @@ import {
   XCircle,
   Save,
 } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DeleteConfirmationDialog } from "@/components/ui/delete-confirmation-dialog";
+import { StatisticsCard } from "@/components/ui/statistics-card";
+import { PageHeader } from "@/components/ui/page-header";
+import { LoadingState } from "@/components/ui/loading-state";
+import { EmptyState } from "@/components/ui/empty-state";
+import { FormDialog } from "@/components/ui/form-dialog";
+import { FormSection } from "@/components/ui/form-section";
+import { usePagination } from "@/lib/hooks/use-pagination";
+import { useFilters } from "@/lib/hooks/use-filters";
 
 export default function TrucksPage() {
   const router = useRouter();
@@ -70,7 +70,7 @@ export default function TrucksPage() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [truckToEdit, setTruckToEdit] = useState<Truck | null>(null);
-  const [formData, setFormData] = useState<CreateTruckInput | UpdateTruckInput>(
+  const [formData, setFormData] = useState<CreateVehicleDto | UpdateVehicleDto>(
     {
       plateNumber: "",
       brand: "",
@@ -89,17 +89,30 @@ export default function TrucksPage() {
 
   // Filters
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [vehicleTypeFilter, setVehicleTypeFilter] = useState<string>("all");
-  const [operationalStatusFilter, setOperationalStatusFilter] =
-    useState<string>("all");
-  const [showFilters, setShowFilters] = useState(false);
+  const {
+    filters: filterState,
+    setFilter,
+    showFilters,
+    toggleFilters,
+    clearFilters: clearAllFilters,
+  } = useFilters({
+    initialFilters: {
+      status: "all",
+      vehicleType: "all",
+      operationalStatus: "all",
+    },
+  });
 
   // Pagination
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
-  const limit = 10;
+  const {
+    page,
+    setPage,
+    total,
+    setTotal,
+    totalPages,
+    setTotalPages,
+    pagination,
+  } = usePagination({ initialLimit: 10 });
 
   // Last update timestamp
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
@@ -112,7 +125,7 @@ export default function TrucksPage() {
     setMounted(true);
     fetchTrucks();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, search, statusFilter, vehicleTypeFilter, operationalStatusFilter]);
+  }, [page, search, filterState.status, filterState.vehicleType, filterState.operationalStatus]);
 
   const fetchTrucks = async () => {
     try {
@@ -125,22 +138,22 @@ export default function TrucksPage() {
         return;
       }
 
-      const params: TruckQueryParams = {
+      const params: VehicleQueryDto = {
         page,
-        limit,
+        limit: pagination.limit,
         includeStats: true,
       };
 
       if (search) params.search = search;
-      if (statusFilter !== "all")
-        params.status = statusFilter === "active" ? true : false;
-      if (vehicleTypeFilter !== "all") {
+      if (filterState.status !== "all")
+        params.status = filterState.status === "active" ? true : false;
+      if (filterState.vehicleType !== "all") {
         params.vehicleType =
-          vehicleTypeFilter as TruckQueryParams["vehicleType"];
+          filterState.vehicleType as VehicleQueryDto["vehicleType"];
       }
-      if (operationalStatusFilter !== "all") {
+      if (filterState.operationalStatus !== "all") {
         params.operationalStatus =
-          operationalStatusFilter as TruckQueryParams["operationalStatus"];
+          filterState.operationalStatus as VehicleQueryDto["operationalStatus"];
       }
 
       const response = await getTrucks(token, params);
@@ -226,11 +239,11 @@ export default function TrucksPage() {
       setError(null);
 
       if (editDialogOpen && truckToEdit) {
-        await updateTruck(token, truckToEdit.id, formData as UpdateTruckInput);
+        await updateTruck(token, truckToEdit.id, formData as UpdateVehicleDto);
         setEditDialogOpen(false);
         setTruckToEdit(null);
       } else {
-        await createTruck(token, formData as CreateTruckInput);
+        await createTruck(token, formData as CreateVehicleDto);
         setCreateDialogOpen(false);
       }
 
@@ -243,7 +256,7 @@ export default function TrucksPage() {
   };
 
   const handleChange = (
-    field: keyof CreateTruckInput,
+    field: keyof CreateVehicleDto,
     value: string | number | boolean | undefined
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -262,11 +275,7 @@ export default function TrucksPage() {
   };
 
   if (!mounted) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-ui-surface-elevated">
-        <p className="text-foreground">Cargando...</p>
-      </div>
-    );
+    return <LoadingState />;
   }
 
   const user = getUser();
@@ -427,8 +436,8 @@ export default function TrucksPage() {
       id: "status-filter",
       label: "Estado",
       type: "select",
-      value: statusFilter,
-      onChange: setStatusFilter,
+      value: filterState.status,
+      onChange: (value) => setFilter("status", value),
       options: [
         { value: "all", label: "Todos los estados" },
         { value: "active", label: "Activo" },
@@ -440,8 +449,8 @@ export default function TrucksPage() {
       id: "vehicle-type-filter",
       label: "Tipo de Vehículo",
       type: "select",
-      value: vehicleTypeFilter,
-      onChange: setVehicleTypeFilter,
+      value: filterState.vehicleType,
+      onChange: (value) => setFilter("vehicleType", value),
       options: [
         { value: "all", label: "Todos los tipos" },
         ...VEHICLE_TYPES.map((type) => ({
@@ -455,8 +464,8 @@ export default function TrucksPage() {
       id: "operational-status-filter",
       label: "Estado Operativo",
       type: "select",
-      value: operationalStatusFilter,
-      onChange: setOperationalStatusFilter,
+      value: filterState.operationalStatus,
+      onChange: (value) => setFilter("operationalStatus", value),
       options: [
         { value: "all", label: "Todos" },
         ...OPERATIONAL_STATUS.map((status) => ({
@@ -468,118 +477,60 @@ export default function TrucksPage() {
     },
   ];
 
-  // Define pagination
-  const pagination: PaginationInfo = {
-    page,
-    limit,
-    total,
-    totalPages,
-  };
-
   const handleClearFilters = () => {
     setSearch("");
-    setStatusFilter("all");
-    setVehicleTypeFilter("all");
-    setOperationalStatusFilter("all");
+    clearAllFilters();
     setPage(1);
   };
 
   return (
     <main className="flex-1 overflow-y-auto p-6">
       <div className="max-w-[1400px] mx-auto space-y-6">
-        {/* Page Header with Stats */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <TruckIcon className="w-6 h-6 text-primary" />
-              Mantenedor de Camiones
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Gestión de flota de camiones y documentación
-            </p>
-          </div>
-          <Button
-            onClick={handleCreateClick}
-            className="bg-primary hover:bg-primary-dark text-white"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Nuevo Camión
-          </Button>
-        </div>
+        {/* Page Header */}
+        <PageHeader
+          title="Mantenedor de Camiones"
+          description="Gestión de flota de camiones y documentación"
+          icon={<TruckIcon className="w-6 h-6" />}
+          actionLabel={
+            <>
+              <Plus className="mr-2 h-4 w-4" />
+              Nuevo Camión
+            </>
+          }
+          onAction={handleCreateClick}
+        />
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-card border-border">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Total Camiones
-                  </p>
-                  <p className="text-2xl font-bold text-foreground mt-1">
-                    {total}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                  <TruckIcon className="w-6 h-6 text-primary" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card border-border">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Activos
-                  </p>
-                  <p className="text-2xl font-bold text-foreground mt-1">
-                    {activeTrucks}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-success/10 rounded-lg flex items-center justify-center">
-                  <CheckCircle className="w-6 h-6 text-success" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card border-border">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">
-                    En Mantenimiento
-                  </p>
-                  <p className="text-2xl font-bold text-warning mt-1">
-                    {inMaintenanceTrucks}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-warning/10 rounded-lg flex items-center justify-center">
-                  <Wrench className="w-6 h-6 text-warning" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card border-border">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Operaciones Próximas
-                  </p>
-                  <p className="text-2xl font-bold text-foreground mt-1">
-                    {totalUpcomingOperations}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center">
-                  <Clock className="w-6 h-6 text-secondary" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <StatisticsCard
+            value={total}
+            label="Total Camiones"
+            icon={<TruckIcon className="w-6 h-6" />}
+            iconBgColor="bg-primary/10"
+            iconColor="text-primary"
+          />
+          <StatisticsCard
+            value={activeTrucks}
+            label="Activos"
+            icon={<CheckCircle className="w-6 h-6" />}
+            iconBgColor="bg-success/10"
+            iconColor="text-success"
+          />
+          <StatisticsCard
+            value={inMaintenanceTrucks}
+            label="En Mantenimiento"
+            icon={<Wrench className="w-6 h-6" />}
+            iconBgColor="bg-warning/10"
+            iconColor="text-warning"
+            valueColor="text-warning"
+          />
+          <StatisticsCard
+            value={totalUpcomingOperations}
+            label="Operaciones Próximas"
+            icon={<Clock className="w-6 h-6" />}
+            iconBgColor="bg-secondary/10"
+            iconColor="text-secondary"
+          />
         </div>
 
         {/* Data Table with Integrated Filters */}
@@ -595,7 +546,7 @@ export default function TrucksPage() {
           onSearchSubmit={handleSearch}
           filters={filters}
           showFilters={showFilters}
-          onToggleFilters={() => setShowFilters(!showFilters)}
+          onToggleFilters={toggleFilters}
           onClearFilters={handleClearFilters}
           loading={loading}
           error={error}
@@ -609,58 +560,32 @@ export default function TrucksPage() {
           }}
           getRowKey={(truck) => truck.id}
           emptyState={
-            <div className="text-center py-12">
-              <TruckIcon className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-              <p className="text-muted-foreground">
-                No se encontraron camiones
-              </p>
-              <Button
-                onClick={handleCreateClick}
-                className="mt-4 bg-primary hover:bg-primary-dark"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Agregar Primer Camión
-              </Button>
-            </div>
+            <EmptyState
+              icon={<TruckIcon className="w-12 h-12 text-slate-600" />}
+              title="No se encontraron camiones"
+              actionLabel={
+                <>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Agregar Primer Camión
+                </>
+              }
+              onAction={handleCreateClick}
+            />
           }
         />
       </div>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="bg-card border-border">
-          <DialogHeader>
-            <DialogTitle className="text-foreground">
-              Confirmar Eliminación
-            </DialogTitle>
-            <DialogDescription className="text-muted-foreground">
-              ¿Estás seguro de que deseas eliminar el camión{" "}
-              <strong className="text-foreground">
-                {truckToDelete?.plateNumber}
-              </strong>
-              ? Esta acción no se puede deshacer.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setDeleteDialogOpen(false)}
-              className="border-border text-foreground hover:bg-ui-surface-elevated"
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleDeleteConfirm}
-              className="bg-red-600 hover:bg-red-700 text-white"
-            >
-              Eliminar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DeleteConfirmationDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDeleteConfirm}
+        itemName={truckToDelete?.plateNumber}
+        itemType="camión"
+      />
 
       {/* Create/Edit Truck Dialog */}
-      <Dialog
+      <FormDialog
         open={createDialogOpen || editDialogOpen}
         onOpenChange={(open) => {
           if (!open) {
@@ -669,24 +594,35 @@ export default function TrucksPage() {
             setTruckToEdit(null);
           }
         }}
+        title={editDialogOpen ? "Editar Camión" : "Nuevo Camión"}
+        description={
+          editDialogOpen
+            ? "Actualiza la información del camión"
+            : "Completa los datos del nuevo camión"
+        }
+        onSubmit={handleFormSubmit}
+        loading={formLoading}
+        submitLabel={
+          editDialogOpen ? (
+            <>
+              <Save className="mr-2 h-4 w-4" />
+              Guardar Cambios
+            </>
+          ) : (
+            <>
+              <Save className="mr-2 h-4 w-4" />
+              Guardar Camión
+            </>
+          )
+        }
+        maxWidth="3xl"
+        onCancel={() => {
+          setCreateDialogOpen(false);
+          setEditDialogOpen(false);
+          setTruckToEdit(null);
+        }}
       >
-        <DialogContent className="bg-card border-border max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-foreground">
-              {editDialogOpen ? "Editar Camión" : "Nuevo Camión"}
-            </DialogTitle>
-            <DialogDescription className="text-muted-foreground">
-              {editDialogOpen
-                ? "Actualiza la información del camión"
-                : "Completa los datos del nuevo camión"}
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleFormSubmit} className="space-y-4">
-            {/* Basic Information */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium text-foreground border-b border-border pb-2">
-                Información del Camión
-              </h3>
+        <FormSection title="Información del Camión">
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -878,43 +814,8 @@ export default function TrucksPage() {
                   </div>
                 </div>
               </div>
-            </div>
-
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setCreateDialogOpen(false);
-                  setEditDialogOpen(false);
-                  setTruckToEdit(null);
-                }}
-                className="border-border text-foreground hover:bg-ui-surface-elevated"
-                disabled={formLoading}
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                disabled={formLoading || !formData.plateNumber}
-                className="bg-primary hover:bg-primary-dark text-white"
-              >
-                {formLoading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Guardando...
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    {editDialogOpen ? "Guardar Cambios" : "Guardar Camión"}
-                  </>
-                )}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+        </FormSection>
+      </FormDialog>
     </main>
   );
 }

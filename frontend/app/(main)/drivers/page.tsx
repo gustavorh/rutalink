@@ -9,11 +9,8 @@ import {
   createDriver,
   updateDriver,
 } from "@/lib/api";
-import type {
-  Driver,
-  DriverQueryParams,
-  CreateDriverInput,
-} from "@/types/drivers";
+import type { Driver } from "@/types/drivers";
+import type { CreateDriverDto, UpdateDriverDto, DriverQueryDto } from "@/lib/api-types";
 import { LICENSE_TYPES } from "@/types/drivers";
 import {
   DataTable,
@@ -22,7 +19,6 @@ import {
   type DataTableAction,
   type PaginationInfo,
 } from "@/components/ui/data-table";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,14 +44,15 @@ import {
   Users,
   Save,
 } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DeleteConfirmationDialog } from "@/components/ui/delete-confirmation-dialog";
+import { StatisticsCard } from "@/components/ui/statistics-card";
+import { PageHeader } from "@/components/ui/page-header";
+import { LoadingState } from "@/components/ui/loading-state";
+import { EmptyState } from "@/components/ui/empty-state";
+import { FormDialog } from "@/components/ui/form-dialog";
+import { FormSection } from "@/components/ui/form-section";
+import { usePagination } from "@/lib/hooks/use-pagination";
+import { useFilters } from "@/lib/hooks/use-filters";
 
 export default function DriversPage() {
   const router = useRouter();
@@ -68,7 +65,7 @@ export default function DriversPage() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [driverToEdit, setDriverToEdit] = useState<Driver | null>(null);
-  const [formData, setFormData] = useState<CreateDriverInput>({
+  const [formData, setFormData] = useState<CreateDriverDto>({
     operatorId: 0,
     rut: "",
     firstName: "",
@@ -93,16 +90,30 @@ export default function DriversPage() {
 
   // Filters
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [isExternalFilter, setIsExternalFilter] = useState<string>("all");
-  const [licenseTypeFilter, setLicenseTypeFilter] = useState<string>("all");
-  const [showFilters, setShowFilters] = useState(false);
+  const {
+    filters: filterState,
+    setFilter,
+    showFilters,
+    toggleFilters,
+    clearFilters: clearAllFilters,
+  } = useFilters({
+    initialFilters: {
+      status: "all",
+      isExternal: "all",
+      licenseType: "all",
+    },
+  });
 
   // Pagination
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
-  const limit = 10;
+  const {
+    page,
+    setPage,
+    total,
+    setTotal,
+    totalPages,
+    setTotalPages,
+    pagination,
+  } = usePagination({ initialLimit: 10 });
 
   // Last update timestamp
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
@@ -115,7 +126,7 @@ export default function DriversPage() {
     setMounted(true);
     fetchDrivers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, search, statusFilter, isExternalFilter, licenseTypeFilter]);
+  }, [page, search, filterState.status, filterState.isExternal, filterState.licenseType]);
 
   const fetchDrivers = async () => {
     try {
@@ -128,18 +139,19 @@ export default function DriversPage() {
         return;
       }
 
-      const params: DriverQueryParams = {
+      const params: DriverQueryDto = {
         operatorId: user.operatorId,
         page,
-        limit,
+        limit: pagination.limit,
       };
 
       if (search) params.search = search;
-      if (statusFilter !== "all")
-        params.status = statusFilter === "active" ? true : false;
-      if (isExternalFilter !== "all")
-        params.isExternal = isExternalFilter === "external" ? true : false;
-      if (licenseTypeFilter !== "all") params.licenseType = licenseTypeFilter;
+      if (filterState.status !== "all")
+        params.status = filterState.status === "active" ? true : false;
+      if (filterState.isExternal !== "all")
+        params.isExternal = filterState.isExternal === "external" ? true : false;
+      if (filterState.licenseType !== "all")
+        params.licenseType = filterState.licenseType;
 
       const response = await getDrivers(token, params);
       setDrivers(response.data);
@@ -254,13 +266,13 @@ export default function DriversPage() {
         // Update existing driver
         // Remove fields that shouldn't be updated
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { operatorId, rut, ...cleanData } = formData as CreateDriverInput;
-        await updateDriver(token, driverToEdit.id, cleanData);
+        const { operatorId, rut, ...cleanData } = formData as CreateDriverDto;
+        await updateDriver(token, driverToEdit.id, cleanData as UpdateDriverDto);
         setEditDialogOpen(false);
         setDriverToEdit(null);
       } else {
         // Create new driver
-        await createDriver(token, formData as CreateDriverInput);
+        await createDriver(token, formData as CreateDriverDto);
         setCreateDialogOpen(false);
       }
 
@@ -273,7 +285,7 @@ export default function DriversPage() {
   };
 
   const handleChange = (
-    field: keyof CreateDriverInput,
+    field: keyof CreateDriverDto,
     value: string | boolean
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -308,11 +320,7 @@ export default function DriversPage() {
   };
 
   if (!mounted) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-ui-surface-elevated">
-        <p className="text-foreground">Cargando...</p>
-      </div>
-    );
+    return <LoadingState />;
   }
 
   const user = getUser();
@@ -478,8 +486,8 @@ export default function DriversPage() {
       id: "status-filter",
       label: "Estado",
       type: "select",
-      value: statusFilter,
-      onChange: setStatusFilter,
+      value: filterState.status,
+      onChange: (value) => setFilter("status", value),
       options: [
         { value: "all", label: "Todos los estados" },
         { value: "active", label: "Activo" },
@@ -491,8 +499,8 @@ export default function DriversPage() {
       id: "external-filter",
       label: "Tipo de Chofer",
       type: "select",
-      value: isExternalFilter,
-      onChange: setIsExternalFilter,
+      value: filterState.isExternal,
+      onChange: (value) => setFilter("isExternal", value),
       options: [
         { value: "all", label: "Todos" },
         { value: "internal", label: "Interno" },
@@ -504,8 +512,8 @@ export default function DriversPage() {
       id: "license-type-filter",
       label: "Tipo de Licencia",
       type: "select",
-      value: licenseTypeFilter,
-      onChange: setLicenseTypeFilter,
+      value: filterState.licenseType,
+      onChange: (value) => setFilter("licenseType", value),
       options: [
         { value: "all", label: "Todas las licencias" },
         ...LICENSE_TYPES.map((type) => ({
@@ -517,118 +525,60 @@ export default function DriversPage() {
     },
   ];
 
-  // Define pagination
-  const pagination: PaginationInfo = {
-    page,
-    limit,
-    total,
-    totalPages,
-  };
-
   const handleClearFilters = () => {
     setSearch("");
-    setStatusFilter("all");
-    setIsExternalFilter("all");
-    setLicenseTypeFilter("all");
+    clearAllFilters();
     setPage(1);
   };
 
   return (
     <main className="flex-1 overflow-y-auto p-6">
       <div className="max-w-[1400px] mx-auto space-y-6">
-        {/* Page Header with Stats */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <Users className="w-6 h-6 text-primary" />
-              Mantenedor de Choferes
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Gestión centralizada de choferes y su documentación
-            </p>
-          </div>
-          <Button
-            onClick={handleCreateClick}
-            className="bg-primary hover:bg-primary-dark text-white"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Nuevo Chofer
-          </Button>
-        </div>
+        {/* Page Header */}
+        <PageHeader
+          title="Mantenedor de Choferes"
+          description="Gestión centralizada de choferes y su documentación"
+          icon={<Users className="w-6 h-6" />}
+          actionLabel={
+            <>
+              <Plus className="mr-2 h-4 w-4" />
+              Nuevo Chofer
+            </>
+          }
+          onAction={handleCreateClick}
+        />
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-card border-border">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Total Choferes
-                  </p>
-                  <p className="text-2xl font-bold text-foreground mt-1">
-                    {total}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                  <Users className="w-6 h-6 text-primary" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card border-border">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Activos
-                  </p>
-                  <p className="text-2xl font-bold text-foreground mt-1">
-                    {activeDrivers}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-success/10 rounded-lg flex items-center justify-center">
-                  <CheckCircle className="w-6 h-6 text-success" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card border-border">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Internos / Externos
-                  </p>
-                  <p className="text-2xl font-bold text-foreground mt-1">
-                    {internalDrivers} / {externalDrivers}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                  <Truck className="w-6 h-6 text-primary" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card border-border">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Licencias Vencidas
-                  </p>
-                  <p className="text-2xl font-bold text-destructive mt-1">
-                    {expiredLicenses}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-destructive/10 rounded-lg flex items-center justify-center">
-                  <AlertTriangle className="w-6 h-6 text-destructive" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <StatisticsCard
+            value={total}
+            label="Total Choferes"
+            icon={<Users className="w-6 h-6" />}
+            iconBgColor="bg-primary/10"
+            iconColor="text-primary"
+          />
+          <StatisticsCard
+            value={activeDrivers}
+            label="Activos"
+            icon={<CheckCircle className="w-6 h-6" />}
+            iconBgColor="bg-success/10"
+            iconColor="text-success"
+          />
+          <StatisticsCard
+            value={`${internalDrivers} / ${externalDrivers}`}
+            label="Internos / Externos"
+            icon={<Truck className="w-6 h-6" />}
+            iconBgColor="bg-primary/10"
+            iconColor="text-primary"
+          />
+          <StatisticsCard
+            value={expiredLicenses}
+            label="Licencias Vencidas"
+            icon={<AlertTriangle className="w-6 h-6" />}
+            iconBgColor="bg-destructive/10"
+            iconColor="text-destructive"
+            valueColor="text-destructive"
+          />
         </div>
 
         {/* Data Table with Integrated Filters */}
@@ -644,7 +594,7 @@ export default function DriversPage() {
           onSearchSubmit={handleSearch}
           filters={filters}
           showFilters={showFilters}
-          onToggleFilters={() => setShowFilters(!showFilters)}
+          onToggleFilters={toggleFilters}
           onClearFilters={handleClearFilters}
           loading={loading}
           error={error}
@@ -658,58 +608,36 @@ export default function DriversPage() {
           }}
           getRowKey={(driver) => driver.id}
           emptyState={
-            <div className="text-center py-12">
-              <Users className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-              <p className="text-muted-foreground">
-                No se encontraron choferes
-              </p>
-              <Button
-                onClick={handleCreateClick}
-                className="mt-4 bg-primary hover:bg-primary-dark"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Agregar Primer Chofer
-              </Button>
-            </div>
+            <EmptyState
+              icon={<Users className="w-12 h-12 text-slate-600" />}
+              title="No se encontraron choferes"
+              actionLabel={
+                <>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Agregar Primer Chofer
+                </>
+              }
+              onAction={handleCreateClick}
+            />
           }
         />
       </div>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="bg-card border-border">
-          <DialogHeader>
-            <DialogTitle className="text-foreground">
-              Confirmar Eliminación
-            </DialogTitle>
-            <DialogDescription className="text-muted-foreground">
-              ¿Estás seguro de que deseas eliminar al chofer{" "}
-              <strong className="text-foreground">
-                {driverToDelete?.firstName} {driverToDelete?.lastName}
-              </strong>
-              ? Esta acción no se puede deshacer.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setDeleteDialogOpen(false)}
-              className="border-border text-foreground hover:bg-ui-surface-elevated"
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleDeleteConfirm}
-              className="bg-red-600 hover:bg-red-700 text-white"
-            >
-              Eliminar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DeleteConfirmationDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDeleteConfirm}
+        itemName={
+          driverToDelete
+            ? `${driverToDelete.firstName} ${driverToDelete.lastName}`
+            : undefined
+        }
+        itemType="chofer"
+      />
 
       {/* Create/Edit Driver Dialog */}
-      <Dialog
+      <FormDialog
         open={createDialogOpen || editDialogOpen}
         onOpenChange={(open) => {
           if (!open) {
@@ -718,24 +646,35 @@ export default function DriversPage() {
             setDriverToEdit(null);
           }
         }}
+        title={editDialogOpen ? "Editar Chofer" : "Nuevo Chofer"}
+        description={
+          editDialogOpen
+            ? "Actualiza la información del chofer"
+            : "Completa la información del nuevo chofer"
+        }
+        onSubmit={handleFormSubmit}
+        loading={formLoading}
+        submitLabel={
+          editDialogOpen ? (
+            <>
+              <Save className="mr-2 h-4 w-4" />
+              Actualizar Chofer
+            </>
+          ) : (
+            <>
+              <Save className="mr-2 h-4 w-4" />
+              Crear Chofer
+            </>
+          )
+        }
+        maxWidth="4xl"
+        onCancel={() => {
+          setCreateDialogOpen(false);
+          setEditDialogOpen(false);
+          setDriverToEdit(null);
+        }}
       >
-        <DialogContent className="bg-card border-border max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-foreground">
-              {editDialogOpen ? "Editar Chofer" : "Nuevo Chofer"}
-            </DialogTitle>
-            <DialogDescription className="text-muted-foreground">
-              {editDialogOpen
-                ? "Actualiza la información del chofer"
-                : "Completa la información del nuevo chofer"}
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleFormSubmit} className="space-y-4">
-            {/* Personal Information */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium text-foreground border-b border-border pb-2">
-                Información Personal
-              </h3>
+        <FormSection title="Información Personal">
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -855,13 +794,9 @@ export default function DriversPage() {
                   />
                 </div>
               </div>
-            </div>
+        </FormSection>
 
-            {/* License Information */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium text-foreground border-b border-border pb-2">
-                Información de Licencia
-              </h3>
+        <FormSection title="Información de Licencia">
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -921,13 +856,9 @@ export default function DriversPage() {
                   />
                 </div>
               </div>
-            </div>
+        </FormSection>
 
-            {/* Emergency Contact */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium text-foreground border-b border-border pb-2">
-                Contacto de Emergencia
-              </h3>
+        <FormSection title="Contacto de Emergencia">
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -964,13 +895,9 @@ export default function DriversPage() {
                   />
                 </div>
               </div>
-            </div>
+        </FormSection>
 
-            {/* Additional Information */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium text-foreground border-b border-border pb-2">
-                Información Adicional
-              </h3>
+        <FormSection title="Información Adicional">
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center space-x-2">
@@ -1038,43 +965,8 @@ export default function DriversPage() {
                   className="bg-ui-surface-elevated border-border text-foreground mt-1"
                 />
               </div>
-            </div>
-
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setCreateDialogOpen(false);
-                  setEditDialogOpen(false);
-                  setDriverToEdit(null);
-                }}
-                className="border-border text-foreground hover:bg-ui-surface-elevated"
-                disabled={formLoading}
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                className="bg-primary hover:bg-primary-dark text-white"
-                disabled={formLoading}
-              >
-                {formLoading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Guardando...
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    {editDialogOpen ? "Actualizar Chofer" : "Crear Chofer"}
-                  </>
-                )}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+        </FormSection>
+      </FormDialog>
     </main>
   );
 }

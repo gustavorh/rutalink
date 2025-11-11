@@ -44,52 +44,6 @@ export interface Client {
   updatedBy?: number | null;
 }
 
-// Create client input
-export interface CreateClientInput {
-  operatorId: number;
-  businessName: string;
-  taxId?: string;
-  contactName?: string;
-  contactEmail?: string;
-  contactPhone?: string;
-  address?: string;
-  city?: string;
-  region?: string;
-  country?: string;
-  industry?: IndustryType;
-  status?: boolean;
-  observations?: string;
-  notes?: string;
-}
-
-// Update client input
-export interface UpdateClientInput {
-  businessName?: string;
-  taxId?: string;
-  contactName?: string;
-  contactEmail?: string;
-  contactPhone?: string;
-  address?: string;
-  city?: string;
-  region?: string;
-  country?: string;
-  industry?: IndustryType;
-  status?: boolean;
-  observations?: string;
-  notes?: string;
-}
-
-// Client query parameters
-export interface ClientQueryParams {
-  operatorId?: number;
-  search?: string;
-  status?: boolean;
-  industry?: string;
-  city?: string;
-  region?: string;
-  page?: number;
-  limit?: number;
-}
 
 // Paginated clients response
 export interface PaginatedClients {

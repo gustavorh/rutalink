@@ -3,41 +3,14 @@
  */
 
 // ============================================================================
-// ENUMS
+// ENUMS - Imported from api-types.ts to avoid duplication
 // ============================================================================
-export enum VehicleType {
-  TRUCK = "truck",
-  VAN = "van",
-  PICKUP = "pickup",
-  FLATBED = "flatbed",
-  TRAILER = "trailer",
-  DUMP_TRUCK = "dump_truck",
-  CRANE_TRUCK = "crane_truck",
-  OTHER = "other",
-}
-
-export enum CapacityUnit {
-  KG = "kg",
-  TONS = "tons",
-  M3 = "m3",
-  PASSENGERS = "passengers",
-}
-
-export enum OperationalStatus {
-  ACTIVE = "active",
-  MAINTENANCE = "maintenance",
-  OUT_OF_SERVICE = "out_of_service",
-  RESERVED = "reserved",
-}
-
-export enum DocumentType {
-  CIRCULATION_PERMIT = "circulation_permit",
-  TECHNICAL_REVIEW = "technical_review",
-  INSURANCE = "insurance",
-  OWNERSHIP = "ownership",
-  GAS_CERTIFICATION = "gas_certification",
-  OTHER = "other",
-}
+export {
+  VehicleType,
+  CapacityUnit,
+  OperationalStatus,
+  DocumentType,
+} from "@/lib/api-types";
 
 // ============================================================================
 // CONSTANTS
@@ -141,44 +114,6 @@ export interface Truck {
   lastOperationDate?: string;
 }
 
-export interface CreateTruckInput {
-  plateNumber: string;
-  brand?: string;
-  model?: string;
-  year?: number;
-  vehicleType: VehicleType;
-  capacity?: number;
-  capacityUnit?: CapacityUnit;
-  vin?: string;
-  color?: string;
-  status?: boolean;
-  notes?: string;
-}
-
-export interface UpdateTruckInput {
-  plateNumber?: string;
-  brand?: string;
-  model?: string;
-  year?: number;
-  vehicleType?: VehicleType;
-  capacity?: number;
-  capacityUnit?: CapacityUnit;
-  vin?: string;
-  color?: string;
-  status?: boolean;
-  notes?: string;
-}
-
-export interface TruckQueryParams {
-  page?: number;
-  limit?: number;
-  search?: string;
-  vehicleType?: VehicleType;
-  status?: boolean;
-  operationalStatus?: OperationalStatus;
-  includeDocuments?: boolean;
-  includeStats?: boolean;
-}
 
 export interface PaginatedTrucks {
   data: Truck[];
@@ -188,22 +123,6 @@ export interface PaginatedTrucks {
     total: number;
     totalPages: number;
   };
-}
-
-export interface CreateTruckDocumentInput {
-  vehicleId: number;
-  documentType: DocumentType;
-  documentName: string;
-  fileName?: string;
-  filePath?: string;
-  fileSize?: number;
-  mimeType?: string;
-  issueDate?: string;
-  expirationDate?: string;
-  insuranceCompany?: string;
-  policyNumber?: string;
-  coverageAmount?: number;
-  notes?: string;
 }
 
 export interface UpdateTruckDocumentInput {

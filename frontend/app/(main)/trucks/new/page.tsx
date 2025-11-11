@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { getToken, isAuthenticated, getUser } from "@/lib/auth";
 import { createTruck } from "@/lib/api";
-import type { CreateTruckInput } from "@/types/trucks";
+import type { CreateVehicleDto } from "@/lib/api-types";
 import {
   VEHICLE_TYPES,
   CAPACITY_UNITS,
@@ -36,7 +36,7 @@ export default function NewTruckPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState<CreateTruckInput>({
+  const [formData, setFormData] = useState<CreateVehicleDto>({
     plateNumber: "",
     brand: "",
     model: "",

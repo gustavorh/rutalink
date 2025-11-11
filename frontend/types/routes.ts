@@ -54,60 +54,13 @@ export interface Route {
 // ROUTE INPUT TYPES
 // ============================================================================
 
-export interface CreateRouteInput {
-  name: string;
-  code?: string;
-  origin: string;
-  destination: string;
-  distance?: number;
-  estimatedDuration?: number;
-  routeType?: (typeof ROUTE_TYPES)[number]["value"];
-  difficulty?: (typeof DIFFICULTY_LEVELS)[number]["value"];
-  roadConditions?: string;
-  tollsRequired?: boolean;
-  estimatedTollCost?: number;
-  observations?: string;
-  notes?: string;
-}
-
-export interface UpdateRouteInput {
-  name?: string;
-  code?: string;
-  origin?: string;
-  destination?: string;
-  distance?: number;
-  estimatedDuration?: number;
-  routeType?: (typeof ROUTE_TYPES)[number]["value"];
-  difficulty?: (typeof DIFFICULTY_LEVELS)[number]["value"];
-  roadConditions?: string;
-  tollsRequired?: boolean;
-  estimatedTollCost?: number;
-  status?: boolean;
-  observations?: string;
-  notes?: string;
-}
-
-// ============================================================================
-// QUERY PARAMETERS
-// ============================================================================
-
-export interface RouteQueryParams {
-  search?: string;
-  routeType?: string;
-  difficulty?: string;
-  status?: boolean;
-  tollsRequired?: boolean;
-  page?: number;
-  limit?: number;
-}
-
 // ============================================================================
 // PAGINATION
 // ============================================================================
 
 export interface PaginatedRoutes {
   data: Route[];
-  meta: {
+  pagination: {
     page: number;
     limit: number;
     total: number;

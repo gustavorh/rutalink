@@ -9,14 +9,13 @@ import {
   createProvider,
   updateProvider,
 } from "@/lib/api";
+import type { Provider } from "@/types/providers";
 import type {
-  Provider,
-  ProviderQueryParams,
-  CreateProviderInput,
-  UpdateProviderInput,
-} from "@/types/providers";
+  CreateProviderDto,
+  UpdateProviderDto,
+  ProviderQueryDto,
+} from "@/lib/api-types";
 import { BUSINESS_TYPES } from "@/types/providers";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -41,14 +40,15 @@ import {
   FileText,
   Star,
 } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DeleteConfirmationDialog } from "@/components/ui/delete-confirmation-dialog";
+import { StatisticsCard } from "@/components/ui/statistics-card";
+import { PageHeader } from "@/components/ui/page-header";
+import { LoadingState } from "@/components/ui/loading-state";
+import { EmptyState } from "@/components/ui/empty-state";
+import { FormDialog } from "@/components/ui/form-dialog";
+import { FormSection } from "@/components/ui/form-section";
+import { usePagination } from "@/lib/hooks/use-pagination";
+import { useFilters } from "@/lib/hooks/use-filters";
 import {
   DataTable,
   DataTableColumn,
@@ -70,7 +70,7 @@ export default function ProvidersPage() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [providerToEdit, setProviderToEdit] = useState<Provider | null>(null);
   const [formData, setFormData] = useState<
-    CreateProviderInput | UpdateProviderInput
+    CreateProviderDto | UpdateProviderDto
   >({
     businessName: "",
     taxId: "",
@@ -93,15 +93,29 @@ export default function ProvidersPage() {
 
   // Filters
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [businessTypeFilter, setBusinessTypeFilter] = useState<string>("all");
-  const [showFilters, setShowFilters] = useState(false);
+  const {
+    filters: filterState,
+    setFilter,
+    showFilters,
+    toggleFilters,
+    clearFilters: clearAllFilters,
+  } = useFilters({
+    initialFilters: {
+      status: "all",
+      businessType: "all",
+    },
+  });
 
   // Pagination
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
-  const limit = 10;
+  const {
+    page,
+    setPage,
+    total,
+    setTotal,
+    totalPages,
+    setTotalPages,
+    pagination,
+  } = usePagination({ initialLimit: 10 });
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -111,7 +125,7 @@ export default function ProvidersPage() {
     setMounted(true);
     fetchProviders();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, search, statusFilter, businessTypeFilter]);
+  }, [page, search, filterState.status, filterState.businessType]);
 
   const fetchProviders = async () => {
     try {
@@ -124,17 +138,17 @@ export default function ProvidersPage() {
         return;
       }
 
-      const params: ProviderQueryParams = {
+      const params: ProviderQueryDto = {
         operatorId: user.operatorId,
         page,
-        limit,
+        limit: pagination.limit,
       };
 
       if (search) params.search = search;
-      if (statusFilter !== "all")
-        params.status = statusFilter === "active" ? true : false;
-      if (businessTypeFilter !== "all")
-        params.businessType = businessTypeFilter;
+      if (filterState.status !== "all")
+        params.status = filterState.status === "active" ? true : false;
+      if (filterState.businessType !== "all")
+        params.businessType = filterState.businessType;
 
       const response = await getProviders(token, params);
       setProviders(response.data);
@@ -242,14 +256,14 @@ export default function ProvidersPage() {
         await updateProvider(
           token,
           providerToEdit.id,
-          formData as UpdateProviderInput
+          formData as UpdateProviderDto
         );
         setEditDialogOpen(false);
         setProviderToEdit(null);
       } else {
         // Create new provider
-        const createData: CreateProviderInput = {
-          ...(formData as CreateProviderInput),
+        const createData: CreateProviderDto = {
+          ...(formData as CreateProviderDto),
           operatorId: user.operatorId,
         };
         await createProvider(token, createData);
@@ -408,8 +422,8 @@ export default function ProvidersPage() {
       id: "status",
       label: "Estado",
       type: "select",
-      value: statusFilter,
-      onChange: setStatusFilter,
+      value: filterState.status,
+      onChange: (value) => setFilter("status", value),
       placeholder: "Estado",
       options: [
         { value: "all", label: "Todos los estados" },
@@ -421,8 +435,8 @@ export default function ProvidersPage() {
       id: "businessType",
       label: "Tipo de Servicio",
       type: "select",
-      value: businessTypeFilter,
-      onChange: setBusinessTypeFilter,
+      value: filterState.businessType,
+      onChange: (value) => setFilter("businessType", value),
       placeholder: "Tipo de servicio",
       options: [
         { value: "all", label: "Todos los tipos" },
@@ -462,11 +476,7 @@ export default function ProvidersPage() {
   ];
 
   if (!mounted) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-ui-surface-elevated">
-        <p className="text-foreground">Cargando...</p>
-      </div>
-    );
+    return <LoadingState />;
   }
 
   const user = getUser();
@@ -495,123 +505,61 @@ export default function ProvidersPage() {
   return (
     <main className="flex-1 overflow-y-auto p-6">
       <div className="w-full space-y-6">
-        {/* Page Header with Stats */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <Truck className="w-6 h-6 text-primary" />
-              Mantenedor de Proveedores de Transporte
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Gestión de proveedores externos y servicios de transporte
-            </p>
-          </div>
-          <Button
-            onClick={handleCreateClick}
-            className="bg-primary hover:bg-primary-dark text-white"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Nuevo Proveedor
-          </Button>
-        </div>
+        {/* Page Header */}
+        <PageHeader
+          title="Mantenedor de Proveedores de Transporte"
+          description="Gestión de proveedores externos y servicios de transporte"
+          icon={<Truck className="w-6 h-6" />}
+          actionLabel={
+            <>
+              <Plus className="mr-2 h-4 w-4" />
+              Nuevo Proveedor
+            </>
+          }
+          onAction={handleCreateClick}
+        />
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-card border-border">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Total Proveedores
-                  </p>
-                  <p className="text-2xl font-bold text-foreground mt-1">
-                    {total}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                  <Building2 className="w-6 h-6 text-primary" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card border-border">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Proveedores Activos
-                  </p>
-                  <p className="text-2xl font-bold text-foreground mt-1">
-                    {activeProviders}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-success/10 rounded-lg flex items-center justify-center">
-                  <CheckCircle className="w-6 h-6 text-success" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card border-border">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Calificación Promedio
-                  </p>
-                  <p className="text-2xl font-bold text-foreground mt-1">
-                    {avgRating}
-                    {avgRating !== "N/A" && (
-                      <span className="text-sm text-muted-foreground">
-                        {" "}
-                        / 5
-                      </span>
-                    )}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-warning/10 rounded-lg flex items-center justify-center">
-                  <Star className="w-6 h-6 text-warning" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card border-border">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Tipo Principal
-                  </p>
-                  <p className="text-sm font-bold text-foreground mt-1">
-                    {topType ? getBusinessTypeLabel(topType[0]) : "N/A"}
-                  </p>
-                  {topType && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {topType[1]} proveedor
-                      {topType[1] !== 1 ? "es" : ""}
-                    </p>
-                  )}
-                </div>
-                <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center">
-                  <TrendingUp className="w-6 h-6 text-secondary" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <StatisticsCard
+            value={total}
+            label="Total Proveedores"
+            icon={<Building2 className="w-6 h-6" />}
+            iconBgColor="bg-primary/10"
+            iconColor="text-primary"
+          />
+          <StatisticsCard
+            value={activeProviders}
+            label="Proveedores Activos"
+            icon={<CheckCircle className="w-6 h-6" />}
+            iconBgColor="bg-success/10"
+            iconColor="text-success"
+          />
+          <StatisticsCard
+            value={avgRating !== "N/A" ? `${avgRating} / 5` : avgRating}
+            label="Calificación Promedio"
+            icon={<Star className="w-6 h-6" />}
+            iconBgColor="bg-warning/10"
+            iconColor="text-warning"
+          />
+          <StatisticsCard
+            value={
+              topType
+                ? `${getBusinessTypeLabel(topType[0])} (${topType[1]})`
+                : "N/A"
+            }
+            label="Tipo Principal"
+            icon={<TrendingUp className="w-6 h-6" />}
+            iconBgColor="bg-secondary/10"
+            iconColor="text-secondary"
+          />
         </div>
 
         {/* Data Table */}
         <DataTable
           data={providers}
           columns={tableColumns}
-          pagination={{
-            page,
-            limit,
-            total,
-            totalPages,
-          }}
+          pagination={pagination}
           onPageChange={setPage}
           searchValue={search}
           onSearchChange={setSearch}
@@ -619,29 +567,27 @@ export default function ProvidersPage() {
           onSearchSubmit={handleSearch}
           filters={tableFilters}
           showFilters={showFilters}
-          onToggleFilters={() => setShowFilters(!showFilters)}
+          onToggleFilters={toggleFilters}
           onClearFilters={() => {
-            setStatusFilter("all");
-            setBusinessTypeFilter("all");
             setSearch("");
+            clearAllFilters();
+            setPage(1);
           }}
           actions={tableActions}
           loading={loading}
           error={error}
           emptyState={
-            <div className="text-center py-12">
-              <Truck className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-              <p className="text-muted-foreground">
-                No se encontraron proveedores
-              </p>
-              <Button
-                onClick={handleCreateClick}
-                className="mt-4 bg-primary hover:bg-primary-dark"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Agregar Primer Proveedor
-              </Button>
-            </div>
+            <EmptyState
+              icon={<Truck className="w-12 h-12 text-slate-600" />}
+              title="No se encontraron proveedores"
+              actionLabel={
+                <>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Agregar Primer Proveedor
+                </>
+              }
+              onAction={handleCreateClick}
+            />
           }
           title={
             <>
@@ -658,40 +604,16 @@ export default function ProvidersPage() {
       </div>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="bg-card border-border">
-          <DialogHeader>
-            <DialogTitle className="text-foreground">
-              Confirmar Eliminación
-            </DialogTitle>
-            <DialogDescription className="text-muted-foreground">
-              ¿Estás seguro de que deseas eliminar al proveedor{" "}
-              <strong className="text-foreground">
-                {providerToDelete?.businessName}
-              </strong>
-              ? Esta acción no se puede deshacer.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setDeleteDialogOpen(false)}
-              className="border-border text-foreground hover:bg-ui-surface-elevated"
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleDeleteConfirm}
-              className="bg-red-600 hover:bg-red-700 text-white"
-            >
-              Eliminar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DeleteConfirmationDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDeleteConfirm}
+        itemName={providerToDelete?.businessName}
+        itemType="proveedor"
+      />
 
       {/* Create/Edit Provider Dialog */}
-      <Dialog
+      <FormDialog
         open={createDialogOpen || editDialogOpen}
         onOpenChange={(open) => {
           if (!open) {
@@ -700,24 +622,23 @@ export default function ProvidersPage() {
             setProviderToEdit(null);
           }
         }}
+        title={editDialogOpen ? "Editar Proveedor" : "Nuevo Proveedor"}
+        description={
+          editDialogOpen
+            ? "Actualiza la información del proveedor"
+            : "Completa la información del nuevo proveedor"
+        }
+        onSubmit={handleFormSubmit}
+        loading={formLoading}
+        submitLabel={editDialogOpen ? "Actualizar Proveedor" : "Crear Proveedor"}
+        maxWidth="2xl"
+        onCancel={() => {
+          setCreateDialogOpen(false);
+          setEditDialogOpen(false);
+          setProviderToEdit(null);
+        }}
       >
-        <DialogContent className="bg-card border-border max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-foreground">
-              {editDialogOpen ? "Editar Proveedor" : "Nuevo Proveedor"}
-            </DialogTitle>
-            <DialogDescription className="text-muted-foreground">
-              {editDialogOpen
-                ? "Actualiza la información del proveedor"
-                : "Completa la información del nuevo proveedor"}
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleFormSubmit} className="space-y-4">
-            {/* Business Information */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium text-foreground border-b border-border pb-2">
-                Información Comercial
-              </h3>
+        <FormSection title="Información Comercial">
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
@@ -841,13 +762,9 @@ export default function ProvidersPage() {
                   />
                 </div>
               </div>
-            </div>
+        </FormSection>
 
-            {/* Contact Information */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium text-foreground border-b border-border pb-2">
-                Información de Contacto
-              </h3>
+        <FormSection title="Información de Contacto">
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
@@ -896,13 +813,9 @@ export default function ProvidersPage() {
                   />
                 </div>
               </div>
-            </div>
+        </FormSection>
 
-            {/* Location Information */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium text-foreground border-b border-border pb-2">
-                Ubicación
-              </h3>
+        <FormSection title="Ubicación">
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
@@ -950,13 +863,9 @@ export default function ProvidersPage() {
                   />
                 </div>
               </div>
-            </div>
+        </FormSection>
 
-            {/* Additional Information */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium text-foreground border-b border-border pb-2">
-                Información Adicional
-              </h3>
+        <FormSection title="Información Adicional">
 
               <div className="space-y-4">
                 <div>
@@ -1009,42 +918,8 @@ export default function ProvidersPage() {
                   </Label>
                 </div>
               </div>
-            </div>
-
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setCreateDialogOpen(false);
-                  setEditDialogOpen(false);
-                  setProviderToEdit(null);
-                }}
-                className="border-border text-foreground hover:bg-ui-surface-elevated"
-                disabled={formLoading}
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                className="bg-primary hover:bg-primary-dark text-white"
-                disabled={formLoading}
-              >
-                {formLoading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Guardando...
-                  </>
-                ) : editDialogOpen ? (
-                  "Actualizar Proveedor"
-                ) : (
-                  "Crear Proveedor"
-                )}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+        </FormSection>
+      </FormDialog>
     </main>
   );
 }

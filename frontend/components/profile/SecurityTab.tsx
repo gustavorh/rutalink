@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import type { User, UpdateUserInput } from "@/types/users";
+import type { User } from "@/types/users";
+import type { UpdateUserDto } from "@/lib/api-types";
 
 interface SecurityTabProps {
   user: User;
-  onUpdate: (data: UpdateUserInput) => Promise<User | undefined>;
+  onUpdate: (data: UpdateUserDto) => Promise<User | undefined>;
 }
 
 export function SecurityTab({ user, onUpdate }: SecurityTabProps) {

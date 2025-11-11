@@ -15,32 +15,6 @@ export interface Operator {
   updatedAt: string;
 }
 
-// Create operator input - matches database schema
-export interface CreateOperatorInput {
-  name: string;
-  rut?: string; // Format: 21.023.531-0
-  super?: boolean;
-  expiration?: string; // ISO date string
-  status?: boolean;
-}
-
-// Update operator input - matches database schema
-export interface UpdateOperatorInput {
-  name?: string;
-  rut?: string;
-  super?: boolean;
-  expiration?: string;
-  status?: boolean;
-}
-
-// Operator query parameters
-export interface OperatorQueryParams {
-  search?: string;
-  status?: boolean;
-  super?: boolean;
-  page?: number;
-  limit?: number;
-}
 
 // Paginated operators response
 export interface PaginatedOperators {

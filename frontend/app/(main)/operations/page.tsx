@@ -14,17 +14,39 @@ import {
   getVehicles,
   getRoutes,
 } from "@/lib/api";
+import type { OperationWithDetails } from "@/types/operations";
 import type {
-  OperationWithDetails,
-  OperationQueryParams,
-  CreateOperationInput,
-  UpdateOperationInput,
-} from "@/types/operations";
+  CreateOperationDto,
+  UpdateOperationDto,
+  OperationQueryDto,
+} from "@/lib/api-types";
 import type { Client } from "@/types/clients";
 import type { Provider } from "@/types/providers";
 import type { Driver } from "@/types/drivers";
 import type { Vehicle } from "@/types/drivers";
 import type { Route } from "@/types/routes";
+
+// Form data type for operation create/edit forms
+interface OperationFormData {
+  operatorId?: number;
+  operationNumber?: string;
+  operationType: string;
+  origin: string;
+  destination: string;
+  scheduledStartDate: string;
+  scheduledEndDate?: string;
+  cargoDescription?: string;
+  notes?: string;
+  clientId?: number;
+  providerId?: number;
+  routeId?: number;
+  driverId?: number;
+  vehicleId?: number;
+  distance?: number;
+  cargoWeight?: number;
+  status?: string;
+}
+
 import {
   Card,
   CardContent,
@@ -72,6 +94,10 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import { DeleteConfirmationDialog } from "@/components/ui/delete-confirmation-dialog";
+import { StatisticsCard } from "@/components/ui/statistics-card";
+import { usePagination } from "@/lib/hooks/use-pagination";
+import { useFilters } from "@/lib/hooks/use-filters";
 import {
   Dialog,
   DialogContent,
@@ -104,8 +130,7 @@ export default function OperationsPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   // Form data
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [formData, setFormData] = useState<Record<string, any>>({
+  const [formData, setFormData] = useState<OperationFormData>({
     operationType: "delivery",
     origin: "",
     destination: "",
@@ -124,20 +149,34 @@ export default function OperationsPage() {
 
   // Filters
   const [search, setSearch] = useState("");
-  const [typeFilter, setTypeFilter] = useState<string>("all");
-  const [clientFilter, setClientFilter] = useState<string>("all");
-  const [providerFilter, setProviderFilter] = useState<string>("all");
-  const [showFilters, setShowFilters] = useState(false);
+  const {
+    filters: filterState,
+    setFilter,
+    showFilters,
+    toggleFilters,
+    clearFilters: clearAllFilters,
+  } = useFilters({
+    initialFilters: {
+      type: "all",
+      client: "all",
+      provider: "all",
+    },
+  });
   const [dateRangeFilter, setDateRangeFilter] = useState<{
     start: string;
     end: string;
   }>({ start: "", end: "" });
 
   // Pagination
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
-  const limit = 10;
+  const {
+    page,
+    setPage,
+    total,
+    setTotal,
+    totalPages,
+    setTotalPages,
+    pagination,
+  } = usePagination({ initialLimit: 10 });
 
   // Last update timestamp
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
@@ -152,7 +191,14 @@ export default function OperationsPage() {
     fetchCatalogs();
     fetchOperations();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, typeFilter, clientFilter, providerFilter, viewMode, currentMonth]);
+  }, [
+    page,
+    filterState.type,
+    filterState.client,
+    filterState.provider,
+    viewMode,
+    currentMonth,
+  ]);
 
   const fetchCatalogs = async () => {
     try {
@@ -205,18 +251,17 @@ export default function OperationsPage() {
         return;
       }
 
-      const params: OperationQueryParams = {
+      const params: OperationQueryDto = {
         operatorId: user.operatorId,
-        page,
-        limit: viewMode === "calendar" ? 1000 : limit, // Fetch all for calendar view
+        page: page,
+        limit: viewMode === "calendar" ? 1000 : pagination.limit, // Fetch all for calendar view
         status: "scheduled", // Only fetch programmed operations
       };
-
-      if (search) params.search = search;
-      if (typeFilter !== "all") params.operationType = typeFilter;
-      if (clientFilter !== "all") params.clientId = parseInt(clientFilter);
-      if (providerFilter !== "all")
-        params.providerId = parseInt(providerFilter);
+      if (filterState.type !== "all") params.operationType = filterState.type;
+      if (filterState.client !== "all")
+        params.clientId = parseInt(filterState.client);
+      if (filterState.provider !== "all")
+        params.providerId = parseInt(filterState.provider);
 
       // For calendar view, fetch operations for the current month
       if (viewMode === "calendar") {
@@ -328,8 +373,7 @@ export default function OperationsPage() {
     };
 
     setFormData({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      operationType: operation.operation.operationType as any,
+      operationType: operation.operation.operationType,
       origin: operation.operation.origin,
       destination: operation.operation.destination,
       clientId: operation.operation.clientId || undefined,
@@ -346,8 +390,7 @@ export default function OperationsPage() {
       distance: operation.operation.distance || undefined,
       cargoDescription: operation.operation.cargoDescription || "",
       cargoWeight: operation.operation.cargoWeight || undefined,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      status: operation.operation.status as any,
+      status: operation.operation.status,
       notes: operation.operation.notes || "",
     });
     setEditDialogOpen(true);
@@ -366,7 +409,7 @@ export default function OperationsPage() {
       if (editDialogOpen && operationToEdit) {
         // Update existing operation
         // Convert string IDs to numbers
-        const updateData: UpdateOperationInput = {
+        const updateData: UpdateOperationDto = {
           operationType: formData.operationType,
           origin: formData.origin,
           destination: formData.destination,
@@ -382,7 +425,12 @@ export default function OperationsPage() {
           scheduledStartDate: formData.scheduledStartDate,
           scheduledEndDate: formData.scheduledEndDate || undefined,
           distance: formData.distance ? Number(formData.distance) : undefined,
-          status: formData.status,
+          status: formData.status as
+            | "scheduled"
+            | "in-progress"
+            | "completed"
+            | "cancelled"
+            | undefined,
           cargoDescription: formData.cargoDescription || undefined,
           cargoWeight: formData.cargoWeight
             ? Number(formData.cargoWeight)
@@ -401,9 +449,9 @@ export default function OperationsPage() {
         }
 
         // Convert string IDs to numbers and ensure correct types
-        const createData: CreateOperationInput = {
+        const createData: CreateOperationDto = {
           operatorId: user.operatorId,
-          operationNumber: formData.operationNumber,
+          operationNumber: formData.operationNumber || "",
           operationType: formData.operationType,
           origin: formData.origin,
           destination: formData.destination,
@@ -640,7 +688,10 @@ export default function OperationsPage() {
               <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
                 Tipo de Operación
               </label>
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <Select
+                value={filterState.type}
+                onValueChange={(value) => setFilter("type", value)}
+              >
                 <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground h-9">
                   <SelectValue placeholder="Tipo" />
                 </SelectTrigger>
@@ -659,7 +710,10 @@ export default function OperationsPage() {
               <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
                 Cliente
               </label>
-              <Select value={clientFilter} onValueChange={setClientFilter}>
+              <Select
+                value={filterState.client}
+                onValueChange={(value) => setFilter("client", value)}
+              >
                 <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground h-9">
                   <SelectValue placeholder="Cliente" />
                 </SelectTrigger>
@@ -678,7 +732,10 @@ export default function OperationsPage() {
               <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
                 Proveedor
               </label>
-              <Select value={providerFilter} onValueChange={setProviderFilter}>
+              <Select
+                value={filterState.provider}
+                onValueChange={(value) => setFilter("provider", value)}
+              >
                 <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground h-9">
                   <SelectValue placeholder="Proveedor" />
                 </SelectTrigger>
@@ -965,87 +1022,42 @@ export default function OperationsPage() {
         {/* Statistics Cards - Only show in list view */}
         {viewMode === "list" && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="bg-card border-border">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground">
-                      Operaciones Programadas
-                    </p>
-                    <p className="text-2xl font-bold text-foreground mt-1">
-                      {total}
-                    </p>
-                  </div>
-                  <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center">
-                    <Calendar className="w-6 h-6 text-secondary" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-card border-border">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground">
-                      En Esta Página
-                    </p>
-                    <p className="text-2xl font-bold text-foreground mt-1">
-                      {totalScheduled}
-                    </p>
-                  </div>
-                  <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                    <Clock className="w-6 h-6 text-primary" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-card border-border">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground">
-                      Pendientes de Inicio
-                    </p>
-                    <p className="text-2xl font-bold text-foreground mt-1">
-                      {total}
-                    </p>
-                  </div>
-                  <div className="w-12 h-12 bg-warning/10 rounded-lg flex items-center justify-center">
-                    <Truck className="w-6 h-6 text-warning" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-card border-border">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground">
-                      Próximas 24hrs
-                    </p>
-                    <p className="text-2xl font-bold text-foreground mt-1">
-                      {
-                        operations.filter((op) => {
-                          const startDate = new Date(
-                            op.operation.scheduledStartDate
-                          );
-                          const now = new Date();
-                          const diff = startDate.getTime() - now.getTime();
-                          const hours = diff / (1000 * 60 * 60);
-                          return hours >= 0 && hours <= 24;
-                        }).length
-                      }
-                    </p>
-                  </div>
-                  <div className="w-12 h-12 bg-success/10 rounded-lg flex items-center justify-center">
-                    <CheckCircle className="w-6 h-6 text-success" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <StatisticsCard
+              value={total}
+              label="Operaciones Programadas"
+              icon={<Calendar className="w-6 h-6" />}
+              iconBgColor="bg-secondary/10"
+              iconColor="text-secondary"
+            />
+            <StatisticsCard
+              value={totalScheduled}
+              label="En Esta Página"
+              icon={<Clock className="w-6 h-6" />}
+              iconBgColor="bg-primary/10"
+              iconColor="text-primary"
+            />
+            <StatisticsCard
+              value={total}
+              label="Pendientes de Inicio"
+              icon={<Truck className="w-6 h-6" />}
+              iconBgColor="bg-warning/10"
+              iconColor="text-warning"
+            />
+            <StatisticsCard
+              value={
+                operations.filter((op) => {
+                  const startDate = new Date(op.operation.scheduledStartDate);
+                  const now = new Date();
+                  const diff = startDate.getTime() - now.getTime();
+                  const hours = diff / (1000 * 60 * 60);
+                  return hours >= 0 && hours <= 24;
+                }).length
+              }
+              label="Próximas 24hrs"
+              icon={<CheckCircle className="w-6 h-6" />}
+              iconBgColor="bg-success/10"
+              iconColor="text-success"
+            />
           </div>
         )}
 
@@ -1126,7 +1138,7 @@ export default function OperationsPage() {
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={() => setShowFilters(!showFilters)}
+                      onClick={toggleFilters}
                       className="border-border text-foreground hover:bg-ui-surface-elevated"
                       aria-label={
                         showFilters ? "Ocultar filtros" : "Mostrar filtros"
@@ -1162,8 +1174,8 @@ export default function OperationsPage() {
                           Tipo de Operación
                         </Label>
                         <Select
-                          value={typeFilter}
-                          onValueChange={setTypeFilter}
+                          value={filterState.type}
+                          onValueChange={(value) => setFilter("type", value)}
                         >
                           <SelectTrigger
                             id="filter-type"
@@ -1191,8 +1203,8 @@ export default function OperationsPage() {
                           Cliente
                         </Label>
                         <Select
-                          value={clientFilter}
-                          onValueChange={setClientFilter}
+                          value={filterState.client}
+                          onValueChange={(value) => setFilter("client", value)}
                         >
                           <SelectTrigger
                             id="filter-client"
@@ -1225,8 +1237,10 @@ export default function OperationsPage() {
                           Proveedor
                         </Label>
                         <Select
-                          value={providerFilter}
-                          onValueChange={setProviderFilter}
+                          value={filterState.provider}
+                          onValueChange={(value) =>
+                            setFilter("provider", value)
+                          }
                         >
                           <SelectTrigger
                             id="filter-provider"
@@ -1507,8 +1521,13 @@ export default function OperationsPage() {
                     {/* Pagination */}
                     <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
                       <p className="text-sm text-muted-foreground">
-                        Mostrando {(page - 1) * limit + 1} a{" "}
-                        {Math.min(page * limit, total)} de {total} operaciones
+                        Mostrando {(pagination.page - 1) * pagination.limit + 1}{" "}
+                        a{" "}
+                        {Math.min(
+                          pagination.page * pagination.limit,
+                          pagination.total
+                        )}{" "}
+                        de {pagination.total} operaciones
                       </p>
                       <div className="flex gap-2">
                         <Button
@@ -1549,7 +1568,7 @@ export default function OperationsPage() {
                         <Button
                           variant="outline"
                           onClick={() => setPage(page + 1)}
-                          disabled={page === totalPages}
+                          disabled={pagination.page === pagination.totalPages}
                           className="border-border text-foreground hover:bg-ui-surface-elevated disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           Siguiente
@@ -1565,37 +1584,13 @@ export default function OperationsPage() {
       </div>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="bg-card border-border">
-          <DialogHeader>
-            <DialogTitle className="text-foreground">
-              Confirmar Eliminación
-            </DialogTitle>
-            <DialogDescription className="text-muted-foreground">
-              ¿Estás seguro de que deseas eliminar la operación{" "}
-              <strong className="text-foreground">
-                {operationToDelete?.operation.operationNumber}
-              </strong>
-              ? Esta acción no se puede deshacer.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setDeleteDialogOpen(false)}
-              className="border-border text-foreground hover:bg-ui-surface-elevated"
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleDeleteConfirm}
-              className="bg-red-600 hover:bg-red-700 text-white"
-            >
-              Eliminar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DeleteConfirmationDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDeleteConfirm}
+        itemName={operationToDelete?.operation.operationNumber}
+        itemType="operación"
+      />
 
       {/* Create/Edit Operation Dialog */}
       <Dialog

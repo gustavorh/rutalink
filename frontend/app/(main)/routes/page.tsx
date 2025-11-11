@@ -4,14 +4,13 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getToken, isAuthenticated, getUser } from "@/lib/auth";
 import { getRoutes, deleteRoute, createRoute, updateRoute } from "@/lib/api";
+import type { Route } from "@/types/routes";
 import type {
-  Route,
-  RouteQueryParams,
-  CreateRouteInput,
-  UpdateRouteInput,
-} from "@/types/routes";
+  CreateRouteDto,
+  UpdateRouteDto,
+  RouteQueryDto,
+} from "@/lib/api-types";
 import { ROUTE_TYPES, DIFFICULTY_LEVELS } from "@/types/routes";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -35,14 +34,15 @@ import {
   Navigation,
   FileText,
 } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DeleteConfirmationDialog } from "@/components/ui/delete-confirmation-dialog";
+import { StatisticsCard } from "@/components/ui/statistics-card";
+import { PageHeader } from "@/components/ui/page-header";
+import { LoadingState } from "@/components/ui/loading-state";
+import { EmptyState } from "@/components/ui/empty-state";
+import { FormDialog } from "@/components/ui/form-dialog";
+import { FormSection } from "@/components/ui/form-section";
+import { usePagination } from "@/lib/hooks/use-pagination";
+import { useFilters } from "@/lib/hooks/use-filters";
 import {
   DataTable,
   DataTableColumn,
@@ -61,37 +61,49 @@ export default function RoutesPage() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [routeToEdit, setRouteToEdit] = useState<Route | null>(null);
-  const [formData, setFormData] = useState<CreateRouteInput | UpdateRouteInput>(
-    {
-      name: "",
-      code: "",
-      origin: "",
-      destination: "",
-      distance: undefined,
-      estimatedDuration: undefined,
-      routeType: undefined,
-      difficulty: undefined,
-      roadConditions: "",
-      tollsRequired: false,
-      estimatedTollCost: undefined,
-      observations: "",
-      notes: "",
-    }
-  );
+  const [formData, setFormData] = useState<CreateRouteDto | UpdateRouteDto>({
+    name: "",
+    code: "",
+    origin: "",
+    destination: "",
+    distance: undefined,
+    estimatedDuration: undefined,
+    routeType: undefined,
+    difficulty: undefined,
+    roadConditions: "",
+    tollsRequired: false,
+    estimatedTollCost: undefined,
+    observations: "",
+    notes: "",
+  });
   const [formLoading, setFormLoading] = useState(false);
 
   // Filters
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [routeTypeFilter, setRouteTypeFilter] = useState<string>("all");
-  const [difficultyFilter, setDifficultyFilter] = useState<string>("all");
-  const [showFilters, setShowFilters] = useState(false);
+  const {
+    filters: filterState,
+    setFilter,
+    showFilters,
+    toggleFilters,
+    clearFilters: clearAllFilters,
+  } = useFilters({
+    initialFilters: {
+      status: "all",
+      routeType: "all",
+      difficulty: "all",
+    },
+  });
 
   // Pagination
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
-  const limit = 10;
+  const {
+    page,
+    setPage,
+    total,
+    setTotal,
+    totalPages,
+    setTotalPages,
+    pagination,
+  } = usePagination({ initialLimit: 10 });
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -101,7 +113,13 @@ export default function RoutesPage() {
     setMounted(true);
     fetchRoutes();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, search, statusFilter, routeTypeFilter, difficultyFilter]);
+  }, [
+    page,
+    search,
+    filterState.status,
+    filterState.routeType,
+    filterState.difficulty,
+  ]);
 
   const fetchRoutes = async () => {
     try {
@@ -114,21 +132,24 @@ export default function RoutesPage() {
         return;
       }
 
-      const params: RouteQueryParams = {
+      const params: RouteQueryDto = {
         page,
-        limit,
+        limit: pagination.limit,
       };
 
       if (search) params.search = search;
-      if (statusFilter !== "all")
-        params.status = statusFilter === "active" ? true : false;
-      if (routeTypeFilter !== "all") params.routeType = routeTypeFilter;
-      if (difficultyFilter !== "all") params.difficulty = difficultyFilter;
+      if (filterState.status !== "all")
+        params.status = filterState.status === "active" ? true : false;
+      if (filterState.routeType !== "all")
+        params.routeType = filterState.routeType as RouteQueryDto["routeType"];
+      if (filterState.difficulty !== "all")
+        params.difficulty =
+          filterState.difficulty as RouteQueryDto["difficulty"];
 
       const response = await getRoutes(token, params);
       setRoutes(response.data);
-      setTotalPages(response.meta.totalPages);
-      setTotal(response.meta.total);
+      setTotalPages(response.pagination.totalPages);
+      setTotal(response.pagination.total);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al cargar rutas");
     } finally {
@@ -216,12 +237,12 @@ export default function RoutesPage() {
 
       if (editDialogOpen && routeToEdit) {
         // Update existing route
-        await updateRoute(token, routeToEdit.id, formData as UpdateRouteInput);
+        await updateRoute(token, routeToEdit.id, formData as UpdateRouteDto);
         setEditDialogOpen(false);
         setRouteToEdit(null);
       } else {
         // Create new route
-        await createRoute(token, formData as CreateRouteInput);
+        await createRoute(token, formData as CreateRouteDto);
         setCreateDialogOpen(false);
       }
 
@@ -389,8 +410,8 @@ export default function RoutesPage() {
       id: "status",
       label: "Estado",
       type: "select",
-      value: statusFilter,
-      onChange: setStatusFilter,
+      value: filterState.status,
+      onChange: (value) => setFilter("status", value),
       placeholder: "Estado",
       options: [
         { value: "all", label: "Todos los estados" },
@@ -402,8 +423,8 @@ export default function RoutesPage() {
       id: "routeType",
       label: "Tipo de Ruta",
       type: "select",
-      value: routeTypeFilter,
-      onChange: setRouteTypeFilter,
+      value: filterState.routeType,
+      onChange: (value) => setFilter("routeType", value),
       placeholder: "Tipo de ruta",
       options: [
         { value: "all", label: "Todos los tipos" },
@@ -417,8 +438,8 @@ export default function RoutesPage() {
       id: "difficulty",
       label: "Dificultad",
       type: "select",
-      value: difficultyFilter,
-      onChange: setDifficultyFilter,
+      value: filterState.difficulty,
+      onChange: (value) => setFilter("difficulty", value),
       placeholder: "Dificultad",
       options: [
         { value: "all", label: "Todas las dificultades" },
@@ -458,11 +479,7 @@ export default function RoutesPage() {
   ];
 
   if (!mounted) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-ui-surface-elevated">
-        <p className="text-foreground">Cargando...</p>
-      </div>
-    );
+    return <LoadingState />;
   }
 
   const user = getUser();
@@ -489,116 +506,61 @@ export default function RoutesPage() {
   return (
     <main className="flex-1 overflow-y-auto p-6">
       <div className="w-full space-y-6">
-        {/* Page Header with Stats */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <RouteIcon className="w-6 h-6 text-primary" />
-              Mantenedor de Tramos y Rutas
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Gestión de rutas estándar para optimización operativa
-            </p>
-          </div>
-          <Button
-            onClick={handleCreateClick}
-            className="bg-primary hover:bg-primary-dark text-white"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Nueva Ruta
-          </Button>
-        </div>
+        {/* Page Header */}
+        <PageHeader
+          title="Mantenedor de Tramos y Rutas"
+          description="Gestión de rutas estándar para optimización operativa"
+          icon={<RouteIcon className="w-6 h-6" />}
+          actionLabel={
+            <>
+              <Plus className="mr-2 h-4 w-4" />
+              Nueva Ruta
+            </>
+          }
+          onAction={handleCreateClick}
+        />
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-card border-border">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Total Rutas
-                  </p>
-                  <p className="text-2xl font-bold text-foreground mt-1">
-                    {total}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                  <RouteIcon className="w-6 h-6 text-primary" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card border-border">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Rutas Activas
-                  </p>
-                  <p className="text-2xl font-bold text-foreground mt-1">
-                    {activeRoutes}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-success/10 rounded-lg flex items-center justify-center">
-                  <CheckCircle className="w-6 h-6 text-success" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card border-border">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Distancia Promedio
-                  </p>
-                  <p className="text-2xl font-bold text-foreground mt-1">
-                    {avgDistance > 0 ? `${avgDistance} km` : "N/A"}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center">
-                  <Navigation className="w-6 h-6 text-secondary" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card border-border">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Tipo Principal
-                  </p>
-                  <p className="text-sm font-bold text-foreground mt-1">
-                    {topType ? getRouteTypeLabel(topType[0]) : "N/A"}
-                  </p>
-                  {topType && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {topType[1]} ruta{topType[1] !== 1 ? "s" : ""}
-                    </p>
-                  )}
-                </div>
-                <div className="w-12 h-12 bg-orange-500/10 rounded-lg flex items-center justify-center">
-                  <MapPin className="w-6 h-6 text-orange-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <StatisticsCard
+            value={total}
+            label="Total Rutas"
+            icon={<RouteIcon className="w-6 h-6" />}
+            iconBgColor="bg-primary/10"
+            iconColor="text-primary"
+          />
+          <StatisticsCard
+            value={activeRoutes}
+            label="Rutas Activas"
+            icon={<CheckCircle className="w-6 h-6" />}
+            iconBgColor="bg-success/10"
+            iconColor="text-success"
+          />
+          <StatisticsCard
+            value={avgDistance > 0 ? `${avgDistance} km` : "N/A"}
+            label="Distancia Promedio"
+            icon={<Navigation className="w-6 h-6" />}
+            iconBgColor="bg-secondary/10"
+            iconColor="text-secondary"
+          />
+          <StatisticsCard
+            value={
+              topType
+                ? `${getRouteTypeLabel(topType[0])} (${topType[1]})`
+                : "N/A"
+            }
+            label="Tipo Principal"
+            icon={<MapPin className="w-6 h-6" />}
+            iconBgColor="bg-orange-500/10"
+            iconColor="text-orange-400"
+          />
         </div>
 
         {/* Data Table */}
         <DataTable
           data={routes}
           columns={tableColumns}
-          pagination={{
-            page,
-            limit,
-            total,
-            totalPages,
-          }}
+          pagination={pagination}
           onPageChange={setPage}
           searchValue={search}
           onSearchChange={setSearch}
@@ -606,35 +568,30 @@ export default function RoutesPage() {
           onSearchSubmit={handleSearch}
           filters={tableFilters}
           showFilters={showFilters}
-          onToggleFilters={() => setShowFilters(!showFilters)}
+          onToggleFilters={toggleFilters}
           onClearFilters={() => {
-            setStatusFilter("all");
-            setRouteTypeFilter("all");
-            setDifficultyFilter("all");
             setSearch("");
+            clearAllFilters();
+            setPage(1);
           }}
           actions={tableActions}
           loading={loading}
           error={error}
           emptyState={
-            <div className="text-center py-12">
-              <RouteIcon className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-              <p className="text-muted-foreground">No se encontraron rutas</p>
-              <Button
-                onClick={handleCreateClick}
-                className="mt-4 bg-primary hover:bg-primary-dark"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Agregar Primera Ruta
-              </Button>
-            </div>
+            <EmptyState
+              icon={<RouteIcon className="w-12 h-12 text-slate-600" />}
+              title="No se encontraron rutas"
+              actionLabel={
+                <>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Agregar Primera Ruta
+                </>
+              }
+              onAction={handleCreateClick}
+            />
           }
-          title={
-            <>
-              <FileText className="w-5 h-5 text-primary" />
-              Listado de Rutas
-            </>
-          }
+          title="Listado de Rutas"
+          icon={<FileText className="w-5 h-5 text-primary" />}
           description={`Total de ${total} rutas registradas`}
           onExport={() => {
             /* TODO: Implement export functionality */
@@ -644,39 +601,17 @@ export default function RoutesPage() {
       </div>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="bg-card border-border">
-          <DialogHeader>
-            <DialogTitle className="text-foreground">
-              Confirmar Eliminación
-            </DialogTitle>
-            <DialogDescription className="text-muted-foreground">
-              ¿Estás seguro de que deseas eliminar la ruta{" "}
-              <strong className="text-foreground">{routeToDelete?.name}</strong>
-              ? Esta acción no se puede deshacer y no podrá realizarse si la
-              ruta está siendo usada en operaciones.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setDeleteDialogOpen(false)}
-              className="border-border text-foreground hover:bg-ui-surface-elevated"
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleDeleteConfirm}
-              className="bg-red-600 hover:bg-red-700 text-white"
-            >
-              Eliminar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DeleteConfirmationDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDeleteConfirm}
+        itemName={routeToDelete?.name}
+        itemType="ruta"
+        description={`¿Estás seguro de que deseas eliminar la ruta ${routeToDelete?.name}? Esta acción no se puede deshacer y no podrá realizarse si la ruta está siendo usada en operaciones.`}
+      />
 
       {/* Create/Edit Route Dialog */}
-      <Dialog
+      <FormDialog
         open={createDialogOpen || editDialogOpen}
         onOpenChange={(open) => {
           if (!open) {
@@ -685,351 +620,293 @@ export default function RoutesPage() {
             setRouteToEdit(null);
           }
         }}
+        title={editDialogOpen ? "Editar Ruta" : "Nueva Ruta"}
+        description={
+          editDialogOpen
+            ? "Actualiza la información de la ruta"
+            : "Completa la información de la nueva ruta"
+        }
+        onSubmit={handleFormSubmit}
+        loading={formLoading}
+        submitLabel={editDialogOpen ? "Actualizar Ruta" : "Crear Ruta"}
+        maxWidth="4xl"
+        onCancel={() => {
+          setCreateDialogOpen(false);
+          setEditDialogOpen(false);
+          setRouteToEdit(null);
+        }}
       >
-        <DialogContent className="bg-card border-border max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-foreground">
-              {editDialogOpen ? "Editar Ruta" : "Nueva Ruta"}
-            </DialogTitle>
-            <DialogDescription className="text-muted-foreground">
-              {editDialogOpen
-                ? "Actualiza la información de la ruta"
-                : "Completa la información de la nueva ruta"}
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleFormSubmit} className="space-y-4">
-            {/* Basic Information */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium text-foreground border-b border-border pb-2">
-                Información Básica
-              </h3>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2">
-                  <Label htmlFor="name" className="text-foreground">
-                    Nombre del Tramo *
-                  </Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
-                    required
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                    placeholder="Ej: Santiago - Valparaíso"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="code" className="text-foreground">
-                    Código Interno
-                  </Label>
-                  <Input
-                    id="code"
-                    value={formData.code}
-                    onChange={(e) =>
-                      setFormData({ ...formData, code: e.target.value })
-                    }
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                    placeholder="Ej: STG-VAL-001"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="routeType" className="text-foreground">
-                    Tipo de Ruta
-                  </Label>
-                  <Select
-                    value={formData.routeType || ""}
-                    onValueChange={(value) =>
-                      setFormData({
-                        ...formData,
-                        routeType:
-                          value as (typeof ROUTE_TYPES)[number]["value"],
-                      })
-                    }
-                  >
-                    <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground mt-1">
-                      <SelectValue placeholder="Seleccionar tipo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {ROUTE_TYPES.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
-                          {type.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+        <FormSection title="Información Básica">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2">
+              <Label htmlFor="name" className="text-foreground">
+                Nombre del Tramo *
+              </Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+                required
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+                placeholder="Ej: Santiago - Valparaíso"
+              />
             </div>
 
-            {/* Route Details */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium text-foreground border-b border-border pb-2">
-                Detalles de la Ruta
-              </h3>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2">
-                  <Label htmlFor="origin" className="text-foreground">
-                    Origen *
-                  </Label>
-                  <Input
-                    id="origin"
-                    value={formData.origin}
-                    onChange={(e) =>
-                      setFormData({ ...formData, origin: e.target.value })
-                    }
-                    required
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                    placeholder="Ej: Santiago, Región Metropolitana"
-                  />
-                </div>
-
-                <div className="col-span-2">
-                  <Label htmlFor="destination" className="text-foreground">
-                    Destino *
-                  </Label>
-                  <Input
-                    id="destination"
-                    value={formData.destination}
-                    onChange={(e) =>
-                      setFormData({ ...formData, destination: e.target.value })
-                    }
-                    required
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                    placeholder="Ej: Valparaíso, Región de Valparaíso"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="distance" className="text-foreground">
-                    Distancia (km)
-                  </Label>
-                  <Input
-                    id="distance"
-                    type="number"
-                    min="0"
-                    value={formData.distance || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        distance: e.target.value
-                          ? parseInt(e.target.value)
-                          : undefined,
-                      })
-                    }
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                    placeholder="Ej: 120"
-                  />
-                </div>
-
-                <div>
-                  <Label
-                    htmlFor="estimatedDuration"
-                    className="text-foreground"
-                  >
-                    Duración Estimada (min)
-                  </Label>
-                  <Input
-                    id="estimatedDuration"
-                    type="number"
-                    min="0"
-                    value={formData.estimatedDuration || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        estimatedDuration: e.target.value
-                          ? parseInt(e.target.value)
-                          : undefined,
-                      })
-                    }
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                    placeholder="Ej: 90"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="difficulty" className="text-foreground">
-                    Dificultad
-                  </Label>
-                  <Select
-                    value={formData.difficulty || ""}
-                    onValueChange={(value) =>
-                      setFormData({
-                        ...formData,
-                        difficulty:
-                          value as (typeof DIFFICULTY_LEVELS)[number]["value"],
-                      })
-                    }
-                  >
-                    <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground mt-1">
-                      <SelectValue placeholder="Seleccionar dificultad" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {DIFFICULTY_LEVELS.map((level) => (
-                        <SelectItem key={level.value} value={level.value}>
-                          {level.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="col-span-2">
-                  <Label htmlFor="roadConditions" className="text-foreground">
-                    Condiciones del Camino
-                  </Label>
-                  <Input
-                    id="roadConditions"
-                    value={formData.roadConditions}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        roadConditions: e.target.value,
-                      })
-                    }
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                    placeholder="Ej: Pavimentado, buen estado"
-                  />
-                </div>
-              </div>
+            <div>
+              <Label htmlFor="code" className="text-foreground">
+                Código Interno
+              </Label>
+              <Input
+                id="code"
+                value={formData.code}
+                onChange={(e) =>
+                  setFormData({ ...formData, code: e.target.value })
+                }
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+                placeholder="Ej: STG-VAL-001"
+              />
             </div>
 
-            {/* Toll Information */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium text-foreground border-b border-border pb-2">
-                Información de Peajes
-              </h3>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="tollsRequired"
-                    checked={formData.tollsRequired}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        tollsRequired: e.target.checked,
-                      })
-                    }
-                    className="rounded border-border bg-ui-surface-elevated text-primary focus:ring-blue-500"
-                  />
-                  <Label
-                    htmlFor="tollsRequired"
-                    className="text-foreground cursor-pointer"
-                  >
-                    Requiere Peajes
-                  </Label>
-                </div>
-
-                {formData.tollsRequired && (
-                  <div>
-                    <Label
-                      htmlFor="estimatedTollCost"
-                      className="text-foreground"
-                    >
-                      Costo Estimado de Peajes ($)
-                    </Label>
-                    <Input
-                      id="estimatedTollCost"
-                      type="number"
-                      min="0"
-                      value={formData.estimatedTollCost || ""}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          estimatedTollCost: e.target.value
-                            ? parseInt(e.target.value)
-                            : undefined,
-                        })
-                      }
-                      className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                      placeholder="Ej: 5000"
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Additional Information */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium text-foreground border-b border-border pb-2">
-                Información Adicional
-              </h3>
-
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="observations" className="text-foreground">
-                    Observaciones
-                  </Label>
-                  <Textarea
-                    id="observations"
-                    value={formData.observations}
-                    onChange={(e) =>
-                      setFormData({ ...formData, observations: e.target.value })
-                    }
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                    placeholder="Observaciones generales de la ruta..."
-                    rows={3}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="notes" className="text-foreground">
-                    Notas Internas
-                  </Label>
-                  <Textarea
-                    id="notes"
-                    value={formData.notes}
-                    onChange={(e) =>
-                      setFormData({ ...formData, notes: e.target.value })
-                    }
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                    placeholder="Notas internas sobre la ruta..."
-                    rows={3}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setCreateDialogOpen(false);
-                  setEditDialogOpen(false);
-                  setRouteToEdit(null);
-                }}
-                className="border-border text-foreground hover:bg-ui-surface-elevated"
-                disabled={formLoading}
+            <div>
+              <Label htmlFor="routeType" className="text-foreground">
+                Tipo de Ruta
+              </Label>
+              <Select
+                value={formData.routeType || ""}
+                onValueChange={(value) =>
+                  setFormData({
+                    ...formData,
+                    routeType: value as (typeof ROUTE_TYPES)[number]["value"],
+                  })
+                }
               >
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                className="bg-primary hover:bg-primary-dark text-white"
-                disabled={formLoading}
+                <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground mt-1">
+                  <SelectValue placeholder="Seleccionar tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ROUTE_TYPES.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </FormSection>
+
+        <FormSection title="Detalles de la Ruta">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2">
+              <Label htmlFor="origin" className="text-foreground">
+                Origen *
+              </Label>
+              <Input
+                id="origin"
+                value={formData.origin}
+                onChange={(e) =>
+                  setFormData({ ...formData, origin: e.target.value })
+                }
+                required
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+                placeholder="Ej: Santiago, Región Metropolitana"
+              />
+            </div>
+
+            <div className="col-span-2">
+              <Label htmlFor="destination" className="text-foreground">
+                Destino *
+              </Label>
+              <Input
+                id="destination"
+                value={formData.destination}
+                onChange={(e) =>
+                  setFormData({ ...formData, destination: e.target.value })
+                }
+                required
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+                placeholder="Ej: Valparaíso, Región de Valparaíso"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="distance" className="text-foreground">
+                Distancia (km)
+              </Label>
+              <Input
+                id="distance"
+                type="number"
+                min="0"
+                value={formData.distance || ""}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    distance: e.target.value
+                      ? parseInt(e.target.value)
+                      : undefined,
+                  })
+                }
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+                placeholder="Ej: 120"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="estimatedDuration" className="text-foreground">
+                Duración Estimada (min)
+              </Label>
+              <Input
+                id="estimatedDuration"
+                type="number"
+                min="0"
+                value={formData.estimatedDuration || ""}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    estimatedDuration: e.target.value
+                      ? parseInt(e.target.value)
+                      : undefined,
+                  })
+                }
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+                placeholder="Ej: 90"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="difficulty" className="text-foreground">
+                Dificultad
+              </Label>
+              <Select
+                value={formData.difficulty || ""}
+                onValueChange={(value) =>
+                  setFormData({
+                    ...formData,
+                    difficulty:
+                      value as (typeof DIFFICULTY_LEVELS)[number]["value"],
+                  })
+                }
               >
-                {formLoading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Guardando...
-                  </>
-                ) : editDialogOpen ? (
-                  "Actualizar Ruta"
-                ) : (
-                  "Crear Ruta"
-                )}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+                <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground mt-1">
+                  <SelectValue placeholder="Seleccionar dificultad" />
+                </SelectTrigger>
+                <SelectContent>
+                  {DIFFICULTY_LEVELS.map((level) => (
+                    <SelectItem key={level.value} value={level.value}>
+                      {level.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="col-span-2">
+              <Label htmlFor="roadConditions" className="text-foreground">
+                Condiciones del Camino
+              </Label>
+              <Input
+                id="roadConditions"
+                value={formData.roadConditions}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    roadConditions: e.target.value,
+                  })
+                }
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+                placeholder="Ej: Pavimentado, buen estado"
+              />
+            </div>
+          </div>
+        </FormSection>
+
+        <FormSection title="Información de Peajes">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="tollsRequired"
+                checked={formData.tollsRequired}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    tollsRequired: e.target.checked,
+                  })
+                }
+                className="rounded border-border bg-ui-surface-elevated text-primary focus:ring-blue-500"
+              />
+              <Label
+                htmlFor="tollsRequired"
+                className="text-foreground cursor-pointer"
+              >
+                Requiere Peajes
+              </Label>
+            </div>
+
+            {formData.tollsRequired && (
+              <div>
+                <Label htmlFor="estimatedTollCost" className="text-foreground">
+                  Costo Estimado de Peajes ($)
+                </Label>
+                <Input
+                  id="estimatedTollCost"
+                  type="number"
+                  min="0"
+                  value={formData.estimatedTollCost || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      estimatedTollCost: e.target.value
+                        ? parseInt(e.target.value)
+                        : undefined,
+                    })
+                  }
+                  className="bg-ui-surface-elevated border-border text-foreground mt-1"
+                  placeholder="Ej: 5000"
+                />
+              </div>
+            )}
+          </div>
+        </FormSection>
+
+        <FormSection title="Información Adicional">
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="observations" className="text-foreground">
+                Observaciones
+              </Label>
+              <Textarea
+                id="observations"
+                value={formData.observations}
+                onChange={(e) =>
+                  setFormData({ ...formData, observations: e.target.value })
+                }
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+                placeholder="Observaciones generales de la ruta..."
+                rows={3}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="notes" className="text-foreground">
+                Notas Internas
+              </Label>
+              <Textarea
+                id="notes"
+                value={formData.notes}
+                onChange={(e) =>
+                  setFormData({ ...formData, notes: e.target.value })
+                }
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+                placeholder="Notas internas sobre la ruta..."
+                rows={3}
+              />
+            </div>
+          </div>
+        </FormSection>
+      </FormDialog>
     </main>
   );
 }

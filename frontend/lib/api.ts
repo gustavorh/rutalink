@@ -1,48 +1,132 @@
 /**
  * API Client for Backend Communication
+ * Typed with backend DTOs and schemas
  */
+
+import type {
+  LoginDto,
+  RegisterDto,
+  AuthResponseDto,
+  CreateUserDto,
+  UpdateUserDto,
+  UserQueryDto,
+  UserActivityQueryDto,
+  CreateClientDto,
+  UpdateClientDto,
+  ClientQueryDto,
+  ClientOperationsQueryDto,
+  CreateDriverDto,
+  UpdateDriverDto,
+  DriverQueryDto,
+  CreateDriverDocumentDto,
+  UpdateDriverDocumentDto,
+  CreateVehicleDto,
+  UpdateVehicleDto,
+  VehicleQueryDto,
+  CreateVehicleDocumentDto,
+  UpdateVehicleDocumentDto,
+  UpdateOperationalStatusDto,
+  CreateOperationDto,
+  UpdateOperationDto,
+  OperationQueryDto,
+  AssignDriverToVehicleDto,
+  UnassignDriverFromVehicleDto,
+  GenerateReportDto,
+  CreateRouteDto,
+  UpdateRouteDto,
+  RouteQueryDto,
+  CreateOperatorDto,
+  UpdateOperatorDto,
+  OperatorQueryDto,
+  CreateProviderDto,
+  UpdateProviderDto,
+  ProviderQueryDto,
+  RoleCreateDto,
+  RoleUpdateDto,
+  RoleQueryDto,
+  AssignTransportProviderDto,
+  ConfirmTransportAssignmentDto,
+  CreateTransportOrderDto,
+  PaginatedResponse,
+  DeleteResponse,
+  DeleteRouteResponse,
+  UserActivityResponse,
+} from "./api-types";
+
+// Import response types from @/types
+import type {
+  Client,
+  PaginatedClients,
+  ClientStatistics,
+  PaginatedClientOperations,
+  ClientOperation,
+  IndustryAnalytics,
+  TopClient,
+} from "@/types/clients";
+
+import type {
+  Driver,
+  PaginatedDrivers,
+  DriverDocument,
+  DriverVehicleAssignmentWithVehicle,
+  DriverStatistics,
+  Vehicle,
+  PaginatedVehicles,
+} from "@/types/drivers";
+
+import type {
+  Operation,
+  OperationWithDetails,
+  PaginatedOperations,
+  OperationStatistics,
+  DaySchedule,
+  WeekSchedule,
+  MonthSchedule,
+  TransportAssignment,
+  TransportOrder,
+} from "@/types/operations";
+
+import type { Route, PaginatedRoutes, RouteStatistics } from "@/types/routes";
+
+import type {
+  Provider,
+  PaginatedProviders,
+  ProviderStatistics,
+  PaginatedProviderOperations,
+} from "@/types/providers";
+
+import type {
+  Truck,
+  PaginatedTrucks,
+  TruckDocument,
+  TruckOperation,
+  TruckStatistics,
+} from "@/types/trucks";
+
+import type {
+  Operator,
+  PaginatedOperators,
+  OperatorStatistics,
+} from "@/types/operators";
+
+import type {
+  User,
+  PaginatedUsers,
+  UserWithStats,
+  UserActivity,
+} from "@/types/users";
+
+import type { Role, PaginatedRoles } from "@/types/roles";
+import type { ApiErrorResponse } from "./api-types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
-export interface LoginRequest {
-  username: string;
-  password: string;
-}
-
-export interface RegisterRequest {
-  username: string;
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  operatorId: number;
-  roleId: number;
-}
-
-export interface AuthResponse {
-  access_token: string;
-  user: {
-    id: number;
-    username: string;
-    email: string;
-    firstName: string;
-    lastName: string;
-    operatorId: number;
-    roleId: number;
-    operator?: {
-      id: number;
-      name: string;
-      super: boolean;
-    };
-    role?: {
-      id: number;
-      name: string;
-    };
-  };
-}
-
 export class ApiError extends Error {
-  constructor(public status: number, message: string, public data?: unknown) {
+  constructor(
+    public status: number,
+    message: string,
+    public data?: ApiErrorResponse
+  ) {
     super(message);
     this.name = "ApiError";
   }
@@ -89,8 +173,8 @@ async function apiRequest<T>(
 /**
  * Login user
  */
-export async function login(credentials: LoginRequest): Promise<AuthResponse> {
-  return apiRequest<AuthResponse>("/api/auth/login", {
+export async function login(credentials: LoginDto): Promise<AuthResponseDto> {
+  return apiRequest<AuthResponseDto>("/api/auth/login", {
     method: "POST",
     body: JSON.stringify(credentials),
   });
@@ -100,9 +184,9 @@ export async function login(credentials: LoginRequest): Promise<AuthResponse> {
  * Register user
  */
 export async function register(
-  userData: RegisterRequest
-): Promise<AuthResponse> {
-  return apiRequest<AuthResponse>("/api/auth/register", {
+  userData: RegisterDto
+): Promise<AuthResponseDto> {
+  return apiRequest<AuthResponseDto>("/api/auth/register", {
     method: "POST",
     body: JSON.stringify(userData),
   });
@@ -143,37 +227,12 @@ export async function authenticatedRequest<T>(
 // DRIVERS API
 // ============================================================================
 
-import type {
-  Driver,
-  CreateDriverInput,
-  UpdateDriverInput,
-  DriverQueryParams,
-  PaginatedDrivers,
-  DriverDocument,
-  CreateDriverDocumentInput,
-  UpdateDriverDocumentInput,
-  DriverVehicleAssignmentWithVehicle,
-  AssignDriverToVehicleInput,
-  UnassignDriverFromVehicleInput,
-  DriverStatistics,
-  Vehicle,
-  CreateVehicleInput,
-  UpdateVehicleInput,
-  VehicleQueryParams,
-  PaginatedVehicles,
-  OperationWithDetails as DriverOperationWithDetails,
-  CreateOperationInput as DriverCreateOperationInput,
-  UpdateOperationInput as DriverUpdateOperationInput,
-  OperationQueryParams as DriverOperationQueryParams,
-  PaginatedOperations as DriverPaginatedOperations,
-} from "@/types/drivers";
-
 /**
  * Get all drivers with filtering and pagination
  */
 export async function getDrivers(
   token: string,
-  params?: DriverQueryParams
+  params?: DriverQueryDto
 ): Promise<PaginatedDrivers> {
   const queryParams = new URLSearchParams();
   if (params) {
@@ -205,7 +264,7 @@ export async function getDriverById(
  */
 export async function createDriver(
   token: string,
-  data: CreateDriverInput
+  data: CreateDriverDto
 ): Promise<Driver> {
   return authenticatedRequest<Driver>("/api/drivers", token, {
     method: "POST",
@@ -219,7 +278,7 @@ export async function createDriver(
 export async function updateDriver(
   token: string,
   id: number,
-  data: UpdateDriverInput
+  data: UpdateDriverDto
 ): Promise<Driver> {
   return authenticatedRequest<Driver>(`/api/drivers/${id}`, token, {
     method: "PUT",
@@ -233,14 +292,10 @@ export async function updateDriver(
 export async function deleteDriver(
   token: string,
   id: number
-): Promise<{ message: string }> {
-  return authenticatedRequest<{ message: string }>(
-    `/api/drivers/${id}`,
-    token,
-    {
-      method: "DELETE",
-    }
-  );
+): Promise<DeleteResponse> {
+  return authenticatedRequest<DeleteResponse>(`/api/drivers/${id}`, token, {
+    method: "DELETE",
+  });
 }
 
 // ============================================================================
@@ -279,7 +334,7 @@ export async function getDriverDocumentById(
 export async function createDriverDocument(
   token: string,
   driverId: number,
-  data: CreateDriverDocumentInput
+  data: CreateDriverDocumentDto
 ): Promise<DriverDocument> {
   return authenticatedRequest<DriverDocument>(
     `/api/drivers/${driverId}/documents`,
@@ -297,7 +352,7 @@ export async function createDriverDocument(
 export async function updateDriverDocument(
   token: string,
   documentId: number,
-  data: UpdateDriverDocumentInput
+  data: UpdateDriverDocumentDto
 ): Promise<DriverDocument> {
   return authenticatedRequest<DriverDocument>(
     `/api/drivers/documents/${documentId}`,
@@ -315,8 +370,8 @@ export async function updateDriverDocument(
 export async function deleteDriverDocument(
   token: string,
   documentId: number
-): Promise<{ message: string }> {
-  return authenticatedRequest<{ message: string }>(
+): Promise<DeleteResponse> {
+  return authenticatedRequest<DeleteResponse>(
     `/api/drivers/documents/${documentId}`,
     token,
     {
@@ -334,8 +389,7 @@ export async function deleteDriverDocument(
  */
 export async function assignDriverToVehicle(
   token: string,
-  driverId: number,
-  data: AssignDriverToVehicleInput
+  data: AssignDriverToVehicleDto
 ): Promise<DriverVehicleAssignmentWithVehicle> {
   return authenticatedRequest<DriverVehicleAssignmentWithVehicle>(
     `/api/operations/assignments`,
@@ -353,7 +407,7 @@ export async function assignDriverToVehicle(
 export async function unassignDriverFromVehicle(
   token: string,
   assignmentId: number,
-  data?: UnassignDriverFromVehicleInput
+  data?: UnassignDriverFromVehicleDto
 ): Promise<DriverVehicleAssignmentWithVehicle> {
   return authenticatedRequest<DriverVehicleAssignmentWithVehicle>(
     `/api/operations/assignments/${assignmentId}/unassign`,
@@ -401,8 +455,8 @@ export async function getActiveDriverVehicleAssignment(
 export async function getDriverOperations(
   token: string,
   driverId: number,
-  params?: DriverOperationQueryParams
-): Promise<DriverPaginatedOperations> {
+  params?: OperationQueryDto
+): Promise<PaginatedOperations> {
   const queryParams = new URLSearchParams();
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
@@ -412,7 +466,7 @@ export async function getDriverOperations(
     });
   }
   const queryString = queryParams.toString();
-  return authenticatedRequest<DriverPaginatedOperations>(
+  return authenticatedRequest<PaginatedOperations>(
     `/api/operations/driver/${driverId}/history${
       queryString ? `?${queryString}` : ""
     }`,
@@ -442,7 +496,7 @@ export async function getDriverStatistics(
  */
 export async function getVehicles(
   token: string,
-  params?: VehicleQueryParams
+  params?: VehicleQueryDto
 ): Promise<PaginatedVehicles> {
   const queryParams = new URLSearchParams();
   if (params) {
@@ -474,7 +528,7 @@ export async function getVehicleById(
  */
 export async function createVehicle(
   token: string,
-  data: CreateVehicleInput
+  data: CreateVehicleDto
 ): Promise<Vehicle> {
   return authenticatedRequest<Vehicle>("/api/vehicles", token, {
     method: "POST",
@@ -488,7 +542,7 @@ export async function createVehicle(
 export async function updateVehicle(
   token: string,
   id: number,
-  data: UpdateVehicleInput
+  data: UpdateVehicleDto
 ): Promise<Vehicle> {
   return authenticatedRequest<Vehicle>(`/api/vehicles/${id}`, token, {
     method: "PUT",
@@ -502,45 +556,23 @@ export async function updateVehicle(
 export async function deleteVehicle(
   token: string,
   id: number
-): Promise<{ message: string }> {
-  return authenticatedRequest<{ message: string }>(
-    `/api/vehicles/${id}`,
-    token,
-    {
-      method: "DELETE",
-    }
-  );
+): Promise<DeleteResponse> {
+  return authenticatedRequest<DeleteResponse>(`/api/vehicles/${id}`, token, {
+    method: "DELETE",
+  });
 }
 
 // ============================================================================
 // OPERATIONS API
 // ============================================================================
 
-import type {
-  Operation,
-  OperationWithDetails,
-  CreateOperationInput,
-  UpdateOperationInput,
-  OperationQueryParams,
-  PaginatedOperations as PaginatedOperationsType,
-  OperationStatistics,
-  DaySchedule,
-  WeekSchedule,
-  MonthSchedule,
-  TransportAssignment,
-  AssignTransportProviderInput,
-  ConfirmTransportAssignmentInput,
-  TransportOrder,
-  CreateTransportOrderInput,
-} from "@/types/operations";
-
 /**
  * Get all operations with filtering and pagination
  */
 export async function getOperations(
   token: string,
-  params?: OperationQueryParams
-): Promise<PaginatedOperationsType> {
+  params?: OperationQueryDto
+): Promise<PaginatedOperations> {
   const queryParams = new URLSearchParams();
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
@@ -550,7 +582,7 @@ export async function getOperations(
     });
   }
   const queryString = queryParams.toString();
-  return authenticatedRequest<PaginatedOperationsType>(
+  return authenticatedRequest<PaginatedOperations>(
     `/api/operations${queryString ? `?${queryString}` : ""}`,
     token
   );
@@ -574,7 +606,7 @@ export async function getOperationById(
  */
 export async function createOperation(
   token: string,
-  data: CreateOperationInput
+  data: CreateOperationDto
 ): Promise<OperationWithDetails> {
   return authenticatedRequest<OperationWithDetails>("/api/operations", token, {
     method: "POST",
@@ -588,7 +620,7 @@ export async function createOperation(
 export async function updateOperation(
   token: string,
   id: number,
-  data: UpdateOperationInput
+  data: UpdateOperationDto
 ): Promise<OperationWithDetails> {
   return authenticatedRequest<OperationWithDetails>(
     `/api/operations/${id}`,
@@ -606,14 +638,10 @@ export async function updateOperation(
 export async function deleteOperation(
   token: string,
   id: number
-): Promise<{ message: string }> {
-  return authenticatedRequest<{ message: string }>(
-    `/api/operations/${id}`,
-    token,
-    {
-      method: "DELETE",
-    }
-  );
+): Promise<DeleteResponse> {
+  return authenticatedRequest<DeleteResponse>(`/api/operations/${id}`, token, {
+    method: "DELETE",
+  });
 }
 
 /**
@@ -622,12 +650,7 @@ export async function deleteOperation(
 export async function generateOperationReport(
   token: string,
   id: number,
-  options?: {
-    includePhotos?: boolean;
-    includeTimeline?: boolean;
-    includeIncidents?: boolean;
-    language?: "es" | "en";
-  }
+  options?: GenerateReportDto
 ): Promise<Blob> {
   const response = await fetch(
     `${API_BASE_URL}/api/operations/${id}/generate-report`,
@@ -733,7 +756,7 @@ export async function getMonthSchedule(
  */
 export async function assignTransportProvider(
   token: string,
-  data: AssignTransportProviderInput
+  data: AssignTransportProviderDto
 ): Promise<TransportAssignment> {
   return authenticatedRequest<TransportAssignment>(
     "/api/operations/assignments",
@@ -751,7 +774,7 @@ export async function assignTransportProvider(
 export async function confirmTransportAssignment(
   token: string,
   assignmentId: number,
-  data: ConfirmTransportAssignmentInput
+  data: ConfirmTransportAssignmentDto
 ): Promise<TransportAssignment> {
   return authenticatedRequest<TransportAssignment>(
     `/api/operations/assignments/${assignmentId}/confirm`,
@@ -785,7 +808,7 @@ export async function getOperationAssignments(
  */
 export async function createTransportOrder(
   token: string,
-  data: CreateTransportOrderInput
+  data: CreateTransportOrderDto
 ): Promise<TransportOrder> {
   return authenticatedRequest<TransportOrder>(
     "/api/operations/transport-orders",
@@ -827,25 +850,12 @@ export async function getOperationTransportOrders(
 // CLIENTS API
 // ============================================================================
 
-import type {
-  Client,
-  CreateClientInput,
-  UpdateClientInput,
-  ClientQueryParams,
-  PaginatedClients,
-  ClientStatistics,
-  ClientOperationsQueryParams,
-  PaginatedClientOperations,
-  IndustryAnalytics,
-  TopClient,
-} from "@/types/clients";
-
 /**
  * Get all clients with filtering and pagination
  */
 export async function getClients(
   token: string,
-  params?: ClientQueryParams
+  params?: ClientQueryDto
 ): Promise<PaginatedClients> {
   const queryParams = new URLSearchParams();
   if (params) {
@@ -877,7 +887,7 @@ export async function getClientById(
  */
 export async function createClient(
   token: string,
-  data: CreateClientInput
+  data: CreateClientDto
 ): Promise<Client> {
   return authenticatedRequest<Client>("/api/clients", token, {
     method: "POST",
@@ -891,7 +901,7 @@ export async function createClient(
 export async function updateClient(
   token: string,
   id: number,
-  data: UpdateClientInput
+  data: UpdateClientDto
 ): Promise<Client> {
   return authenticatedRequest<Client>(`/api/clients/${id}`, token, {
     method: "PUT",
@@ -905,14 +915,10 @@ export async function updateClient(
 export async function deleteClient(
   token: string,
   id: number
-): Promise<{ message: string }> {
-  return authenticatedRequest<{ message: string }>(
-    `/api/clients/${id}`,
-    token,
-    {
-      method: "DELETE",
-    }
-  );
+): Promise<DeleteResponse> {
+  return authenticatedRequest<DeleteResponse>(`/api/clients/${id}`, token, {
+    method: "DELETE",
+  });
 }
 
 /**
@@ -921,8 +927,8 @@ export async function deleteClient(
 export async function permanentlyDeleteClient(
   token: string,
   id: number
-): Promise<{ message: string }> {
-  return authenticatedRequest<{ message: string }>(
+): Promise<DeleteResponse> {
+  return authenticatedRequest<DeleteResponse>(
     `/api/clients/${id}/permanent`,
     token,
     {
@@ -937,7 +943,7 @@ export async function permanentlyDeleteClient(
 export async function getClientOperations(
   token: string,
   clientId: number,
-  params?: ClientOperationsQueryParams
+  params?: ClientOperationsQueryDto
 ): Promise<PaginatedClientOperations> {
   const queryParams = new URLSearchParams();
   if (params) {
@@ -1029,21 +1035,12 @@ export async function getTopClientsByOperations(
 // ROUTES API
 // ============================================================================
 
-import type {
-  Route,
-  CreateRouteInput,
-  UpdateRouteInput,
-  RouteQueryParams,
-  PaginatedRoutes,
-  RouteStatistics,
-} from "@/types/routes";
-
 /**
  * Get all routes with filtering and pagination
  */
 export async function getRoutes(
   token: string,
-  params?: RouteQueryParams
+  params?: RouteQueryDto
 ): Promise<PaginatedRoutes> {
   const queryParams = new URLSearchParams();
   if (params) {
@@ -1072,7 +1069,7 @@ export async function getRouteById(token: string, id: number): Promise<Route> {
  */
 export async function createRoute(
   token: string,
-  data: CreateRouteInput
+  data: CreateRouteDto
 ): Promise<Route> {
   return authenticatedRequest<Route>("/api/routes", token, {
     method: "POST",
@@ -1086,7 +1083,7 @@ export async function createRoute(
 export async function updateRoute(
   token: string,
   id: number,
-  data: UpdateRouteInput
+  data: UpdateRouteDto
 ): Promise<Route> {
   return authenticatedRequest<Route>(`/api/routes/${id}`, token, {
     method: "PUT",
@@ -1100,14 +1097,10 @@ export async function updateRoute(
 export async function deleteRoute(
   token: string,
   id: number
-): Promise<{ message: string; route: Route }> {
-  return authenticatedRequest<{ message: string; route: Route }>(
-    `/api/routes/${id}`,
-    token,
-    {
-      method: "DELETE",
-    }
-  );
+): Promise<DeleteRouteResponse> {
+  return authenticatedRequest<DeleteRouteResponse>(`/api/routes/${id}`, token, {
+    method: "DELETE",
+  });
 }
 
 /**
@@ -1127,22 +1120,12 @@ export async function getRouteStatistics(
 // PROVIDERS API
 // ============================================================================
 
-import type {
-  Provider,
-  CreateProviderInput,
-  UpdateProviderInput,
-  ProviderQueryParams,
-  PaginatedProviders,
-  ProviderStatistics,
-  PaginatedProviderOperations,
-} from "@/types/providers";
-
 /**
  * Get all providers with filtering and pagination
  */
 export async function getProviders(
   token: string,
-  params?: ProviderQueryParams
+  params?: ProviderQueryDto
 ): Promise<PaginatedProviders> {
   const queryParams = new URLSearchParams();
   if (params) {
@@ -1174,7 +1157,7 @@ export async function getProviderById(
  */
 export async function createProvider(
   token: string,
-  data: CreateProviderInput
+  data: CreateProviderDto
 ): Promise<Provider> {
   return authenticatedRequest<Provider>("/api/providers", token, {
     method: "POST",
@@ -1188,7 +1171,7 @@ export async function createProvider(
 export async function updateProvider(
   token: string,
   id: number,
-  data: UpdateProviderInput
+  data: UpdateProviderDto
 ): Promise<Provider> {
   return authenticatedRequest<Provider>(`/api/providers/${id}`, token, {
     method: "PUT",
@@ -1202,14 +1185,10 @@ export async function updateProvider(
 export async function deleteProvider(
   token: string,
   id: number
-): Promise<{ message: string }> {
-  return authenticatedRequest<{ message: string }>(
-    `/api/providers/${id}`,
-    token,
-    {
-      method: "DELETE",
-    }
-  );
+): Promise<DeleteResponse> {
+  return authenticatedRequest<DeleteResponse>(`/api/providers/${id}`, token, {
+    method: "DELETE",
+  });
 }
 
 /**
@@ -1247,92 +1226,68 @@ export async function getProviderOperations(
 }
 
 // ============================================================================
-// TRUCKS API
+// TRUCKS API (aliases for vehicles)
 // ============================================================================
-
-import type {
-  Truck,
-  CreateTruckInput,
-  UpdateTruckInput,
-  TruckQueryParams,
-  PaginatedTrucks,
-  TruckDocument,
-  CreateTruckDocumentInput,
-  UpdateTruckDocumentInput,
-  TruckOperation,
-  TruckStatistics,
-} from "@/types/trucks";
 
 /**
  * Get all trucks with filtering and pagination
+ * @deprecated Use getVehicles instead
  */
 export async function getTrucks(
   token: string,
-  params?: TruckQueryParams
+  params?: VehicleQueryDto
 ): Promise<PaginatedTrucks> {
-  const queryParams = new URLSearchParams();
-  if (params) {
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        queryParams.append(key, value.toString());
-      }
-    });
-  }
-  const queryString = queryParams.toString();
-  return authenticatedRequest<PaginatedTrucks>(
-    `/api/vehicles${queryString ? `?${queryString}` : ""}`,
-    token
-  );
+  const result = await getVehicles(token, params);
+  // Truck and Vehicle types are compatible, but we need to ensure proper typing
+  return result as unknown as PaginatedTrucks;
 }
 
 /**
  * Get a single truck by ID
+ * @deprecated Use getVehicleById instead
  */
 export async function getTruckById(token: string, id: number): Promise<Truck> {
-  return authenticatedRequest<Truck>(`/api/vehicles/${id}`, token);
+  const result = await getVehicleById(token, id);
+  // Truck and Vehicle types are compatible, but we need to ensure proper typing
+  return result as unknown as Truck;
 }
 
 /**
  * Create a new truck
+ * @deprecated Use createVehicle instead
  */
 export async function createTruck(
   token: string,
-  data: CreateTruckInput
+  data: CreateVehicleDto
 ): Promise<Truck> {
-  return authenticatedRequest<Truck>("/api/vehicles", token, {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
+  const result = await createVehicle(token, data);
+  // Truck and Vehicle types are compatible, but we need to ensure proper typing
+  return result as unknown as Truck;
 }
 
 /**
  * Update an existing truck
+ * @deprecated Use updateVehicle instead
  */
 export async function updateTruck(
   token: string,
   id: number,
-  data: UpdateTruckInput
+  data: UpdateVehicleDto
 ): Promise<Truck> {
-  return authenticatedRequest<Truck>(`/api/vehicles/${id}`, token, {
-    method: "PUT",
-    body: JSON.stringify(data),
-  });
+  const result = await updateVehicle(token, id, data);
+  // Truck and Vehicle types are compatible, but we need to ensure proper typing
+  return result as unknown as Truck;
 }
 
 /**
  * Delete a truck
+ * @deprecated Use deleteVehicle instead
  */
 export async function deleteTruck(
   token: string,
   id: number
-): Promise<{ message: string }> {
-  return authenticatedRequest<{ message: string }>(
-    `/api/vehicles/${id}`,
-    token,
-    {
-      method: "DELETE",
-    }
-  );
+): Promise<DeleteResponse> {
+  return deleteVehicle(token, id);
 }
 
 // ============================================================================
@@ -1357,7 +1312,7 @@ export async function getTruckDocuments(
  */
 export async function createTruckDocument(
   token: string,
-  data: CreateTruckDocumentInput
+  data: CreateVehicleDocumentDto
 ): Promise<TruckDocument> {
   return authenticatedRequest<TruckDocument>("/api/vehicles/documents", token, {
     method: "POST",
@@ -1371,7 +1326,7 @@ export async function createTruckDocument(
 export async function updateTruckDocument(
   token: string,
   documentId: number,
-  data: UpdateTruckDocumentInput
+  data: UpdateVehicleDocumentDto
 ): Promise<TruckDocument> {
   return authenticatedRequest<TruckDocument>(
     `/api/vehicles/documents/${documentId}`,
@@ -1389,8 +1344,8 @@ export async function updateTruckDocument(
 export async function deleteTruckDocument(
   token: string,
   documentId: number
-): Promise<{ message: string }> {
-  return authenticatedRequest<{ message: string }>(
+): Promise<DeleteResponse> {
+  return authenticatedRequest<DeleteResponse>(
     `/api/vehicles/documents/${documentId}`,
     token,
     {
@@ -1472,21 +1427,12 @@ export async function getTrucksStatsOverview(
 // OPERATORS API
 // ==========================================
 
-import type {
-  Operator,
-  CreateOperatorInput,
-  UpdateOperatorInput,
-  OperatorQueryParams,
-  PaginatedOperators,
-  OperatorStatistics,
-} from "@/types/operators";
-
 /**
  * Get all operators with filtering and pagination
  */
 export async function getOperators(
   token: string,
-  params?: OperatorQueryParams
+  params?: OperatorQueryDto
 ): Promise<PaginatedOperators> {
   const queryParams = new URLSearchParams();
   if (params) {
@@ -1518,7 +1464,7 @@ export async function getOperatorById(
  */
 export async function createOperator(
   token: string,
-  data: CreateOperatorInput
+  data: CreateOperatorDto
 ): Promise<Operator> {
   return authenticatedRequest<Operator>("/api/operators", token, {
     method: "POST",
@@ -1532,7 +1478,7 @@ export async function createOperator(
 export async function updateOperator(
   token: string,
   id: number,
-  data: UpdateOperatorInput
+  data: UpdateOperatorDto
 ): Promise<Operator> {
   return authenticatedRequest<Operator>(`/api/operators/${id}`, token, {
     method: "PUT",
@@ -1546,14 +1492,10 @@ export async function updateOperator(
 export async function deleteOperator(
   token: string,
   id: number
-): Promise<{ message: string }> {
-  return authenticatedRequest<{ message: string }>(
-    `/api/operators/${id}`,
-    token,
-    {
-      method: "DELETE",
-    }
-  );
+): Promise<DeleteResponse> {
+  return authenticatedRequest<DeleteResponse>(`/api/operators/${id}`, token, {
+    method: "DELETE",
+  });
 }
 
 /**
@@ -1573,20 +1515,12 @@ export async function getOperatorStatistics(
 // ROLES API
 // ==========================================
 
-import type {
-  Role,
-  CreateRoleInput,
-  UpdateRoleInput,
-  RoleQueryParams,
-  PaginatedRoles,
-} from "@/types/roles";
-
 /**
  * Get all roles with filtering and pagination
  */
 export async function getRoles(
   token: string,
-  params?: RoleQueryParams
+  params?: RoleQueryDto
 ): Promise<PaginatedRoles> {
   const queryParams = new URLSearchParams();
   if (params) {
@@ -1615,7 +1549,7 @@ export async function getRoleById(token: string, id: number): Promise<Role> {
  */
 export async function createRole(
   token: string,
-  data: CreateRoleInput
+  data: RoleCreateDto
 ): Promise<Role> {
   return authenticatedRequest<Role>("/api/roles", token, {
     method: "POST",
@@ -1629,7 +1563,7 @@ export async function createRole(
 export async function updateRole(
   token: string,
   id: number,
-  data: UpdateRoleInput
+  data: RoleUpdateDto
 ): Promise<Role> {
   return authenticatedRequest<Role>(`/api/roles/${id}`, token, {
     method: "PUT",
@@ -1643,8 +1577,8 @@ export async function updateRole(
 export async function deleteRole(
   token: string,
   id: number
-): Promise<{ message: string }> {
-  return authenticatedRequest<{ message: string }>(`/api/roles/${id}`, token, {
+): Promise<DeleteResponse> {
+  return authenticatedRequest<DeleteResponse>(`/api/roles/${id}`, token, {
     method: "DELETE",
   });
 }
@@ -1653,23 +1587,12 @@ export async function deleteRole(
 // USERS API
 // ==========================================
 
-import type {
-  User,
-  CreateUserInput,
-  UpdateUserInput,
-  UserQueryParams,
-  PaginatedUsers,
-  UserWithStats,
-  UserActivity,
-  UserActivityQueryParams,
-} from "@/types/users";
-
 /**
  * Get all users with filtering and pagination
  */
 export async function getUsers(
   token: string,
-  params?: UserQueryParams
+  params?: UserQueryDto
 ): Promise<PaginatedUsers> {
   const queryParams = new URLSearchParams();
   if (params) {
@@ -1708,7 +1631,7 @@ export async function getUserWithStats(
  */
 export async function createUser(
   token: string,
-  data: CreateUserInput
+  data: CreateUserDto
 ): Promise<User> {
   return authenticatedRequest<User>("/api/users", token, {
     method: "POST",
@@ -1722,7 +1645,7 @@ export async function createUser(
 export async function updateUser(
   token: string,
   id: number,
-  data: UpdateUserInput
+  data: UpdateUserDto
 ): Promise<User> {
   return authenticatedRequest<User>(`/api/users/${id}`, token, {
     method: "PUT",
@@ -1736,8 +1659,8 @@ export async function updateUser(
 export async function deleteUser(
   token: string,
   id: number
-): Promise<{ message: string }> {
-  return authenticatedRequest<{ message: string }>(`/api/users/${id}`, token, {
+): Promise<DeleteResponse> {
+  return authenticatedRequest<DeleteResponse>(`/api/users/${id}`, token, {
     method: "DELETE",
   });
 }
@@ -1747,16 +1670,8 @@ export async function deleteUser(
  */
 export async function getUserActivity(
   token: string,
-  params: UserActivityQueryParams
-): Promise<{
-  data: UserActivity[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-}> {
+  params: UserActivityQueryDto
+): Promise<UserActivityResponse> {
   const queryParams = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null) {
@@ -1764,13 +1679,8 @@ export async function getUserActivity(
     }
   });
   const queryString = queryParams.toString();
-  return authenticatedRequest<{
-    data: UserActivity[];
-    pagination: {
-      page: number;
-      limit: number;
-      total: number;
-      totalPages: number;
-    };
-  }>(`/api/users/activity${queryString ? `?${queryString}` : ""}`, token);
+  return authenticatedRequest<UserActivityResponse>(
+    `/api/users/activity${queryString ? `?${queryString}` : ""}`,
+    token
+  );
 }
