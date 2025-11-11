@@ -1,0 +1,2751 @@
+openapi: 3.0.3
+info:
+  title: RutaLink API
+  description: |
+    Documentación de la API de RutaLink.
+    Esta API proporciona endpoints para gestionar operadores, usuarios, roles, clientes, conductores, vehículos, rutas, proveedores y operaciones.
+  version: 0.1.0
+  contact:
+    name: Gustavo Reyes
+    email: hello@gustavorh.com
+
+servers:
+  - url: http://localhost:3030/api
+    description: Local development server
+  - url: https://srv.rutalink.gustavorh.com/api
+    description: Production server
+
+tags:
+  - name: Auth
+    description: Authentication and authorization endpoints
+  - name: Users
+    description: User management endpoints
+  - name: Operators
+    description: Operator management endpoints
+  - name: Roles
+    description: Role and permission management endpoints
+  - name: Clients
+    description: Client management endpoints
+  - name: Drivers
+    description: Driver management endpoints
+  - name: Vehicles
+    description: Vehicle management endpoints
+  - name: Routes
+    description: Route management endpoints
+  - name: Providers
+    description: Provider management endpoints
+  - name: Operations
+    description: Operation management endpoints
+  - name: Audit
+    description: Audit log endpoints
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from /api/auth/login
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+        message:
+          type: string | array
+        error:
+          type: string
+
+    # Auth Schemas
+    RegisterDto:
+      type: object
+      required:
+        - username
+        - email
+        - password
+        - firstName
+        - lastName
+        - operatorId
+        - roleId
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 50
+          pattern: '^[a-zA-Z0-9_]+$'
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+          maxLength: 100
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        operatorId:
+          type: integer
+          minimum: 1
+        roleId:
+          type: integer
+          minimum: 1
+
+    LoginDto:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+
+    AuthResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        user:
+          $ref: '#/components/schemas/UserResponse'
+
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        operatorId:
+          type: integer
+        roleId:
+          type: integer
+        operator:
+          type: object
+          properties:
+            id:
+              type: integer
+            name:
+              type: string
+            super:
+              type: boolean
+        role:
+          type: object
+          properties:
+            id:
+              type: integer
+            name:
+              type: string
+
+    # User Schemas
+    CreateUserDto:
+      type: object
+      required:
+        - username
+        - email
+        - password
+        - firstName
+        - lastName
+        - operatorId
+        - roleId
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 50
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        operatorId:
+          type: integer
+          minimum: 1
+        roleId:
+          type: integer
+          minimum: 1
+        status:
+          type: boolean
+          default: true
+
+    UpdateUserDto:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        roleId:
+          type: integer
+          minimum: 1
+        status:
+          type: boolean
+
+    # Operator Schemas
+    CreateOperatorDto:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        rut:
+          type: string
+          maxLength: 12
+          pattern: '^\d{1,2}\.\d{3}\.\d{3}-[\dkK]$'
+        super:
+          type: boolean
+          default: false
+        expiration:
+          type: string
+          format: date-time
+        status:
+          type: boolean
+          default: true
+
+    UpdateOperatorDto:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        rut:
+          type: string
+          maxLength: 12
+        super:
+          type: boolean
+        expiration:
+          type: string
+          format: date-time
+        status:
+          type: boolean
+
+    # Role Schemas
+    CreateRoleDto:
+      type: object
+      required:
+        - name
+        - operatorId
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        operatorId:
+          type: integer
+          minimum: 1
+        permissions:
+          type: array
+          items:
+            type: string
+
+    UpdateRoleDto:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        permissions:
+          type: array
+          items:
+            type: string
+
+    # Client Schemas
+    CreateClientDto:
+      type: object
+      required:
+        - operatorId
+        - businessName
+      properties:
+        operatorId:
+          type: integer
+          minimum: 1
+        businessName:
+          type: string
+          maxLength: 255
+        taxId:
+          type: string
+          maxLength: 20
+        contactName:
+          type: string
+          maxLength: 200
+        contactEmail:
+          type: string
+          format: email
+          maxLength: 255
+        contactPhone:
+          type: string
+          maxLength: 20
+        address:
+          type: string
+          maxLength: 500
+        city:
+          type: string
+          maxLength: 100
+        region:
+          type: string
+          maxLength: 100
+        country:
+          type: string
+          maxLength: 100
+          default: Chile
+        industry:
+          type: string
+          enum:
+            - minería
+            - construcción
+            - industrial
+            - agricultura
+            - transporte
+            - energía
+            - forestal
+            - pesca
+            - retail
+            - servicios
+            - manufactura
+            - tecnología
+            - otro
+        status:
+          type: boolean
+          default: true
+        observations:
+          type: string
+          maxLength: 1000
+        notes:
+          type: string
+          maxLength: 1000
+
+    UpdateClientDto:
+      type: object
+      properties:
+        businessName:
+          type: string
+          maxLength: 255
+        taxId:
+          type: string
+          maxLength: 20
+        contactName:
+          type: string
+          maxLength: 200
+        contactEmail:
+          type: string
+          format: email
+        contactPhone:
+          type: string
+          maxLength: 20
+        address:
+          type: string
+          maxLength: 500
+        city:
+          type: string
+          maxLength: 100
+        region:
+          type: string
+          maxLength: 100
+        country:
+          type: string
+          maxLength: 100
+        industry:
+          type: string
+          enum:
+            - minería
+            - construcción
+            - industrial
+            - agricultura
+            - transporte
+            - energía
+            - forestal
+            - pesca
+            - retail
+            - servicios
+            - manufactura
+            - tecnología
+            - otro
+        status:
+          type: boolean
+        observations:
+          type: string
+          maxLength: 1000
+        notes:
+          type: string
+          maxLength: 1000
+
+    # Driver Schemas
+    CreateDriverDto:
+      type: object
+      required:
+        - operatorId
+        - rut
+        - firstName
+        - lastName
+        - licenseType
+        - licenseNumber
+        - licenseExpirationDate
+      properties:
+        operatorId:
+          type: integer
+          minimum: 1
+        rut:
+          type: string
+          maxLength: 12
+        firstName:
+          type: string
+          maxLength: 100
+        lastName:
+          type: string
+          maxLength: 100
+        email:
+          type: string
+          format: email
+          maxLength: 255
+        phone:
+          type: string
+          maxLength: 20
+        emergencyContactName:
+          type: string
+          maxLength: 200
+        emergencyContactPhone:
+          type: string
+          maxLength: 20
+        licenseType:
+          type: string
+          enum: [A1, A2, A3, A4, A5, B, C, D, E, F]
+        licenseNumber:
+          type: string
+          maxLength: 50
+        licenseExpirationDate:
+          type: string
+          format: date-time
+        dateOfBirth:
+          type: string
+          format: date-time
+        address:
+          type: string
+          maxLength: 500
+        city:
+          type: string
+          maxLength: 100
+        region:
+          type: string
+          maxLength: 100
+        status:
+          type: boolean
+          default: true
+        isExternal:
+          type: boolean
+          default: false
+        externalCompany:
+          type: string
+          maxLength: 255
+        notes:
+          type: string
+          maxLength: 1000
+
+    UpdateDriverDto:
+      type: object
+      properties:
+        firstName:
+          type: string
+          maxLength: 100
+        lastName:
+          type: string
+          maxLength: 100
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+          maxLength: 20
+        emergencyContactName:
+          type: string
+          maxLength: 200
+        emergencyContactPhone:
+          type: string
+          maxLength: 20
+        licenseType:
+          type: string
+          enum: [A1, A2, A3, A4, A5, B, C, D, E, F]
+        licenseNumber:
+          type: string
+          maxLength: 50
+        licenseExpirationDate:
+          type: string
+          format: date-time
+        dateOfBirth:
+          type: string
+          format: date-time
+        address:
+          type: string
+          maxLength: 500
+        city:
+          type: string
+          maxLength: 100
+        region:
+          type: string
+          maxLength: 100
+        status:
+          type: boolean
+        isExternal:
+          type: boolean
+        externalCompany:
+          type: string
+          maxLength: 255
+        notes:
+          type: string
+          maxLength: 1000
+
+    # Vehicle Schemas
+    CreateVehicleDto:
+      type: object
+      required:
+        - plateNumber
+        - vehicleType
+      properties:
+        plateNumber:
+          type: string
+          maxLength: 20
+        brand:
+          type: string
+          maxLength: 100
+        model:
+          type: string
+          maxLength: 100
+        year:
+          type: integer
+          minimum: 1900
+        vehicleType:
+          type: string
+          enum:
+            - truck
+            - van
+            - pickup
+            - flatbed
+            - trailer
+            - dump_truck
+            - crane_truck
+            - other
+        capacity:
+          type: integer
+          minimum: 0
+        capacityUnit:
+          type: string
+          enum: [kg, tons, m3, passengers]
+        vin:
+          type: string
+          maxLength: 50
+        color:
+          type: string
+          maxLength: 50
+        status:
+          type: boolean
+          default: true
+        notes:
+          type: string
+          maxLength: 1000
+
+    UpdateVehicleDto:
+      type: object
+      properties:
+        plateNumber:
+          type: string
+          maxLength: 20
+        brand:
+          type: string
+          maxLength: 100
+        model:
+          type: string
+          maxLength: 100
+        year:
+          type: integer
+          minimum: 1900
+        vehicleType:
+          type: string
+          enum:
+            - truck
+            - van
+            - pickup
+            - flatbed
+            - trailer
+            - dump_truck
+            - crane_truck
+            - other
+        capacity:
+          type: integer
+          minimum: 0
+        capacityUnit:
+          type: string
+          enum: [kg, tons, m3, passengers]
+        vin:
+          type: string
+          maxLength: 50
+        color:
+          type: string
+          maxLength: 50
+        status:
+          type: boolean
+        notes:
+          type: string
+          maxLength: 1000
+
+    # Route Schemas
+    CreateRouteDto:
+      type: object
+      required:
+        - name
+        - origin
+        - destination
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        code:
+          type: string
+          maxLength: 50
+        origin:
+          type: string
+          maxLength: 500
+        destination:
+          type: string
+          maxLength: 500
+        distance:
+          type: integer
+          minimum: 0
+        estimatedDuration:
+          type: integer
+          minimum: 0
+        routeType:
+          type: string
+          enum:
+            - urbana
+            - interurbana
+            - minera
+            - rural
+            - carretera
+            - montaña
+            - otra
+        difficulty:
+          type: string
+          enum: [fácil, moderada, difícil]
+        roadConditions:
+          type: string
+          maxLength: 500
+        tollsRequired:
+          type: boolean
+          default: false
+        estimatedTollCost:
+          type: integer
+          minimum: 0
+        observations:
+          type: string
+          maxLength: 1000
+        notes:
+          type: string
+          maxLength: 1000
+
+    UpdateRouteDto:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        code:
+          type: string
+          maxLength: 50
+        origin:
+          type: string
+          maxLength: 500
+        destination:
+          type: string
+          maxLength: 500
+        distance:
+          type: integer
+          minimum: 0
+        estimatedDuration:
+          type: integer
+          minimum: 0
+        routeType:
+          type: string
+          enum:
+            - urbana
+            - interurbana
+            - minera
+            - rural
+            - carretera
+            - montaña
+            - otra
+        difficulty:
+          type: string
+          enum: [fácil, moderada, difícil]
+        roadConditions:
+          type: string
+          maxLength: 500
+        tollsRequired:
+          type: boolean
+        estimatedTollCost:
+          type: integer
+          minimum: 0
+        status:
+          type: boolean
+        observations:
+          type: string
+          maxLength: 1000
+        notes:
+          type: string
+          maxLength: 1000
+
+    # Provider Schemas
+    CreateProviderDto:
+      type: object
+      required:
+        - operatorId
+        - businessName
+      properties:
+        operatorId:
+          type: integer
+          minimum: 1
+        businessName:
+          type: string
+          maxLength: 255
+        taxId:
+          type: string
+          maxLength: 20
+        contactName:
+          type: string
+          maxLength: 200
+        contactEmail:
+          type: string
+          format: email
+          maxLength: 255
+        contactPhone:
+          type: string
+          maxLength: 20
+        address:
+          type: string
+          maxLength: 500
+        city:
+          type: string
+          maxLength: 100
+        region:
+          type: string
+          maxLength: 100
+        country:
+          type: string
+          maxLength: 100
+          default: Chile
+        businessType:
+          type: string
+          maxLength: 100
+        serviceTypes:
+          type: string
+          maxLength: 500
+        fleetSize:
+          type: integer
+          minimum: 0
+        status:
+          type: boolean
+          default: true
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        observations:
+          type: string
+          maxLength: 1000
+        notes:
+          type: string
+          maxLength: 1000
+
+    UpdateProviderDto:
+      type: object
+      properties:
+        businessName:
+          type: string
+          maxLength: 255
+        taxId:
+          type: string
+          maxLength: 20
+        contactName:
+          type: string
+          maxLength: 200
+        contactEmail:
+          type: string
+          format: email
+        contactPhone:
+          type: string
+          maxLength: 20
+        address:
+          type: string
+          maxLength: 500
+        city:
+          type: string
+          maxLength: 100
+        region:
+          type: string
+          maxLength: 100
+        country:
+          type: string
+          maxLength: 100
+        businessType:
+          type: string
+          maxLength: 100
+        serviceTypes:
+          type: string
+          maxLength: 500
+        fleetSize:
+          type: integer
+          minimum: 0
+        status:
+          type: boolean
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        observations:
+          type: string
+          maxLength: 1000
+        notes:
+          type: string
+          maxLength: 1000
+
+    # Operation Schemas
+    CreateOperationDto:
+      type: object
+      required:
+        - operatorId
+        - driverId
+        - vehicleId
+        - operationNumber
+        - operationType
+        - origin
+        - destination
+        - scheduledStartDate
+      properties:
+        operatorId:
+          type: integer
+          minimum: 1
+        clientId:
+          type: integer
+        providerId:
+          type: integer
+        routeId:
+          type: integer
+        driverId:
+          type: integer
+          minimum: 1
+        vehicleId:
+          type: integer
+          minimum: 1
+        operationNumber:
+          type: string
+          maxLength: 50
+        operationType:
+          type: string
+          maxLength: 50
+        origin:
+          type: string
+          maxLength: 500
+        destination:
+          type: string
+          maxLength: 500
+        scheduledStartDate:
+          type: string
+          format: date-time
+        scheduledEndDate:
+          type: string
+          format: date-time
+        distance:
+          type: integer
+        cargoDescription:
+          type: string
+          maxLength: 1000
+        cargoWeight:
+          type: integer
+        notes:
+          type: string
+          maxLength: 1000
+
+    UpdateOperationDto:
+      type: object
+      properties:
+        clientId:
+          type: integer
+        providerId:
+          type: integer
+        routeId:
+          type: integer
+        driverId:
+          type: integer
+        vehicleId:
+          type: integer
+        operationType:
+          type: string
+          maxLength: 50
+        origin:
+          type: string
+          maxLength: 500
+        destination:
+          type: string
+          maxLength: 500
+        scheduledStartDate:
+          type: string
+          format: date-time
+        scheduledEndDate:
+          type: string
+          format: date-time
+        actualStartDate:
+          type: string
+          format: date-time
+        actualEndDate:
+          type: string
+          format: date-time
+        distance:
+          type: integer
+        status:
+          type: string
+          enum: [scheduled, in-progress, completed, cancelled]
+        cargoDescription:
+          type: string
+          maxLength: 1000
+        cargoWeight:
+          type: integer
+        notes:
+          type: string
+          maxLength: 1000
+
+    # Driver-Vehicle Assignment DTOs
+    AssignDriverToVehicleDto:
+      type: object
+      required:
+        - driverId
+        - vehicleId
+      properties:
+        driverId:
+          type: integer
+          minimum: 1
+        vehicleId:
+          type: integer
+          minimum: 1
+        notes:
+          type: string
+          maxLength: 500
+
+    UnassignDriverFromVehicleDto:
+      type: object
+      properties:
+        notes:
+          type: string
+          maxLength: 500
+
+    # PDF Report DTOs
+    GenerateReportDto:
+      type: object
+      properties:
+        includePhotos:
+          type: boolean
+          default: true
+        includeTimeline:
+          type: boolean
+          default: true
+        includeIncidents:
+          type: boolean
+          default: true
+        language:
+          type: string
+          enum: [es, en]
+          default: es
+
+    # Driver Document DTOs
+    CreateDriverDocumentDto:
+      type: object
+      required:
+        - driverId
+        - documentType
+        - documentName
+        - fileName
+        - filePath
+      properties:
+        driverId:
+          type: integer
+          minimum: 1
+        documentType:
+          type: string
+          enum: [license, certificate, medical, psychotechnical, training, insurance, other]
+        documentName:
+          type: string
+          maxLength: 255
+        fileName:
+          type: string
+          maxLength: 255
+        filePath:
+          type: string
+          maxLength: 500
+        fileSize:
+          type: integer
+        mimeType:
+          type: string
+          maxLength: 100
+        issueDate:
+          type: string
+          format: date-time
+        expirationDate:
+          type: string
+          format: date-time
+        notes:
+          type: string
+          maxLength: 500
+
+    UpdateDriverDocumentDto:
+      type: object
+      properties:
+        documentName:
+          type: string
+          maxLength: 255
+        issueDate:
+          type: string
+          format: date-time
+        expirationDate:
+          type: string
+          format: date-time
+        notes:
+          type: string
+          maxLength: 500
+
+    # Vehicle Document DTOs
+    CreateVehicleDocumentDto:
+      type: object
+      required:
+        - vehicleId
+        - documentType
+        - documentName
+      properties:
+        vehicleId:
+          type: integer
+          minimum: 1
+        documentType:
+          type: string
+          enum: [circulation_permit, technical_review, insurance, ownership, gas_certification, other]
+        documentName:
+          type: string
+          maxLength: 255
+        fileName:
+          type: string
+          maxLength: 255
+        filePath:
+          type: string
+          maxLength: 500
+        fileSize:
+          type: integer
+        mimeType:
+          type: string
+          maxLength: 100
+        issueDate:
+          type: string
+          format: date-time
+        expirationDate:
+          type: string
+          format: date-time
+        insuranceCompany:
+          type: string
+          maxLength: 255
+        policyNumber:
+          type: string
+          maxLength: 100
+        coverageAmount:
+          type: integer
+          minimum: 0
+        notes:
+          type: string
+          maxLength: 500
+
+    UpdateVehicleDocumentDto:
+      type: object
+      properties:
+        documentType:
+          type: string
+          enum: [circulation_permit, technical_review, insurance, ownership, gas_certification, other]
+        documentName:
+          type: string
+          maxLength: 255
+        fileName:
+          type: string
+          maxLength: 255
+        filePath:
+          type: string
+          maxLength: 500
+        fileSize:
+          type: integer
+        mimeType:
+          type: string
+          maxLength: 100
+        issueDate:
+          type: string
+          format: date-time
+        expirationDate:
+          type: string
+          format: date-time
+        insuranceCompany:
+          type: string
+          maxLength: 255
+        policyNumber:
+          type: string
+          maxLength: 100
+        coverageAmount:
+          type: integer
+          minimum: 0
+        notes:
+          type: string
+          maxLength: 500
+
+    # Client Operations Query DTO
+    ClientOperationsQueryDto:
+      type: object
+      properties:
+        status:
+          type: string
+        operationType:
+          type: string
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+        page:
+          type: integer
+          minimum: 1
+          default: 1
+        limit:
+          type: integer
+          minimum: 1
+          default: 10
+
+paths:
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a new user
+      description: Create a new user account
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterDto'
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login user
+      description: Authenticate user and receive JWT token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginDto'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users:
+    get:
+      tags: [Users]
+      summary: Get all users
+      description: Retrieve a list of users with optional filters
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: roleId
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: boolean
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: List of users
+        '401':
+          description: Unauthorized
+    post:
+      tags: [Users]
+      summary: Create a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserDto'
+      responses:
+        '201':
+          description: User created successfully
+        '400':
+          description: Bad request
+
+  /users/{id}:
+    get:
+      tags: [Users]
+      summary: Get user by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User details
+        '404':
+          description: User not found
+    put:
+      tags: [Users]
+      summary: Update user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserDto'
+      responses:
+        '200':
+          description: User updated successfully
+    delete:
+      tags: [Users]
+      summary: Delete user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: User deleted successfully
+
+  /operators:
+    get:
+      tags: [Operators]
+      summary: Get all operators
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: boolean
+        - name: super
+          in: query
+          schema:
+            type: boolean
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of operators
+    post:
+      tags: [Operators]
+      summary: Create a new operator
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOperatorDto'
+      responses:
+        '201':
+          description: Operator created successfully
+
+  /operators/{id}:
+    get:
+      tags: [Operators]
+      summary: Get operator by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Operator details
+    put:
+      tags: [Operators]
+      summary: Update operator
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateOperatorDto'
+      responses:
+        '200':
+          description: Operator updated successfully
+    delete:
+      tags: [Operators]
+      summary: Delete operator
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Operator deleted successfully
+
+  /operators/{id}/statistics:
+    get:
+      tags: [Operators]
+      summary: Get operator statistics
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Operator statistics
+
+  /roles:
+    get:
+      tags: [Roles]
+      summary: Get all roles
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: boolean
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of roles
+    post:
+      tags: [Roles]
+      summary: Create a new role
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRoleDto'
+      responses:
+        '201':
+          description: Role created successfully
+
+  /roles/{id}:
+    get:
+      tags: [Roles]
+      summary: Get role by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Role details
+    put:
+      tags: [Roles]
+      summary: Update role
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRoleDto'
+      responses:
+        '200':
+          description: Role updated successfully
+    delete:
+      tags: [Roles]
+      summary: Delete role
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Role deleted successfully
+
+  /clients:
+    get:
+      tags: [Clients]
+      summary: Get all clients
+      parameters:
+        - name: operatorId
+          in: query
+          schema:
+            type: integer
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: boolean
+        - name: industry
+          in: query
+          schema:
+            type: string
+        - name: city
+          in: query
+          schema:
+            type: string
+        - name: region
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: List of clients
+    post:
+      tags: [Clients]
+      summary: Create a new client
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateClientDto'
+      responses:
+        '201':
+          description: Client created successfully
+
+  /clients/{id}:
+    get:
+      tags: [Clients]
+      summary: Get client by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Client details
+    put:
+      tags: [Clients]
+      summary: Update client
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateClientDto'
+      responses:
+        '200':
+          description: Client updated successfully
+    delete:
+      tags: [Clients]
+      summary: Delete client
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Client deleted successfully
+
+  /clients/{id}/operations:
+    get:
+      tags: [Clients]
+      summary: Get client operations
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: operationType
+          in: query
+          schema:
+            type: string
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Client operations
+
+  /clients/{id}/statistics:
+    get:
+      tags: [Clients]
+      summary: Get client statistics
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Client statistics
+
+  /clients/{id}/permanent:
+    delete:
+      tags: [Clients]
+      summary: Permanently delete client
+      description: Permanently delete a client (hard delete)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Client permanently deleted
+        '404':
+          description: Client not found
+
+  /clients/{id}/recent-operations:
+    get:
+      tags: [Clients]
+      summary: Get recent client operations
+      description: Get recent operations for a client
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 5
+      responses:
+        '200':
+          description: Recent client operations
+        '404':
+          description: Client not found
+
+  /clients/analytics/by-industry:
+    get:
+      tags: [Clients]
+      summary: Get clients by industry analytics
+      description: Get analytics grouped by industry
+      parameters:
+        - name: operatorId
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Clients analytics by industry
+
+  /clients/analytics/top-clients:
+    get:
+      tags: [Clients]
+      summary: Get top clients by operations
+      description: Get top clients ranked by number of operations
+      parameters:
+        - name: operatorId
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Top clients by operations
+
+  /drivers:
+    get:
+      tags: [Drivers]
+      summary: Get all drivers
+      parameters:
+        - name: operatorId
+          in: query
+          schema:
+            type: integer
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: boolean
+        - name: isExternal
+          in: query
+          schema:
+            type: boolean
+        - name: licenseType
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: List of drivers
+    post:
+      tags: [Drivers]
+      summary: Create a new driver
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDriverDto'
+      responses:
+        '201':
+          description: Driver created successfully
+
+  /drivers/{id}:
+    get:
+      tags: [Drivers]
+      summary: Get driver by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Driver details
+    put:
+      tags: [Drivers]
+      summary: Update driver
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDriverDto'
+      responses:
+        '200':
+          description: Driver updated successfully
+    delete:
+      tags: [Drivers]
+      summary: Delete driver
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Driver deleted successfully
+
+  /drivers/{id}/documents:
+    post:
+      tags: [Drivers]
+      summary: Create driver document
+      description: Add a new document to a driver
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDriverDocumentDto'
+      responses:
+        '201':
+          description: Driver document created successfully
+        '404':
+          description: Driver not found
+    get:
+      tags: [Drivers]
+      summary: Get driver documents
+      description: Get all documents for a driver
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of driver documents
+        '404':
+          description: Driver not found
+
+  /drivers/documents/{documentId}:
+    get:
+      tags: [Drivers]
+      summary: Get driver document by ID
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Driver document details
+        '404':
+          description: Document not found
+    put:
+      tags: [Drivers]
+      summary: Update driver document
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDriverDocumentDto'
+      responses:
+        '200':
+          description: Driver document updated successfully
+        '404':
+          description: Document not found
+    delete:
+      tags: [Drivers]
+      summary: Delete driver document
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Driver document deleted successfully
+        '404':
+          description: Document not found
+
+  /vehicles:
+    get:
+      tags: [Vehicles]
+      summary: Get all vehicles
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: vehicleType
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: boolean
+        - name: includeDocuments
+          in: query
+          schema:
+            type: boolean
+        - name: includeStats
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: List of vehicles
+    post:
+      tags: [Vehicles]
+      summary: Create a new vehicle
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateVehicleDto'
+      responses:
+        '201':
+          description: Vehicle created successfully
+
+  /vehicles/stats/overview:
+    get:
+      tags: [Vehicles]
+      summary: Get fleet overview statistics
+      description: Get general statistics for the vehicle fleet
+      responses:
+        '200':
+          description: Fleet overview statistics
+
+  /vehicles/documents/expiring:
+    get:
+      tags: [Vehicles]
+      summary: Get expiring vehicle documents
+      description: Get vehicle documents that are expiring soon
+      parameters:
+        - name: days
+          in: query
+          schema:
+            type: integer
+            default: 30
+      responses:
+        '200':
+          description: List of expiring documents
+
+  /vehicles/{id}:
+    get:
+      tags: [Vehicles]
+      summary: Get vehicle by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: includeRelations
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Vehicle details
+    put:
+      tags: [Vehicles]
+      summary: Update vehicle
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateVehicleDto'
+      responses:
+        '200':
+          description: Vehicle updated successfully
+    delete:
+      tags: [Vehicles]
+      summary: Delete vehicle
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Vehicle deleted successfully
+
+  /vehicles/{id}/documents:
+    get:
+      tags: [Vehicles]
+      summary: Get vehicle documents
+      description: Get all documents for a vehicle
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of vehicle documents
+        '404':
+          description: Vehicle not found
+
+  /vehicles/{id}/operational-status:
+    get:
+      tags: [Vehicles]
+      summary: Get vehicle operational status
+      description: Get the operational status of a vehicle
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Vehicle operational status
+        '404':
+          description: Vehicle not found
+
+  /vehicles/{id}/operations/history:
+    get:
+      tags: [Vehicles]
+      summary: Get vehicle operation history
+      description: Get operation history for a vehicle
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Vehicle operation history
+        '404':
+          description: Vehicle not found
+
+  /vehicles/{id}/operations/upcoming:
+    get:
+      tags: [Vehicles]
+      summary: Get upcoming vehicle operations
+      description: Get upcoming operations for a vehicle
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Upcoming vehicle operations
+        '404':
+          description: Vehicle not found
+
+  /vehicles/documents:
+    post:
+      tags: [Vehicles]
+      summary: Create vehicle document
+      description: Add a new document to a vehicle
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateVehicleDocumentDto'
+      responses:
+        '201':
+          description: Vehicle document created successfully
+        '400':
+          description: Bad request
+
+  /vehicles/documents/{documentId}:
+    put:
+      tags: [Vehicles]
+      summary: Update vehicle document
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateVehicleDocumentDto'
+      responses:
+        '200':
+          description: Vehicle document updated successfully
+        '404':
+          description: Document not found
+    delete:
+      tags: [Vehicles]
+      summary: Delete vehicle document
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Vehicle document deleted successfully
+        '404':
+          description: Document not found
+
+  /routes:
+    get:
+      tags: [Routes]
+      summary: Get all routes
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: routeType
+          in: query
+          schema:
+            type: string
+        - name: difficulty
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: boolean
+        - name: tollsRequired
+          in: query
+          schema:
+            type: boolean
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of routes
+    post:
+      tags: [Routes]
+      summary: Create a new route
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRouteDto'
+      responses:
+        '201':
+          description: Route created successfully
+
+  /routes/{id}:
+    get:
+      tags: [Routes]
+      summary: Get route by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Route details
+    put:
+      tags: [Routes]
+      summary: Update route
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRouteDto'
+      responses:
+        '200':
+          description: Route updated successfully
+    delete:
+      tags: [Routes]
+      summary: Delete route
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Route deleted successfully
+
+  /routes/{id}/statistics:
+    get:
+      tags: [Routes]
+      summary: Get route statistics
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Route statistics
+
+  /providers:
+    get:
+      tags: [Providers]
+      summary: Get all providers
+      parameters:
+        - name: operatorId
+          in: query
+          schema:
+            type: integer
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: boolean
+        - name: businessType
+          in: query
+          schema:
+            type: string
+        - name: minRating
+          in: query
+          schema:
+            type: integer
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: List of providers
+    post:
+      tags: [Providers]
+      summary: Create a new provider
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProviderDto'
+      responses:
+        '201':
+          description: Provider created successfully
+
+  /providers/{id}:
+    get:
+      tags: [Providers]
+      summary: Get provider by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Provider details
+    put:
+      tags: [Providers]
+      summary: Update provider
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProviderDto'
+      responses:
+        '200':
+          description: Provider updated successfully
+    delete:
+      tags: [Providers]
+      summary: Delete provider
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Provider deleted successfully
+
+  /providers/{id}/statistics:
+    get:
+      tags: [Providers]
+      summary: Get provider statistics
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Provider statistics
+
+  /providers/{id}/operations:
+    get:
+      tags: [Providers]
+      summary: Get provider operations
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Provider operations
+
+  /operations:
+    get:
+      tags: [Operations]
+      summary: Get all operations
+      parameters:
+        - name: operatorId
+          in: query
+          schema:
+            type: integer
+        - name: clientId
+          in: query
+          schema:
+            type: integer
+        - name: providerId
+          in: query
+          schema:
+            type: integer
+        - name: driverId
+          in: query
+          schema:
+            type: integer
+        - name: vehicleId
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: operationType
+          in: query
+          schema:
+            type: string
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: List of operations
+    post:
+      tags: [Operations]
+      summary: Create a new operation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOperationDto'
+      responses:
+        '201':
+          description: Operation created successfully
+
+  /operations/{id}:
+    get:
+      tags: [Operations]
+      summary: Get operation by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Operation details
+    put:
+      tags: [Operations]
+      summary: Update operation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateOperationDto'
+      responses:
+        '200':
+          description: Operation updated successfully
+    delete:
+      tags: [Operations]
+      summary: Delete operation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Operation deleted successfully
+
+  /operations/{id}/generate-report:
+    post:
+      tags: [Operations]
+      summary: Generate operation report (PDF)
+      description: Generate a PDF report for an operation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateReportDto'
+      responses:
+        '200':
+          description: PDF report generated successfully
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Operation not found
+
+  /operations/assignments:
+    post:
+      tags: [Operations]
+      summary: Assign driver to vehicle
+      description: Create a new driver-vehicle assignment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignDriverToVehicleDto'
+      responses:
+        '201':
+          description: Driver assigned to vehicle successfully
+        '400':
+          description: Bad request
+
+  /operations/assignments/{assignmentId}/unassign:
+    put:
+      tags: [Operations]
+      summary: Unassign driver from vehicle
+      description: Unassign a driver from a vehicle assignment
+      parameters:
+        - name: assignmentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UnassignDriverFromVehicleDto'
+      responses:
+        '200':
+          description: Driver unassigned successfully
+        '404':
+          description: Assignment not found
+
+  /operations/assignments/driver/{driverId}:
+    get:
+      tags: [Operations]
+      summary: Get driver vehicle assignments
+      description: Get all vehicle assignments for a driver
+      parameters:
+        - name: driverId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of driver vehicle assignments
+        '404':
+          description: Driver not found
+
+  /operations/assignments/driver/{driverId}/active:
+    get:
+      tags: [Operations]
+      summary: Get active driver vehicle assignment
+      description: Get the currently active vehicle assignment for a driver
+      parameters:
+        - name: driverId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Active driver vehicle assignment
+        '404':
+          description: Driver not found or no active assignment
+
+  /operations/driver/{driverId}/history:
+    get:
+      tags: [Operations]
+      summary: Get driver operation history
+      description: Get operation history for a specific driver
+      parameters:
+        - name: driverId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: operatorId
+          in: query
+          schema:
+            type: integer
+        - name: clientId
+          in: query
+          schema:
+            type: integer
+        - name: providerId
+          in: query
+          schema:
+            type: integer
+        - name: vehicleId
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: operationType
+          in: query
+          schema:
+            type: string
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Driver operation history
+        '404':
+          description: Driver not found
+
+  /operations/driver/{driverId}/statistics:
+    get:
+      tags: [Operations]
+      summary: Get driver statistics
+      description: Get statistics for a specific driver
+      parameters:
+        - name: driverId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Driver statistics
+        '404':
+          description: Driver not found
+
+  /audit:
+    get:
+      tags: [Audit]
+      summary: Get audit logs
+      parameters:
+        - name: userId
+          in: query
+          schema:
+            type: integer
+        - name: operatorId
+          in: query
+          schema:
+            type: integer
+        - name: action
+          in: query
+          schema:
+            type: string
+        - name: resource
+          in: query
+          schema:
+            type: string
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: List of audit logs
+
+  /audit/{id}:
+    get:
+      tags: [Audit]
+      summary: Get audit log by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Audit log details
+        '404':
+          description: Audit log not found
+
+  /audit/user/{userId}:
+    get:
+      tags: [Audit]
+      summary: Get user activity
+      description: Get audit logs for a specific user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: User activity logs
+        '404':
+          description: User not found
