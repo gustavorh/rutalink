@@ -12,9 +12,13 @@ import {
   ParseIntPipe,
   Res,
   HttpStatus,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
-import { OperationsService } from './operations.service';
+import { OperationsService, BatchUploadResult } from './operations.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../auth/guards/permissions.guard';
 import { RequirePermission } from '../auth/decorators/require-permission.decorator';
@@ -25,6 +29,7 @@ import {
   AssignDriverToVehicleDto,
   UnassignDriverFromVehicleDto,
   GenerateReportDto,
+  BatchUploadOperationsDto,
 } from './dto/operation.dto';
 
 interface RequestWithUser extends Request {
@@ -65,6 +70,26 @@ export class OperationsController {
     return this.operationsService.getOperations(query);
   }
 
+  // ============================================================================
+  // OPERATION BATCH UPLOAD ENDPOINTS
+  // ============================================================================
+
+  @Get('excel-template')
+  @RequirePermission('operations', 'read')
+  async downloadExcelTemplate(@Res() res: Response) {
+    const buffer = await this.operationsService.generateExcelTemplate();
+    const filename = `plantilla-operaciones-${new Date().toISOString().split('T')[0]}.xlsx`;
+
+    res.set({
+      'Content-Type':
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': `attachment; filename="${filename}"`,
+      'Content-Length': buffer.length,
+    });
+
+    res.status(HttpStatus.OK).send(buffer);
+  }
+
   @Get(':id')
   @RequirePermission('operations', 'read')
   async getOperationById(@Param('id', ParseIntPipe) id: number) {
@@ -89,6 +114,103 @@ export class OperationsController {
   @RequirePermission('operations', 'delete')
   async deleteOperation(@Param('id', ParseIntPipe) id: number) {
     return this.operationsService.deleteOperation(id);
+  }
+
+  @Post('batch-upload/parse')
+  @RequirePermission('operations', 'create')
+  @UseInterceptors(FileInterceptor('file'))
+  async parseExcelFile(@UploadedFile() file?: Express.Multer.File): Promise<{
+    success: boolean;
+    totalRows: number;
+    validRows: number;
+    errors: any[];
+    data: any[];
+  }> {
+    if (!file) {
+      throw new BadRequestException('No se proporcionó ningún archivo');
+    }
+
+    if (
+      !file.mimetype.includes('spreadsheet') &&
+      !file.mimetype.includes('excel')
+    ) {
+      throw new BadRequestException(
+        'El archivo debe ser un archivo Excel (.xlsx)',
+      );
+    }
+
+    const result = await this.operationsService.processExcelFile(file.buffer);
+
+    return {
+      success: result.errors.length === 0,
+      totalRows: result.data.length,
+      validRows: result.data.length - result.errors.length,
+      errors: result.errors,
+      data: result.data,
+    };
+  }
+
+  @Post('batch-upload')
+  @RequirePermission('operations', 'create')
+  async batchUploadOperations(
+    @Body() batchUploadDto: BatchUploadOperationsDto,
+    @Request() req: RequestWithUser,
+  ): Promise<BatchUploadResult> {
+    return await this.operationsService.batchUploadOperations(
+      batchUploadDto,
+      req.user.userId,
+    );
+  }
+
+  @Post('batch-upload/file')
+  @RequirePermission('operations', 'create')
+  @UseInterceptors(FileInterceptor('file'))
+  async batchUploadOperationsFromFile(
+    @UploadedFile() file: Express.Multer.File | undefined,
+    @Body('operatorId', ParseIntPipe) operatorId: number,
+    @Request() req: RequestWithUser,
+  ): Promise<BatchUploadResult> {
+    if (!file) {
+      throw new BadRequestException('No se proporcionó ningún archivo');
+    }
+
+    if (
+      !file.mimetype.includes('spreadsheet') &&
+      !file.mimetype.includes('excel')
+    ) {
+      throw new BadRequestException(
+        'El archivo debe ser un archivo Excel (.xlsx)',
+      );
+    }
+
+    // Parse the Excel file
+    const parseResult = await this.operationsService.processExcelFile(
+      file.buffer,
+    );
+
+    if (parseResult.errors.length > 0) {
+      return {
+        success: false,
+        message: 'El archivo contiene errores de validación',
+        totalRows: parseResult.data.length,
+        successCount: 0,
+        errorCount: parseResult.errors.length,
+        errors: parseResult.errors,
+        duplicates: [],
+        createdOperations: [],
+      };
+    }
+
+    // Process the batch upload
+    const batchUploadDto: BatchUploadOperationsDto = {
+      operatorId,
+      operations: parseResult.data,
+    };
+
+    return await this.operationsService.batchUploadOperations(
+      batchUploadDto,
+      req.user.userId,
+    );
   }
 
   // ============================================================================

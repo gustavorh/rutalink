@@ -17,8 +17,21 @@ import {
   AssignDriverToVehicleDto,
   UnassignDriverFromVehicleDto,
   GenerateReportDto,
+  BatchUploadOperationsDto,
 } from './dto/operation.dto';
 import { PdfService } from './pdf.service';
+import { ExcelService, ValidationError } from './excel.service';
+
+export interface BatchUploadResult {
+  success: boolean;
+  totalRows: number;
+  successCount: number;
+  errorCount: number;
+  errors: ValidationError[];
+  duplicates: string[];
+  createdOperations: number[];
+  message?: string;
+}
 
 @Injectable()
 export class OperationsService {
@@ -26,6 +39,7 @@ export class OperationsService {
     @Inject(DATABASE)
     private db: MySql2Database<typeof schema>,
     private pdfService: PdfService,
+    private excelService: ExcelService,
   ) {}
 
   // ============================================================================
@@ -633,6 +647,296 @@ export class OperationsService {
       .where(eq(schema.operations.driverId, driverId));
 
     return stats;
+  }
+
+  // ============================================================================
+  // BATCH UPLOAD OPERATIONS
+  // ============================================================================
+
+  async batchUploadOperations(
+    batchUploadDto: BatchUploadOperationsDto,
+    userId: number,
+  ): Promise<BatchUploadResult> {
+    const { operatorId, operations: operationsData } = batchUploadDto;
+
+    // Verify operator exists
+    const [operator] = await this.db
+      .select()
+      .from(schema.operators)
+      .where(eq(schema.operators.id, operatorId))
+      .limit(1);
+
+    if (!operator) {
+      throw new NotFoundException(`Operator with ID ${operatorId} not found`);
+    }
+
+    const result: BatchUploadResult = {
+      success: true,
+      totalRows: operationsData.length,
+      successCount: 0,
+      errorCount: 0,
+      errors: [],
+      duplicates: [],
+      createdOperations: [],
+    };
+
+    // Process each operation
+    for (let i = 0; i < operationsData.length; i++) {
+      const rowData = operationsData[i];
+      const rowNumber = i + 2; // Excel row number (1 is header, so data starts at 2)
+
+      try {
+        // Validate and create operation
+        await this.processOperationRow(
+          operatorId,
+          rowData,
+          rowNumber,
+          userId,
+          result,
+        );
+      } catch (error) {
+        result.errorCount++;
+        result.errors.push({
+          row: rowNumber,
+          field: 'general',
+          message: error.message || 'Error desconocido al procesar la fila',
+          value: null,
+        });
+      }
+    }
+
+    result.success = result.errorCount === 0;
+
+    return result;
+  }
+
+  private async processOperationRow(
+    operatorId: number,
+    rowData: any,
+    rowNumber: number,
+    userId: number,
+    result: BatchUploadResult,
+  ): Promise<void> {
+    // Check for duplicate operation number
+    const existingOperation = await this.db
+      .select()
+      .from(schema.operations)
+      .where(
+        and(
+          eq(schema.operations.operatorId, operatorId),
+          eq(schema.operations.operationNumber, rowData.operationNumber),
+        ),
+      )
+      .limit(1);
+
+    if (existingOperation.length > 0) {
+      result.errorCount++;
+      result.duplicates.push(rowData.operationNumber);
+      result.errors.push({
+        row: rowNumber,
+        field: 'operationNumber',
+        message: `El número de operación ${rowData.operationNumber} ya existe`,
+        value: rowData.operationNumber,
+      });
+      return;
+    }
+
+    // Find driver by RUT
+    const [driver] = await this.db
+      .select()
+      .from(schema.drivers)
+      .where(
+        and(
+          eq(schema.drivers.operatorId, operatorId),
+          eq(schema.drivers.rut, rowData.driverRut),
+        ),
+      )
+      .limit(1);
+
+    if (!driver) {
+      result.errorCount++;
+      result.errors.push({
+        row: rowNumber,
+        field: 'driverRut',
+        message: `No se encontró un chofer con RUT ${rowData.driverRut}`,
+        value: rowData.driverRut,
+      });
+      return;
+    }
+
+    if (!driver.status) {
+      result.errorCount++;
+      result.errors.push({
+        row: rowNumber,
+        field: 'driverRut',
+        message: `El chofer con RUT ${rowData.driverRut} está inactivo`,
+        value: rowData.driverRut,
+      });
+      return;
+    }
+
+    // Find vehicle by plate number
+    const [vehicle] = await this.db
+      .select()
+      .from(schema.vehicles)
+      .where(
+        and(
+          eq(schema.vehicles.operatorId, operatorId),
+          eq(schema.vehicles.plateNumber, rowData.vehiclePlateNumber),
+        ),
+      )
+      .limit(1);
+
+    if (!vehicle) {
+      result.errorCount++;
+      result.errors.push({
+        row: rowNumber,
+        field: 'vehiclePlateNumber',
+        message: `No se encontró un vehículo con patente ${rowData.vehiclePlateNumber}`,
+        value: rowData.vehiclePlateNumber,
+      });
+      return;
+    }
+
+    if (!vehicle.status) {
+      result.errorCount++;
+      result.errors.push({
+        row: rowNumber,
+        field: 'vehiclePlateNumber',
+        message: `El vehículo con patente ${rowData.vehiclePlateNumber} está inactivo`,
+        value: rowData.vehiclePlateNumber,
+      });
+      return;
+    }
+
+    // Find client if specified
+    let clientId: number | undefined = undefined;
+    if (rowData.clientName) {
+      const [client] = await this.db
+        .select()
+        .from(schema.clients)
+        .where(
+          and(
+            eq(schema.clients.operatorId, operatorId),
+            eq(schema.clients.businessName, rowData.clientName),
+          ),
+        )
+        .limit(1);
+
+      if (!client) {
+        result.errorCount++;
+        result.errors.push({
+          row: rowNumber,
+          field: 'clientName',
+          message: `No se encontró un cliente con el nombre ${rowData.clientName}`,
+          value: rowData.clientName,
+        });
+        return;
+      }
+
+      clientId = client.id;
+    }
+
+    // Find provider if specified
+    let providerId: number | undefined = undefined;
+    if (rowData.providerName) {
+      const [provider] = await this.db
+        .select()
+        .from(schema.providers)
+        .where(
+          and(
+            eq(schema.providers.operatorId, operatorId),
+            eq(schema.providers.businessName, rowData.providerName),
+          ),
+        )
+        .limit(1);
+
+      if (!provider) {
+        result.errorCount++;
+        result.errors.push({
+          row: rowNumber,
+          field: 'providerName',
+          message: `No se encontró un proveedor con el nombre ${rowData.providerName}`,
+          value: rowData.providerName,
+        });
+        return;
+      }
+
+      providerId = provider.id;
+    }
+
+    // Find route if specified
+    let routeId: number | undefined = undefined;
+    if (rowData.routeName) {
+      const [route] = await this.db
+        .select()
+        .from(schema.routes)
+        .where(
+          and(
+            eq(schema.routes.operatorId, operatorId),
+            eq(schema.routes.name, rowData.routeName),
+          ),
+        )
+        .limit(1);
+
+      if (!route) {
+        result.errorCount++;
+        result.errors.push({
+          row: rowNumber,
+          field: 'routeName',
+          message: `No se encontró un tramo/ruta con el nombre ${rowData.routeName}`,
+          value: rowData.routeName,
+        });
+        return;
+      }
+
+      routeId = route.id;
+    }
+
+    // Create the operation
+    const createDto: CreateOperationDto = {
+      operatorId,
+      clientId,
+      providerId,
+      routeId,
+      driverId: driver.id,
+      vehicleId: vehicle.id,
+      operationNumber: rowData.operationNumber,
+      operationType: rowData.operationType,
+      origin: rowData.origin,
+      destination: rowData.destination,
+      scheduledStartDate: rowData.scheduledStartDate,
+      scheduledEndDate: rowData.scheduledEndDate,
+      distance: rowData.distance,
+      cargoDescription: rowData.cargoDescription,
+      cargoWeight: rowData.cargoWeight,
+      notes: rowData.notes,
+    };
+
+    try {
+      const newOperation = await this.createOperation(createDto, userId);
+      result.successCount++;
+      result.createdOperations.push(newOperation.operation.id);
+    } catch (error) {
+      result.errorCount++;
+      result.errors.push({
+        row: rowNumber,
+        field: 'general',
+        message: `Error al crear la operación: ${error.message}`,
+        value: null,
+      });
+    }
+  }
+
+  async generateExcelTemplate(): Promise<Buffer> {
+    return this.excelService.generateOperationsTemplate();
+  }
+
+  async processExcelFile(fileBuffer: Buffer): Promise<{
+    data: any[];
+    errors: ValidationError[];
+  }> {
+    return this.excelService.parseOperationsExcel(fileBuffer);
   }
 
   // ============================================================================
