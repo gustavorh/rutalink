@@ -6,8 +6,8 @@ import { getToken, isAuthenticated, getUser } from "@/lib/auth";
 import { getRoles, deleteRole, createRole, updateRole } from "@/lib/api";
 import type { Role } from "@/types/roles";
 import type {
-  CreateRoleDto,
-  UpdateRoleDto,
+  RoleCreateDto,
+  RoleUpdateDto,
   RoleQueryDto,
 } from "@/lib/api-types";
 import { PERMISSIONS } from "@/types/roles";
@@ -60,7 +60,7 @@ export default function RolesPage() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [roleToEdit, setRoleToEdit] = useState<Role | null>(null);
-  const [formData, setFormData] = useState<CreateRoleDto | UpdateRoleDto>({
+  const [formData, setFormData] = useState<RoleCreateDto | RoleUpdateDto>({
     name: "",
     permissions: [],
   });
@@ -135,10 +135,7 @@ export default function RolesPage() {
   };
 
   const handleCreateClick = () => {
-    const user = getUser();
-    if (!user) return;
     setFormData({
-      operatorId: user.operatorId, // Add operatorId from current user
       name: "",
       permissions: [],
     });
@@ -165,11 +162,11 @@ export default function RolesPage() {
       setError(null);
 
       if (editDialogOpen && roleToEdit) {
-        await updateRole(token, roleToEdit.id, formData as UpdateRoleDto);
+        await updateRole(token, roleToEdit.id, formData as RoleUpdateDto);
         setEditDialogOpen(false);
         setRoleToEdit(null);
       } else {
-        await createRole(token, formData as CreateRoleDto);
+        await createRole(token, formData as RoleCreateDto);
         setCreateDialogOpen(false);
       }
       fetchRoles();
@@ -185,7 +182,7 @@ export default function RolesPage() {
     if (permissions.includes(permission)) {
       setFormData({
         ...formData,
-        permissions: permissions.filter((p) => p !== permission),
+        permissions: permissions.filter((p: string) => p !== permission),
       });
     } else {
       setFormData({
@@ -497,27 +494,126 @@ export default function RolesPage() {
             <Label className="text-foreground mb-3 block">
               Permisos ({formData.permissions?.length || 0} seleccionados)
             </Label>
-            <div className="grid grid-cols-2 gap-2 max-h-[300px] overflow-y-auto border border-border rounded-lg p-4 bg-ui-surface-elevated">
-              {PERMISSIONS.map((permission) => (
-                <div
-                  key={permission.value}
-                  className="flex items-center space-x-2"
-                >
-                  <input
-                    type="checkbox"
-                    id={permission.value}
-                    checked={formData.permissions?.includes(permission.value)}
-                    onChange={() => togglePermission(permission.value)}
-                    className="rounded border-border bg-ui-surface-elevated text-primary focus:ring-blue-500"
-                  />
-                  <Label
-                    htmlFor={permission.value}
-                    className="text-sm text-foreground cursor-pointer"
-                  >
-                    {permission.label}
-                  </Label>
-                </div>
-              ))}
+            <div className="max-h-[400px] overflow-auto border border-border rounded-lg bg-ui-surface-elevated">
+              <table className="w-full">
+                <thead className="bg-ui-surface-elevated">
+                  <tr className="border-b border-border">
+                    <th className="sticky top-0 bg-ui-surface-elevated text-left px-4 py-3 text-foreground font-semibold z-10 border-b border-border">
+                      Recurso
+                    </th>
+                    <th className="sticky top-0 bg-ui-surface-elevated text-center px-4 py-3 text-foreground font-semibold z-10 border-b border-border">
+                      Ver
+                    </th>
+                    <th className="sticky top-0 bg-ui-surface-elevated text-center px-4 py-3 text-foreground font-semibold z-10 border-b border-border">
+                      Crear
+                    </th>
+                    <th className="sticky top-0 bg-ui-surface-elevated text-center px-4 py-3 text-foreground font-semibold z-10 border-b border-border">
+                      Actualizar
+                    </th>
+                    <th className="sticky top-0 bg-ui-surface-elevated text-center px-4 py-3 text-foreground font-semibold z-10 border-b border-border">
+                      Eliminar
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { key: "users", label: "Usuarios" },
+                    { key: "roles", label: "Roles" },
+                    { key: "clients", label: "Clientes" },
+                    { key: "drivers", label: "Choferes" },
+                    { key: "vehicles", label: "Vehículos" },
+                    { key: "operations", label: "Operaciones" },
+                    { key: "routes", label: "Rutas" },
+                    { key: "providers", label: "Proveedores" },
+                    { key: "reports", label: "Reportes" },
+                    { key: "analytics", label: "Analíticas" },
+                  ].map((resource) => {
+                    const hasRead = PERMISSIONS.find(
+                      (p) => p.value === `${resource.key}.read`
+                    );
+                    const hasCreate = PERMISSIONS.find(
+                      (p) => p.value === `${resource.key}.create`
+                    );
+                    const hasUpdate = PERMISSIONS.find(
+                      (p) => p.value === `${resource.key}.update`
+                    );
+                    const hasDelete = PERMISSIONS.find(
+                      (p) => p.value === `${resource.key}.delete`
+                    );
+
+                    return (
+                      <tr
+                        key={resource.key}
+                        className="border-b border-border hover:bg-ui-surface-elevated/50 transition-colors"
+                      >
+                        <td className="px-4 py-3 font-medium text-foreground">
+                          {resource.label}
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          {hasRead && (
+                            <input
+                              type="checkbox"
+                              id={`${resource.key}.read`}
+                              checked={formData.permissions?.includes(
+                                `${resource.key}.read`
+                              )}
+                              onChange={() =>
+                                togglePermission(`${resource.key}.read`)
+                              }
+                              className="rounded border-border bg-ui-surface-elevated text-primary focus:ring-primary focus:ring-offset-0 w-4 h-4 cursor-pointer"
+                            />
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          {hasCreate && (
+                            <input
+                              type="checkbox"
+                              id={`${resource.key}.create`}
+                              checked={formData.permissions?.includes(
+                                `${resource.key}.create`
+                              )}
+                              onChange={() =>
+                                togglePermission(`${resource.key}.create`)
+                              }
+                              className="rounded border-border bg-ui-surface-elevated text-primary focus:ring-primary focus:ring-offset-0 w-4 h-4 cursor-pointer"
+                            />
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          {hasUpdate && (
+                            <input
+                              type="checkbox"
+                              id={`${resource.key}.update`}
+                              checked={formData.permissions?.includes(
+                                `${resource.key}.update`
+                              )}
+                              onChange={() =>
+                                togglePermission(`${resource.key}.update`)
+                              }
+                              className="rounded border-border bg-ui-surface-elevated text-primary focus:ring-primary focus:ring-offset-0 w-4 h-4 cursor-pointer"
+                            />
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          {hasDelete && (
+                            <input
+                              type="checkbox"
+                              id={`${resource.key}.delete`}
+                              checked={formData.permissions?.includes(
+                                `${resource.key}.delete`
+                              )}
+                              onChange={() =>
+                                togglePermission(`${resource.key}.delete`)
+                              }
+                              className="rounded border-border bg-ui-surface-elevated text-primary focus:ring-primary focus:ring-offset-0 w-4 h-4 cursor-pointer"
+                            />
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
             <p className="text-xs text-muted-foreground mt-2">
               Los permisos se almacenan en la tabla de grants y roleGrants
