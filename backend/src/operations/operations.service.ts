@@ -4,12 +4,6 @@ import {
   ConflictException,
   BadRequestException,
 } from '@nestjs/common';
-import { Inject } from '@nestjs/common';
-import { eq, and, desc, gte, lte, sql } from 'drizzle-orm';
-import type { SQL } from 'drizzle-orm';
-import { MySql2Database } from 'drizzle-orm/mysql2';
-import { DATABASE } from '../database/database.module';
-import * as schema from '../database/schema';
 import {
   CreateOperationDto,
   UpdateOperationDto,
@@ -21,6 +15,8 @@ import {
 } from './dto/operation.dto';
 import { PdfService } from './pdf.service';
 import { ExcelService, ValidationError } from './excel.service';
+import { OperationsRepository } from './repositories/operations.repository';
+import { DriverVehiclesRepository } from './repositories/driver-vehicles.repository';
 
 export interface BatchUploadResult {
   success: boolean;
@@ -36,10 +32,10 @@ export interface BatchUploadResult {
 @Injectable()
 export class OperationsService {
   constructor(
-    @Inject(DATABASE)
-    private db: MySql2Database<typeof schema>,
     private pdfService: PdfService,
     private excelService: ExcelService,
+    private operationsRepository: OperationsRepository,
+    private driverVehiclesRepository: DriverVehiclesRepository,
   ) {}
 
   // ============================================================================
@@ -52,57 +48,37 @@ export class OperationsService {
   ) {
     // Verificar que el operador, chofer y vehículo existen
     const [operator, driver, vehicle] = await Promise.all([
-      this.db
-        .select()
-        .from(schema.operators)
-        .where(eq(schema.operators.id, createOperationDto.operatorId))
-        .limit(1),
-      this.db
-        .select()
-        .from(schema.drivers)
-        .where(eq(schema.drivers.id, createOperationDto.driverId))
-        .limit(1),
-      this.db
-        .select()
-        .from(schema.vehicles)
-        .where(eq(schema.vehicles.id, createOperationDto.vehicleId))
-        .limit(1),
+      this.operationsRepository.findOperatorById(createOperationDto.operatorId),
+      this.operationsRepository.findDriverById(createOperationDto.driverId),
+      this.operationsRepository.findVehicleById(createOperationDto.vehicleId),
     ]);
 
-    if (operator.length === 0) {
+    if (!operator) {
       throw new NotFoundException(
         `Operator with ID ${createOperationDto.operatorId} not found`,
       );
     }
 
-    if (driver.length === 0) {
+    if (!driver) {
       throw new NotFoundException(
         `Driver with ID ${createOperationDto.driverId} not found`,
       );
     }
 
-    if (vehicle.length === 0) {
+    if (!vehicle) {
       throw new NotFoundException(
         `Vehicle with ID ${createOperationDto.vehicleId} not found`,
       );
     }
 
     // Verificar que el número de operación no esté duplicado
-    const existingOperation = await this.db
-      .select()
-      .from(schema.operations)
-      .where(
-        and(
-          eq(schema.operations.operatorId, createOperationDto.operatorId),
-          eq(
-            schema.operations.operationNumber,
-            createOperationDto.operationNumber,
-          ),
-        ),
-      )
-      .limit(1);
+    const existingOperation =
+      await this.operationsRepository.findByOperationNumber(
+        createOperationDto.operatorId,
+        createOperationDto.operationNumber,
+      );
 
-    if (existingOperation.length > 0) {
+    if (existingOperation) {
       throw new ConflictException(
         `Operation with number ${createOperationDto.operationNumber} already exists for this operator`,
       );
@@ -110,8 +86,8 @@ export class OperationsService {
 
     // Verificar que el chofer y vehículo pertenecen al mismo operador
     if (
-      driver[0].operatorId !== createOperationDto.operatorId ||
-      vehicle[0].operatorId !== createOperationDto.operatorId
+      driver.operatorId !== createOperationDto.operatorId ||
+      vehicle.operatorId !== createOperationDto.operatorId
     ) {
       throw new BadRequestException(
         'Driver and vehicle must belong to the specified operator',
@@ -128,17 +104,13 @@ export class OperationsService {
       userId,
     );
 
-    const [newOperation] = await this.db.insert(schema.operations).values({
-      ...createOperationDto,
-      scheduledStartDate: new Date(createOperationDto.scheduledStartDate),
-      scheduledEndDate: createOperationDto.scheduledEndDate
-        ? new Date(createOperationDto.scheduledEndDate)
-        : undefined,
-      createdBy: userId,
-      updatedBy: userId,
-    });
+    // Create operation using repository
+    const operationId = await this.operationsRepository.createOperation(
+      createOperationDto as any,
+      userId,
+    );
 
-    return this.getOperationById(newOperation.insertId);
+    return this.getOperationById(operationId);
   }
 
   async getOperations(query: OperationQueryDto) {
@@ -156,127 +128,24 @@ export class OperationsService {
       limit = 10,
     } = query;
 
-    const conditions: SQL[] = [];
-
-    if (operatorId) {
-      conditions.push(eq(schema.operations.operatorId, operatorId));
-    }
-
-    if (clientId) {
-      conditions.push(eq(schema.operations.clientId, clientId));
-    }
-
-    if (providerId) {
-      conditions.push(eq(schema.operations.providerId, providerId));
-    }
-
-    if (driverId) {
-      conditions.push(eq(schema.operations.driverId, driverId));
-    }
-
-    if (vehicleId) {
-      conditions.push(eq(schema.operations.vehicleId, vehicleId));
-    }
-
-    if (status) {
-      conditions.push(eq(schema.operations.status, status));
-    }
-
-    if (operationType) {
-      conditions.push(eq(schema.operations.operationType, operationType));
-    }
-
-    if (startDate) {
-      conditions.push(
-        gte(schema.operations.scheduledStartDate, new Date(startDate)),
-      );
-    }
-
-    if (endDate) {
-      conditions.push(
-        lte(schema.operations.scheduledStartDate, new Date(endDate)),
-      );
-    }
-
-    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
-
-    const offset = (page - 1) * limit;
-
-    const [operations, totalCount] = await Promise.all([
-      this.db
-        .select({
-          operation: schema.operations,
-          client: schema.clients,
-          provider: schema.providers,
-          driver: schema.drivers,
-          vehicle: schema.vehicles,
-        })
-        .from(schema.operations)
-        .leftJoin(
-          schema.clients,
-          eq(schema.operations.clientId, schema.clients.id),
-        )
-        .leftJoin(
-          schema.providers,
-          eq(schema.operations.providerId, schema.providers.id),
-        )
-        .leftJoin(
-          schema.drivers,
-          eq(schema.operations.driverId, schema.drivers.id),
-        )
-        .leftJoin(
-          schema.vehicles,
-          eq(schema.operations.vehicleId, schema.vehicles.id),
-        )
-        .where(whereClause)
-        .orderBy(desc(schema.operations.scheduledStartDate))
-        .limit(limit)
-        .offset(offset),
-      this.db
-        .select({ count: sql<number>`count(*)` })
-        .from(schema.operations)
-        .where(whereClause),
-    ]);
-
-    return {
-      data: operations,
-      pagination: {
-        page,
-        limit,
-        total: Number(totalCount[0].count),
-        totalPages: Math.ceil(Number(totalCount[0].count) / limit),
-      },
-    };
+    // Use repository's findPaginated method
+    return this.operationsRepository.findPaginated(
+      operatorId,
+      clientId,
+      providerId,
+      driverId,
+      vehicleId,
+      status,
+      operationType,
+      startDate,
+      endDate,
+      page,
+      limit,
+    );
   }
 
   async getOperationById(id: number) {
-    const [operation] = await this.db
-      .select({
-        operation: schema.operations,
-        client: schema.clients,
-        provider: schema.providers,
-        driver: schema.drivers,
-        vehicle: schema.vehicles,
-      })
-      .from(schema.operations)
-      .leftJoin(
-        schema.clients,
-        eq(schema.operations.clientId, schema.clients.id),
-      )
-      .leftJoin(
-        schema.providers,
-        eq(schema.operations.providerId, schema.providers.id),
-      )
-      .leftJoin(
-        schema.drivers,
-        eq(schema.operations.driverId, schema.drivers.id),
-      )
-      .leftJoin(
-        schema.vehicles,
-        eq(schema.operations.vehicleId, schema.vehicles.id),
-      )
-      .where(eq(schema.operations.id, id))
-      .limit(1);
+    const operation = await this.operationsRepository.findByIdWithRelations(id);
 
     if (!operation) {
       throw new NotFoundException(`Operation with ID ${id} not found`);
@@ -296,25 +165,17 @@ export class OperationsService {
     if (updateOperationDto.driverId && updateOperationDto.vehicleId) {
       // Verificar que el chofer y vehículo existen y pertenecen al mismo operador
       const [driver, vehicle] = await Promise.all([
-        this.db
-          .select()
-          .from(schema.drivers)
-          .where(eq(schema.drivers.id, updateOperationDto.driverId))
-          .limit(1),
-        this.db
-          .select()
-          .from(schema.vehicles)
-          .where(eq(schema.vehicles.id, updateOperationDto.vehicleId))
-          .limit(1),
+        this.operationsRepository.findDriverById(updateOperationDto.driverId),
+        this.operationsRepository.findVehicleById(updateOperationDto.vehicleId),
       ]);
 
-      if (driver.length === 0) {
+      if (!driver) {
         throw new NotFoundException(
           `Driver with ID ${updateOperationDto.driverId} not found`,
         );
       }
 
-      if (vehicle.length === 0) {
+      if (!vehicle) {
         throw new NotFoundException(
           `Vehicle with ID ${updateOperationDto.vehicleId} not found`,
         );
@@ -322,8 +183,8 @@ export class OperationsService {
 
       // Verificar que pertenecen al mismo operador que la operación
       if (
-        driver[0].operatorId !== operation.operation.operatorId ||
-        vehicle[0].operatorId !== operation.operation.operatorId
+        driver.operatorId !== operation.operation.operatorId ||
+        vehicle.operatorId !== operation.operation.operatorId
       ) {
         throw new BadRequestException(
           'Driver and vehicle must belong to the same operator as the operation',
@@ -348,30 +209,22 @@ export class OperationsService {
 
       // Verificar que ambos existen
       const [driver, vehicle] = await Promise.all([
-        this.db
-          .select()
-          .from(schema.drivers)
-          .where(eq(schema.drivers.id, driverId))
-          .limit(1),
-        this.db
-          .select()
-          .from(schema.vehicles)
-          .where(eq(schema.vehicles.id, vehicleId))
-          .limit(1),
+        this.operationsRepository.findDriverById(driverId),
+        this.operationsRepository.findVehicleById(vehicleId),
       ]);
 
-      if (driver.length === 0) {
+      if (!driver) {
         throw new NotFoundException(`Driver with ID ${driverId} not found`);
       }
 
-      if (vehicle.length === 0) {
+      if (!vehicle) {
         throw new NotFoundException(`Vehicle with ID ${vehicleId} not found`);
       }
 
       // Verificar que pertenecen al mismo operador
       if (
-        driver[0].operatorId !== operation.operation.operatorId ||
-        vehicle[0].operatorId !== operation.operation.operatorId
+        driver.operatorId !== operation.operation.operatorId ||
+        vehicle.operatorId !== operation.operation.operatorId
       ) {
         throw new BadRequestException(
           'Driver and vehicle must belong to the same operator as the operation',
@@ -389,25 +242,12 @@ export class OperationsService {
       );
     }
 
-    await this.db
-      .update(schema.operations)
-      .set({
-        ...updateOperationDto,
-        scheduledStartDate: updateOperationDto.scheduledStartDate
-          ? new Date(updateOperationDto.scheduledStartDate)
-          : undefined,
-        scheduledEndDate: updateOperationDto.scheduledEndDate
-          ? new Date(updateOperationDto.scheduledEndDate)
-          : undefined,
-        actualStartDate: updateOperationDto.actualStartDate
-          ? new Date(updateOperationDto.actualStartDate)
-          : undefined,
-        actualEndDate: updateOperationDto.actualEndDate
-          ? new Date(updateOperationDto.actualEndDate)
-          : undefined,
-        updatedBy: userId,
-      })
-      .where(eq(schema.operations.id, id));
+    // Update operation using repository
+    await this.operationsRepository.updateOperation(
+      id,
+      updateOperationDto as any,
+      userId,
+    );
 
     return this.getOperationById(id);
   }
@@ -420,7 +260,8 @@ export class OperationsService {
       throw new BadRequestException('Cannot delete operation in progress');
     }
 
-    await this.db.delete(schema.operations).where(eq(schema.operations.id, id));
+    // Delete operation using repository
+    await this.operationsRepository.delete(id);
 
     return { message: 'Operation deleted successfully' };
   }
@@ -436,17 +277,10 @@ export class OperationsService {
     const { driverId, vehicleId, notes } = assignDto;
 
     // Verificar que el chofer y vehículo existen
-    const [driver] = await this.db
-      .select()
-      .from(schema.drivers)
-      .where(eq(schema.drivers.id, driverId))
-      .limit(1);
-
-    const [vehicle] = await this.db
-      .select()
-      .from(schema.vehicles)
-      .where(eq(schema.vehicles.id, vehicleId))
-      .limit(1);
+    const [driver, vehicle] = await Promise.all([
+      this.operationsRepository.findDriverById(driverId),
+      this.operationsRepository.findVehicleById(vehicleId),
+    ]);
 
     if (!driver) {
       throw new NotFoundException(`Driver with ID ${driverId} not found`);
@@ -474,31 +308,20 @@ export class OperationsService {
     }
 
     // Desactivar cualquier asignación activa previa del chofer
-    await this.db
-      .update(schema.driverVehicles)
-      .set({
-        isActive: false,
-        unassignedAt: new Date(),
-        updatedBy: userId,
-      })
-      .where(
-        and(
-          eq(schema.driverVehicles.driverId, driverId),
-          eq(schema.driverVehicles.isActive, true),
-        ),
-      );
+    await this.driverVehiclesRepository.deactivateActiveAssignments(
+      driverId,
+      userId,
+    );
 
     // Crear nueva asignación
-    const [newAssignment] = await this.db.insert(schema.driverVehicles).values({
+    const assignmentId = await this.driverVehiclesRepository.createAssignment(
       driverId,
       vehicleId,
       notes,
-      isActive: true,
-      createdBy: userId,
-      updatedBy: userId,
-    });
+      userId,
+    );
 
-    return this.getDriverVehicleAssignmentById(newAssignment.insertId);
+    return this.getDriverVehicleAssignmentById(assignmentId);
   }
 
   async unassignDriverFromVehicle(
@@ -512,84 +335,39 @@ export class OperationsService {
       throw new BadRequestException('Assignment is already inactive');
     }
 
-    await this.db
-      .update(schema.driverVehicles)
-      .set({
-        isActive: false,
-        unassignedAt: new Date(),
-        notes: unassignDto.notes || assignment.notes,
-        updatedBy: userId,
-      })
-      .where(eq(schema.driverVehicles.id, assignmentId));
+    await this.driverVehiclesRepository.unassignById(
+      assignmentId,
+      unassignDto.notes,
+      userId,
+    );
 
     return this.getDriverVehicleAssignmentById(assignmentId);
   }
 
   async getDriverVehicleAssignments(driverId: number) {
     // Verificar que el driver existe
-    const [driver] = await this.db
-      .select()
-      .from(schema.drivers)
-      .where(eq(schema.drivers.id, driverId))
-      .limit(1);
+    const driver = await this.operationsRepository.findDriverById(driverId);
 
     if (!driver) {
       throw new NotFoundException(`Driver with ID ${driverId} not found`);
     }
 
-    return this.db
-      .select({
-        assignment: schema.driverVehicles,
-        vehicle: schema.vehicles,
-      })
-      .from(schema.driverVehicles)
-      .leftJoin(
-        schema.vehicles,
-        eq(schema.driverVehicles.vehicleId, schema.vehicles.id),
-      )
-      .where(eq(schema.driverVehicles.driverId, driverId))
-      .orderBy(desc(schema.driverVehicles.assignedAt));
+    return this.driverVehiclesRepository.findByDriverId(driverId);
   }
 
   async getActiveDriverVehicleAssignment(driverId: number) {
     // Verificar que el driver existe
-    const [driver] = await this.db
-      .select()
-      .from(schema.drivers)
-      .where(eq(schema.drivers.id, driverId))
-      .limit(1);
+    const driver = await this.operationsRepository.findDriverById(driverId);
 
     if (!driver) {
       throw new NotFoundException(`Driver with ID ${driverId} not found`);
     }
 
-    const [assignment] = await this.db
-      .select({
-        assignment: schema.driverVehicles,
-        vehicle: schema.vehicles,
-      })
-      .from(schema.driverVehicles)
-      .leftJoin(
-        schema.vehicles,
-        eq(schema.driverVehicles.vehicleId, schema.vehicles.id),
-      )
-      .where(
-        and(
-          eq(schema.driverVehicles.driverId, driverId),
-          eq(schema.driverVehicles.isActive, true),
-        ),
-      )
-      .limit(1);
-
-    return assignment || null;
+    return this.driverVehiclesRepository.findActiveByDriverId(driverId);
   }
 
   async getDriverVehicleAssignmentById(id: number) {
-    const [assignment] = await this.db
-      .select()
-      .from(schema.driverVehicles)
-      .where(eq(schema.driverVehicles.id, id))
-      .limit(1);
+    const assignment = await this.driverVehiclesRepository.findById(id);
 
     if (!assignment) {
       throw new NotFoundException(
@@ -606,11 +384,7 @@ export class OperationsService {
 
   async getDriverOperationHistory(driverId: number, query: OperationQueryDto) {
     // Verificar que el driver existe
-    const [driver] = await this.db
-      .select()
-      .from(schema.drivers)
-      .where(eq(schema.drivers.id, driverId))
-      .limit(1);
+    const driver = await this.operationsRepository.findDriverById(driverId);
 
     if (!driver) {
       throw new NotFoundException(`Driver with ID ${driverId} not found`);
@@ -624,29 +398,13 @@ export class OperationsService {
 
   async getDriverStatistics(driverId: number) {
     // Verificar que el driver existe
-    const [driver] = await this.db
-      .select()
-      .from(schema.drivers)
-      .where(eq(schema.drivers.id, driverId))
-      .limit(1);
+    const driver = await this.operationsRepository.findDriverById(driverId);
 
     if (!driver) {
       throw new NotFoundException(`Driver with ID ${driverId} not found`);
     }
 
-    const [stats] = await this.db
-      .select({
-        totalOperations: sql<number>`count(*)`,
-        completedOperations: sql<number>`sum(case when ${schema.operations.status} = 'completed' then 1 else 0 end)`,
-        inProgressOperations: sql<number>`sum(case when ${schema.operations.status} = 'in-progress' then 1 else 0 end)`,
-        scheduledOperations: sql<number>`sum(case when ${schema.operations.status} = 'scheduled' then 1 else 0 end)`,
-        cancelledOperations: sql<number>`sum(case when ${schema.operations.status} = 'cancelled' then 1 else 0 end)`,
-        totalDistance: sql<number>`sum(${schema.operations.distance})`,
-      })
-      .from(schema.operations)
-      .where(eq(schema.operations.driverId, driverId));
-
-    return stats;
+    return this.operationsRepository.getDriverStatistics(driverId);
   }
 
   // ============================================================================
@@ -660,11 +418,8 @@ export class OperationsService {
     const { operatorId, operations: operationsData } = batchUploadDto;
 
     // Verify operator exists
-    const [operator] = await this.db
-      .select()
-      .from(schema.operators)
-      .where(eq(schema.operators.id, operatorId))
-      .limit(1);
+    const operator =
+      await this.operationsRepository.findOperatorById(operatorId);
 
     if (!operator) {
       throw new NotFoundException(`Operator with ID ${operatorId} not found`);
@@ -718,18 +473,13 @@ export class OperationsService {
     result: BatchUploadResult,
   ): Promise<void> {
     // Check for duplicate operation number
-    const existingOperation = await this.db
-      .select()
-      .from(schema.operations)
-      .where(
-        and(
-          eq(schema.operations.operatorId, operatorId),
-          eq(schema.operations.operationNumber, rowData.operationNumber),
-        ),
-      )
-      .limit(1);
+    const existingOperation =
+      await this.operationsRepository.findByOperationNumber(
+        operatorId,
+        rowData.operationNumber,
+      );
 
-    if (existingOperation.length > 0) {
+    if (existingOperation) {
       result.errorCount++;
       result.duplicates.push(rowData.operationNumber);
       result.errors.push({
@@ -742,16 +492,10 @@ export class OperationsService {
     }
 
     // Find driver by RUT
-    const [driver] = await this.db
-      .select()
-      .from(schema.drivers)
-      .where(
-        and(
-          eq(schema.drivers.operatorId, operatorId),
-          eq(schema.drivers.rut, rowData.driverRut),
-        ),
-      )
-      .limit(1);
+    const driver = await this.operationsRepository.findDriverByRut(
+      operatorId,
+      rowData.driverRut,
+    );
 
     if (!driver) {
       result.errorCount++;
@@ -776,16 +520,10 @@ export class OperationsService {
     }
 
     // Find vehicle by plate number
-    const [vehicle] = await this.db
-      .select()
-      .from(schema.vehicles)
-      .where(
-        and(
-          eq(schema.vehicles.operatorId, operatorId),
-          eq(schema.vehicles.plateNumber, rowData.vehiclePlateNumber),
-        ),
-      )
-      .limit(1);
+    const vehicle = await this.operationsRepository.findVehicleByPlateNumber(
+      operatorId,
+      rowData.vehiclePlateNumber,
+    );
 
     if (!vehicle) {
       result.errorCount++;
@@ -812,16 +550,10 @@ export class OperationsService {
     // Find client if specified
     let clientId: number | undefined = undefined;
     if (rowData.clientName) {
-      const [client] = await this.db
-        .select()
-        .from(schema.clients)
-        .where(
-          and(
-            eq(schema.clients.operatorId, operatorId),
-            eq(schema.clients.businessName, rowData.clientName),
-          ),
-        )
-        .limit(1);
+      const client = await this.operationsRepository.findClientByBusinessName(
+        operatorId,
+        rowData.clientName,
+      );
 
       if (!client) {
         result.errorCount++;
@@ -840,16 +572,11 @@ export class OperationsService {
     // Find provider if specified
     let providerId: number | undefined = undefined;
     if (rowData.providerName) {
-      const [provider] = await this.db
-        .select()
-        .from(schema.providers)
-        .where(
-          and(
-            eq(schema.providers.operatorId, operatorId),
-            eq(schema.providers.businessName, rowData.providerName),
-          ),
-        )
-        .limit(1);
+      const provider =
+        await this.operationsRepository.findProviderByBusinessName(
+          operatorId,
+          rowData.providerName,
+        );
 
       if (!provider) {
         result.errorCount++;
@@ -868,16 +595,10 @@ export class OperationsService {
     // Find route if specified
     let routeId: number | undefined = undefined;
     if (rowData.routeName) {
-      const [route] = await this.db
-        .select()
-        .from(schema.routes)
-        .where(
-          and(
-            eq(schema.routes.operatorId, operatorId),
-            eq(schema.routes.name, rowData.routeName),
-          ),
-        )
-        .limit(1);
+      const route = await this.operationsRepository.findRouteByName(
+        operatorId,
+        rowData.routeName,
+      );
 
       if (!route) {
         result.errorCount++;
@@ -967,11 +688,9 @@ export class OperationsService {
     }
 
     // Get operator information
-    const [operator] = await this.db
-      .select()
-      .from(schema.operators)
-      .where(eq(schema.operators.id, operationData.operation.operatorId))
-      .limit(1);
+    const operator = await this.operationsRepository.findOperatorById(
+      operationData.operation.operatorId,
+    );
 
     if (!operator) {
       throw new NotFoundException(
@@ -982,11 +701,9 @@ export class OperationsService {
     // Get route information if exists
     let routeInfo: { name: string; distance?: number } | undefined = undefined;
     if (operationData.operation.routeId) {
-      const [routeData] = await this.db
-        .select()
-        .from(schema.routes)
-        .where(eq(schema.routes.id, operationData.operation.routeId))
-        .limit(1);
+      const routeData = await this.operationsRepository.findRouteById(
+        operationData.operation.routeId,
+      );
       if (routeData) {
         routeInfo = {
           name: routeData.name,
