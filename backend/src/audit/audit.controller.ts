@@ -9,7 +9,8 @@ import {
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../auth/guards/permissions.guard';
 import { RequirePermission } from '../auth/decorators/require-permission.decorator';
-import { AuditService, AuditLogFilter } from './audit.service';
+import { AuditService } from './audit.service';
+import { AuditLogFilter } from './repositories/audit.repository';
 
 @Controller('audit')
 @UseGuards(JwtAuthGuard, PermissionsGuard)

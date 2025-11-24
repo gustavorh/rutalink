@@ -152,15 +152,16 @@ export class ClientsRepository extends BaseRepository<Client> {
    */
   async getClientsByIndustryStats(
     operatorId?: number,
-  ): Promise<Array<{ industry: string; totalClients: number; activeClients: number }>> {
+  ): Promise<
+    Array<{ industry: string; totalClients: number; activeClients: number }>
+  > {
     const conditions: SQL[] = [];
 
     if (operatorId) {
       conditions.push(eq(schema.clients.operatorId, operatorId));
     }
 
-    const whereClause =
-      conditions.length > 0 ? and(...conditions) : undefined;
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
     const industryStats = await this.db
       .select({
@@ -228,4 +229,3 @@ export class ClientsRepository extends BaseRepository<Client> {
     return Number(result.count);
   }
 }
-
