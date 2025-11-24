@@ -1,28 +1,19 @@
 import {
   Injectable,
-  Inject,
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { eq, like, and, count, sql, SQL } from 'drizzle-orm';
-import { MySql2Database } from 'drizzle-orm/mysql2';
-import { DATABASE } from '../database/database.module';
-import {
-  roles,
-  operators,
-  grants,
-  roleGrants,
-  users,
-} from '../database/schema';
-import type { NewRole, NewRoleGrant } from '../database/schema';
+import { RolesRepository } from './repositories/roles.repository';
+import { OperatorsRepository } from '../operators/repositories/operators.repository';
+import type { NewRole } from '../database/schema';
 
 @Injectable()
 export class RolesService {
-  constructor(@Inject(DATABASE) private db: MySql2Database) {}
+  constructor(
+    private readonly rolesRepository: RolesRepository,
+    private readonly operatorsRepository: OperatorsRepository,
+  ) {}
 
-  /**
-   * Find all roles with filtering and pagination
-   */
   async findAll(params: {
     operatorId?: number;
     search?: string;
@@ -32,141 +23,57 @@ export class RolesService {
   }) {
     const page = params.page || 1;
     const limit = params.limit || 10;
-    const offset = (page - 1) * limit;
 
-    // Build where conditions
-    const conditions: SQL[] = [];
+    const result = await this.rolesRepository.findPaginatedWithOperator(
+      {
+        operatorId: params.operatorId,
+        search: params.search,
+      },
+      page,
+      limit,
+    );
 
-    if (params.operatorId !== undefined) {
-      conditions.push(eq(roles.operatorId, params.operatorId));
-    }
-
-    if (params.search) {
-      conditions.push(like(roles.name, `%${params.search}%`));
-    }
-
-    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
-
-    // Get total count
-    const [{ total }] = await this.db
-      .select({ total: count() })
-      .from(roles)
-      .where(whereClause);
-
-    // Get paginated data with operator info
-    const data = await this.db
-      .select({
-        id: roles.id,
-        name: roles.name,
-        operatorId: roles.operatorId,
-        createdAt: roles.createdAt,
-        updatedAt: roles.updatedAt,
-        operator: {
-          id: operators.id,
-          name: operators.name,
-        },
-      })
-      .from(roles)
-      .leftJoin(operators, eq(roles.operatorId, operators.id))
-      .where(whereClause)
-      .limit(limit)
-      .offset(offset)
-      .orderBy(sql`${roles.createdAt} DESC`);
-
-    // Enrich with permissions and additional data
     const enrichedData = await Promise.all(
-      data.map(async (role) => {
-        // Get permissions for this role
-        const rolePermissions = await this.db
-          .select({
-            resource: grants.resource,
-            action: grants.action,
-          })
-          .from(roleGrants)
-          .leftJoin(grants, eq(roleGrants.grantId, grants.id))
-          .where(eq(roleGrants.roleId, role.id));
-
-        // Format permissions as "resource.action"
-        const permissions = rolePermissions.map(
-          (p) => `${p.resource}.${p.action}`,
+      result.data.map(async (role) => {
+        const permissions = await this.rolesRepository.getRolePermissions(
+          role.id,
         );
+        const userCount = await this.rolesRepository.getUserCountByRoleId(
+          role.id,
+        );
+        const activeCount =
+          await this.rolesRepository.getActiveUserCountByRoleId(role.id);
 
-        // Check if it's a system role (you can define this logic)
         const isSystemRole =
           role.name === 'Admin' || role.name === 'SuperAdmin';
-
-        // Get user count for this role
-        const [{ userCount }] = await this.db
-          .select({ userCount: count() })
-          .from(users)
-          .where(eq(users.roleId, role.id));
-
-        // Check if any user with this role is active to determine status
-        const [{ activeCount }] = await this.db
-          .select({ activeCount: count() })
-          .from(users)
-          .where(and(eq(users.roleId, role.id), eq(users.status, true)));
 
         return {
           ...role,
           permissions,
           isSystemRole,
-          status: Number(activeCount) > 0 || Number(userCount) === 0, // Active if has active users or no users
-          userCount: Number(userCount),
+          status: activeCount > 0 || userCount === 0,
+          userCount,
         };
       }),
     );
 
     return {
       data: enrichedData,
-      pagination: {
-        page,
-        limit,
-        total: Number(total),
-        totalPages: Math.ceil(Number(total) / limit),
-      },
+      pagination: result.pagination,
     };
   }
 
-  /**
-   * Find role by ID with permissions
-   */
   async findById(id: number, operatorId?: number) {
-    const conditions = operatorId
-      ? and(eq(roles.id, id), eq(roles.operatorId, operatorId))
-      : eq(roles.id, id);
-
-    const [role] = await this.db
-      .select({
-        id: roles.id,
-        name: roles.name,
-        operatorId: roles.operatorId,
-        createdAt: roles.createdAt,
-        updatedAt: roles.updatedAt,
-        operator: {
-          id: operators.id,
-          name: operators.name,
-        },
-      })
-      .from(roles)
-      .leftJoin(operators, eq(roles.operatorId, operators.id))
-      .where(conditions);
+    const role = await this.rolesRepository.findByIdWithOperator(
+      id,
+      operatorId,
+    );
 
     if (!role) {
       throw new NotFoundException(`Role with ID ${id} not found`);
     }
 
-    // Get permissions
-    const rolePermissions = await this.db
-      .select({
-        resource: grants.resource,
-        action: grants.action,
-      })
-      .from(roleGrants)
-      .leftJoin(grants, eq(roleGrants.grantId, grants.id))
-      .where(eq(roleGrants.roleId, role.id));
-
-    const permissions = rolePermissions.map((p) => `${p.resource}.${p.action}`);
+    const permissions = await this.rolesRepository.getRolePermissions(role.id);
 
     return {
       ...role,
@@ -174,15 +81,10 @@ export class RolesService {
     };
   }
 
-  /**
-   * Create a new role with permissions
-   */
   async create(roleData: NewRole & { permissions?: string[] }) {
-    // Validate operator exists and is active
-    const [operator] = await this.db
-      .select()
-      .from(operators)
-      .where(eq(operators.id, roleData.operatorId));
+    const operator = await this.operatorsRepository.findById(
+      roleData.operatorId,
+    );
 
     if (!operator) {
       throw new BadRequestException(
@@ -196,16 +98,10 @@ export class RolesService {
       );
     }
 
-    // Check if role name already exists for this operator
-    const [existingRole] = await this.db
-      .select()
-      .from(roles)
-      .where(
-        and(
-          eq(roles.name, roleData.name),
-          eq(roles.operatorId, roleData.operatorId),
-        ),
-      );
+    const existingRole = await this.rolesRepository.findByNameAndOperator(
+      roleData.name,
+      roleData.operatorId,
+    );
 
     if (existingRole) {
       throw new BadRequestException(
@@ -213,45 +109,31 @@ export class RolesService {
       );
     }
 
-    // Create role
-    const [insertedRole] = await this.db
-      .insert(roles)
-      .values({
-        name: roleData.name,
-        operatorId: roleData.operatorId,
-      })
-      .$returningId();
+    const roleId = await this.rolesRepository.createRoleWithId({
+      name: roleData.name,
+      operatorId: roleData.operatorId,
+    });
 
-    // Handle permissions if provided
     if (roleData.permissions && roleData.permissions.length > 0) {
-      await this.updateRolePermissions(insertedRole.id, roleData.permissions);
+      await this.updateRolePermissions(roleId, roleData.permissions);
     }
 
-    return this.findById(insertedRole.id);
+    return this.findById(roleId);
   }
 
-  /**
-   * Update role and optionally its permissions
-   */
   async update(
     id: number,
     roleData: Partial<NewRole> & { permissions?: string[] },
     operatorId?: number,
   ) {
-    // Check if role exists
     const existingRole = await this.findById(id, operatorId);
 
-    // Check if new name conflicts with existing role
     if (roleData.name) {
-      const [conflictingRole] = await this.db
-        .select()
-        .from(roles)
-        .where(
-          and(
-            eq(roles.name, roleData.name),
-            eq(roles.operatorId, existingRole.operatorId),
-            sql`${roles.id} != ${id}`,
-          ),
+      const conflictingRole =
+        await this.rolesRepository.findByNameAndOperatorExcludingId(
+          roleData.name,
+          existingRole.operatorId,
+          id,
         );
 
       if (conflictingRole) {
@@ -259,17 +141,10 @@ export class RolesService {
           `Role with name "${roleData.name}" already exists for this operator`,
         );
       }
+
+      await this.rolesRepository.updateRoleName(id, roleData.name);
     }
 
-    // Update role if name is provided
-    if (roleData.name) {
-      await this.db
-        .update(roles)
-        .set({ name: roleData.name })
-        .where(eq(roles.id, id));
-    }
-
-    // Update permissions if provided
     if (roleData.permissions !== undefined) {
       await this.updateRolePermissions(id, roleData.permissions);
     }
@@ -277,51 +152,31 @@ export class RolesService {
     return this.findById(id, operatorId);
   }
 
-  /**
-   * Delete role
-   */
   async delete(id: number, operatorId?: number): Promise<void> {
-    // Check if role exists
     await this.findById(id, operatorId);
 
-    // Check if role has users assigned
-    const [{ userCount }] = await this.db
-      .select({ userCount: count() })
-      .from(users)
-      .where(eq(users.roleId, id));
+    const userCount = await this.rolesRepository.getUserCountByRoleId(id);
 
-    if (Number(userCount) > 0) {
+    if (userCount > 0) {
       throw new BadRequestException(
         `Cannot delete role with ${userCount} assigned users. Please reassign users first.`,
       );
     }
 
-    // Delete role grants first (cascade should handle this but being explicit)
-    await this.db.delete(roleGrants).where(eq(roleGrants.roleId, id));
-
-    // Delete role
-    const conditions = operatorId
-      ? and(eq(roles.id, id), eq(roles.operatorId, operatorId))
-      : eq(roles.id, id);
-
-    await this.db.delete(roles).where(conditions);
+    await this.rolesRepository.deleteRolePermissions(id);
+    await this.rolesRepository.delete(id);
   }
 
-  /**
-   * Update role permissions
-   */
   private async updateRolePermissions(
     roleId: number,
     permissions: string[],
   ): Promise<void> {
-    // Delete existing permissions
-    await this.db.delete(roleGrants).where(eq(roleGrants.roleId, roleId));
+    await this.rolesRepository.deleteRolePermissions(roleId);
 
     if (permissions.length === 0) {
       return;
     }
 
-    // Parse permissions (format: "resource.action")
     const parsedPermissions = permissions.map((permission) => {
       const [resource, action] = permission.split('.');
       if (!resource || !action) {
@@ -332,38 +187,14 @@ export class RolesService {
       return { resource, action };
     });
 
-    // Ensure all grants exist
-    for (const { resource, action } of parsedPermissions) {
-      const [existingGrant] = await this.db
-        .select()
-        .from(grants)
-        .where(and(eq(grants.resource, resource), eq(grants.action, action)));
+    const grants =
+      await this.rolesRepository.findGrantsByResourceAndAction(
+        parsedPermissions,
+      );
 
-      if (!existingGrant) {
-        // Create grant if it doesn't exist
-        await this.db.insert(grants).values({ resource, action });
-      }
-    }
-
-    // Get grant IDs
-    const grantRecords = await Promise.all(
-      parsedPermissions.map(async ({ resource, action }) => {
-        const [grant] = await this.db
-          .select()
-          .from(grants)
-          .where(and(eq(grants.resource, resource), eq(grants.action, action)));
-        return grant;
-      }),
-    );
-
-    // Create role grants
-    const roleGrantsValues: NewRoleGrant[] = grantRecords.map((grant) => ({
-      roleId,
-      grantId: grant.id,
-    }));
-
-    if (roleGrantsValues.length > 0) {
-      await this.db.insert(roleGrants).values(roleGrantsValues);
+    if (grants.length > 0) {
+      const grantIds = grants.map((grant) => grant.id);
+      await this.rolesRepository.createRolePermissions(roleId, grantIds);
     }
   }
 }
