@@ -125,7 +125,7 @@ export class OperatorsController {
           : null,
     };
 
-    return this.operatorsService.create(operatorData);
+    return this.operatorsService.create(operatorData, req.user.id);
   }
 
   @Put(':id')
@@ -155,7 +155,7 @@ export class OperatorsController {
           : null,
     };
 
-    return this.operatorsService.update(id, operatorData);
+    return this.operatorsService.update(id, operatorData, req.user.id);
   }
 
   @Delete(':id')
