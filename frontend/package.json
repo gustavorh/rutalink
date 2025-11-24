@@ -1,6 +1,8 @@
 {
-  "name": "frontend",
+  "name": "rutalink-frontend",
   "version": "0.1.0",
+  "description": "Frontend for Rutalink",
+  "author": "gustavorh",
   "private": true,
   "scripts": {
     "dev": "next dev",
