@@ -49,7 +49,7 @@ export class DriverDocumentsRepository extends BaseRepository<DriverDocument> {
     if (!createdDocument) {
       throw new Error('Failed to retrieve created driver document');
     }
-    return createdDocument as DriverDocument;
+    return createdDocument;
   }
 
   /**
@@ -72,6 +72,6 @@ export class DriverDocumentsRepository extends BaseRepository<DriverDocument> {
     if (!updatedDocument) {
       throw new Error('Failed to retrieve updated driver document');
     }
-    return updatedDocument as DriverDocument;
+    return updatedDocument;
   }
 }

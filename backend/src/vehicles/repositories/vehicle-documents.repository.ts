@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { MySql2Database } from 'drizzle-orm/mysql2';
-import { eq, and, lt, asc, desc, sql, SQL } from 'drizzle-orm';
+import { eq, and, lt, asc, desc, sql } from 'drizzle-orm';
 import { BaseRepository } from '../../common/repositories/base.repository';
 import { DATABASE } from '../../database/database.module';
 import * as schema from '../../database/schema';
@@ -36,7 +36,10 @@ export class VehicleDocumentsRepository extends BaseRepository<VehicleDocument> 
     data: Partial<VehicleDocument>,
     userId: number,
   ): Promise<number> {
-    const insertData: any = {
+    const issueDateValue = data.issueDate;
+    const expirationDateValue = data.expirationDate;
+
+    const insertData = {
       vehicleId: data.vehicleId!,
       documentType: data.documentType!,
       documentName: data.documentName!,
@@ -44,9 +47,11 @@ export class VehicleDocumentsRepository extends BaseRepository<VehicleDocument> 
       filePath: data.filePath ?? null,
       fileSize: data.fileSize ?? null,
       mimeType: data.mimeType ?? null,
-      issueDate: data.issueDate ? new Date(data.issueDate as any) : null,
-      expirationDate: data.expirationDate
-        ? new Date(data.expirationDate as any)
+      issueDate: issueDateValue
+        ? new Date(issueDateValue as string | number | Date)
+        : null,
+      expirationDate: expirationDateValue
+        ? new Date(expirationDateValue as string | number | Date)
         : null,
       insuranceCompany: data.insuranceCompany ?? null,
       policyNumber: data.policyNumber ?? null,
@@ -70,20 +75,23 @@ export class VehicleDocumentsRepository extends BaseRepository<VehicleDocument> 
     data: Partial<VehicleDocument>,
     userId: number,
   ): Promise<void> {
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       ...data,
       updatedBy: userId,
     };
 
     // Handle date conversions
-    if (data.issueDate !== undefined) {
-      updateData.issueDate = data.issueDate
-        ? new Date(data.issueDate as any)
+    const issueDateValue = data.issueDate;
+    const expirationDateValue = data.expirationDate;
+
+    if (issueDateValue !== undefined) {
+      updateData.issueDate = issueDateValue
+        ? new Date(issueDateValue as string | number | Date)
         : null;
     }
-    if (data.expirationDate !== undefined) {
-      updateData.expirationDate = data.expirationDate
-        ? new Date(data.expirationDate as any)
+    if (expirationDateValue !== undefined) {
+      updateData.expirationDate = expirationDateValue
+        ? new Date(expirationDateValue as string | number | Date)
         : null;
     }
 

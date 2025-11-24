@@ -9,6 +9,10 @@ import {
   ValidateIf,
 } from 'class-validator';
 
+interface OperatorDtoWithExpiration {
+  expiration?: string | null;
+}
+
 export class CreateOperatorDto {
   @IsString()
   @IsNotEmpty()
@@ -27,9 +31,8 @@ export class CreateOperatorDto {
   @IsOptional()
   super?: boolean;
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   @ValidateIf(
-    (o: any) =>
+    (o: OperatorDtoWithExpiration) =>
       o.expiration !== '' &&
       o.expiration !== null &&
       o.expiration !== undefined,
@@ -61,9 +64,8 @@ export class UpdateOperatorDto {
   @IsOptional()
   super?: boolean;
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   @ValidateIf(
-    (o: any) =>
+    (o: OperatorDtoWithExpiration) =>
       o.expiration !== '' &&
       o.expiration !== null &&
       o.expiration !== undefined,

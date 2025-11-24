@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { MySql2Database } from 'drizzle-orm/mysql2';
-import { eq, and, sql, SQL, desc } from 'drizzle-orm';
+import { eq, and, sql, SQL } from 'drizzle-orm';
 import { BaseRepository } from '../../common/repositories/base.repository';
 import { DATABASE } from '../../database/database.module';
 import * as schema from '../../database/schema';
@@ -257,7 +257,7 @@ export class RoutesRepository extends BaseRepository<Route> {
     if (!createdRoute) {
       throw new Error('Failed to retrieve created route');
     }
-    return createdRoute as Route;
+    return createdRoute;
   }
 
   /**

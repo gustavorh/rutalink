@@ -30,6 +30,7 @@ import {
   UnassignDriverFromVehicleDto,
   GenerateReportDto,
   BatchUploadOperationsDto,
+  OperationExcelRowDto,
 } from './dto/operation.dto';
 
 interface RequestWithUser extends Request {
@@ -204,7 +205,7 @@ export class OperationsController {
     // Process the batch upload
     const batchUploadDto: BatchUploadOperationsDto = {
       operatorId,
-      operations: parseResult.data,
+      operations: parseResult.data as OperationExcelRowDto[],
     };
 
     return await this.operationsService.batchUploadOperations(

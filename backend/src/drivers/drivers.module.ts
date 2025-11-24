@@ -9,15 +9,7 @@ import { AuthModule } from '../auth/auth.module';
 @Module({
   imports: [DatabaseModule, AuthModule],
   controllers: [DriversController],
-  providers: [
-    DriversService,
-    DriversRepository,
-    DriverDocumentsRepository,
-  ],
-  exports: [
-    DriversService,
-    DriversRepository,
-    DriverDocumentsRepository,
-  ],
+  providers: [DriversService, DriversRepository, DriverDocumentsRepository],
+  exports: [DriversService, DriversRepository, DriverDocumentsRepository],
 })
 export class DriversModule {}

@@ -36,7 +36,13 @@ import { DatabaseModule } from '../database/database.module';
     }),
   ],
   controllers: [AuthController, RolesController],
-  providers: [AuthService, RolesService, RolesRepository, JwtStrategy, LocalStrategy],
+  providers: [
+    AuthService,
+    RolesService,
+    RolesRepository,
+    JwtStrategy,
+    LocalStrategy,
+  ],
   exports: [AuthService, RolesService, RolesRepository],
 })
 export class AuthModule {}

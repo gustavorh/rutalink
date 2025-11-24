@@ -1,4 +1,7 @@
-import { SQL, eq, like, or, and, gte, lte, inArray } from 'drizzle-orm';
+import { SQL, eq, like, or, and, gte, lte, inArray, Column } from 'drizzle-orm';
+
+// Type for Drizzle columns that can be used in queries
+type DrizzleColumn = Column | SQL;
 
 /**
  * Query Builder Pattern
@@ -20,9 +23,14 @@ export class QueryBuilder {
    * Add an equality condition (field = value)
    * Automatically skips if value is undefined or null
    */
-  addEquals(field: any, value: any): this {
+  addEquals(field: DrizzleColumn, value: unknown): this {
     if (value !== undefined && value !== null) {
-      this.conditions.push(eq(field, value));
+      this.conditions.push(
+        eq(
+          field as Parameters<typeof eq>[0],
+          value as Parameters<typeof eq>[1],
+        ),
+      );
     }
     return this;
   }
@@ -31,10 +39,10 @@ export class QueryBuilder {
    * Add a LIKE search condition across multiple fields (OR)
    * Creates: (field1 LIKE '%term%' OR field2 LIKE '%term%' OR ...)
    */
-  addSearch(fields: any[], searchTerm?: string): this {
+  addSearch(fields: DrizzleColumn[], searchTerm?: string): this {
     if (searchTerm && searchTerm.trim()) {
       const searchConditions = fields.map((field) =>
-        like(field, `%${searchTerm}%`),
+        like(field as Parameters<typeof like>[0], `%${searchTerm}%`),
       );
       const orCondition = or(...searchConditions);
       if (orCondition) {
@@ -50,12 +58,12 @@ export class QueryBuilder {
    * @param startDate Optional start date (inclusive)
    * @param endDate Optional end date (inclusive)
    */
-  addDateRange(field: any, startDate?: Date, endDate?: Date): this {
+  addDateRange(field: DrizzleColumn, startDate?: Date, endDate?: Date): this {
     if (startDate) {
-      this.conditions.push(gte(field, startDate));
+      this.conditions.push(gte(field as Parameters<typeof gte>[0], startDate));
     }
     if (endDate) {
-      this.conditions.push(lte(field, endDate));
+      this.conditions.push(lte(field as Parameters<typeof lte>[0], endDate));
     }
     return this;
   }
@@ -63,9 +71,9 @@ export class QueryBuilder {
   /**
    * Add a greater than or equal condition (field >= value)
    */
-  addGreaterThanOrEqual(field: any, value?: number | Date): this {
+  addGreaterThanOrEqual(field: DrizzleColumn, value?: number | Date): this {
     if (value !== undefined && value !== null) {
-      this.conditions.push(gte(field, value));
+      this.conditions.push(gte(field as Parameters<typeof gte>[0], value));
     }
     return this;
   }
@@ -73,9 +81,9 @@ export class QueryBuilder {
   /**
    * Add a less than or equal condition (field <= value)
    */
-  addLessThanOrEqual(field: any, value?: number | Date): this {
+  addLessThanOrEqual(field: DrizzleColumn, value?: number | Date): this {
     if (value !== undefined && value !== null) {
-      this.conditions.push(lte(field, value));
+      this.conditions.push(lte(field as Parameters<typeof lte>[0], value));
     }
     return this;
   }
@@ -83,9 +91,14 @@ export class QueryBuilder {
   /**
    * Add an IN condition (field IN (value1, value2, ...))
    */
-  addIn(field: any, values?: any[]): this {
+  addIn(field: DrizzleColumn, values?: unknown[]): this {
     if (values && values.length > 0) {
-      this.conditions.push(inArray(field, values));
+      this.conditions.push(
+        inArray(
+          field as Parameters<typeof inArray>[0],
+          values as Parameters<typeof inArray>[1],
+        ),
+      );
     }
     return this;
   }
@@ -105,9 +118,14 @@ export class QueryBuilder {
    * Add an OR condition between multiple fields with the same value
    * Creates: (field1 = value OR field2 = value OR ...)
    */
-  addOrEquals(fields: any[], value: any): this {
+  addOrEquals(fields: DrizzleColumn[], value: unknown): this {
     if (value !== undefined && value !== null && fields.length > 0) {
-      const orConditions = fields.map((field) => eq(field, value));
+      const orConditions = fields.map((field) =>
+        eq(
+          field as Parameters<typeof eq>[0],
+          value as Parameters<typeof eq>[1],
+        ),
+      );
       const orCondition = or(...orConditions);
       if (orCondition) {
         this.conditions.push(orCondition);

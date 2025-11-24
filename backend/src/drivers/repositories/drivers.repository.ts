@@ -175,7 +175,7 @@ export class DriversRepository extends BaseRepository<Driver> {
     if (!createdDriver) {
       throw new Error('Failed to retrieve created driver');
     }
-    return createdDriver as Driver;
+    return createdDriver;
   }
 
   /**
@@ -198,7 +198,7 @@ export class DriversRepository extends BaseRepository<Driver> {
     if (!updatedDriver) {
       throw new Error('Failed to retrieve updated driver');
     }
-    return updatedDriver as Driver;
+    return updatedDriver;
   }
 
   /**

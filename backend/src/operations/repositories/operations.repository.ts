@@ -175,7 +175,12 @@ export class OperationsRepository extends BaseRepository<Operation> {
     data: Partial<Operation>,
     userId: number,
   ): Promise<number> {
-    const insertData: any = {
+    const scheduledStart = data.scheduledStartDate;
+    const scheduledEnd = data.scheduledEndDate;
+    const actualStart = data.actualStartDate;
+    const actualEnd = data.actualEndDate;
+
+    const insertData = {
       operatorId: data.operatorId!,
       driverId: data.driverId!,
       vehicleId: data.vehicleId!,
@@ -183,17 +188,17 @@ export class OperationsRepository extends BaseRepository<Operation> {
       operationType: data.operationType!,
       origin: data.origin!,
       destination: data.destination!,
-      scheduledStartDate: data.scheduledStartDate
-        ? new Date(data.scheduledStartDate as any)
-        : undefined,
-      scheduledEndDate: data.scheduledEndDate
-        ? new Date(data.scheduledEndDate as any)
+      scheduledStartDate: scheduledStart
+        ? new Date(scheduledStart as string | number | Date)
+        : new Date(),
+      scheduledEndDate: scheduledEnd
+        ? new Date(scheduledEnd as string | number | Date)
         : null,
-      actualStartDate: data.actualStartDate
-        ? new Date(data.actualStartDate as any)
+      actualStartDate: actualStart
+        ? new Date(actualStart as string | number | Date)
         : null,
-      actualEndDate: data.actualEndDate
-        ? new Date(data.actualEndDate as any)
+      actualEndDate: actualEnd
+        ? new Date(actualEnd as string | number | Date)
         : null,
       clientId: data.clientId ?? null,
       providerId: data.providerId ?? null,
@@ -219,28 +224,35 @@ export class OperationsRepository extends BaseRepository<Operation> {
     data: Partial<Operation>,
     userId: number,
   ): Promise<void> {
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       ...data,
       updatedBy: userId,
     };
 
     // Handle date conversions
-    if (data.scheduledStartDate) {
-      updateData.scheduledStartDate = new Date(data.scheduledStartDate as any);
+    const scheduledStart = data.scheduledStartDate;
+    const scheduledEnd = data.scheduledEndDate;
+    const actualStart = data.actualStartDate;
+    const actualEnd = data.actualEndDate;
+
+    if (scheduledStart) {
+      updateData.scheduledStartDate = new Date(
+        scheduledStart as string | number | Date,
+      );
     }
-    if (data.scheduledEndDate !== undefined) {
-      updateData.scheduledEndDate = data.scheduledEndDate
-        ? new Date(data.scheduledEndDate as any)
+    if (scheduledEnd !== undefined) {
+      updateData.scheduledEndDate = scheduledEnd
+        ? new Date(scheduledEnd as string | number | Date)
         : null;
     }
-    if (data.actualStartDate !== undefined) {
-      updateData.actualStartDate = data.actualStartDate
-        ? new Date(data.actualStartDate as any)
+    if (actualStart !== undefined) {
+      updateData.actualStartDate = actualStart
+        ? new Date(actualStart as string | number | Date)
         : null;
     }
-    if (data.actualEndDate !== undefined) {
-      updateData.actualEndDate = data.actualEndDate
-        ? new Date(data.actualEndDate as any)
+    if (actualEnd !== undefined) {
+      updateData.actualEndDate = actualEnd
+        ? new Date(actualEnd as string | number | Date)
         : null;
     }
 

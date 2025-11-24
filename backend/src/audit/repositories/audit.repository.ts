@@ -213,4 +213,3 @@ export class AuditRepository extends BaseRepository<AuditLog> {
     return Number(result.count);
   }
 }
-

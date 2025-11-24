@@ -9,11 +9,7 @@ import { OperationsModule } from '../operations/operations.module';
 @Module({
   imports: [DatabaseModule, OperationsModule],
   controllers: [VehiclesController],
-  providers: [
-    VehiclesService,
-    VehiclesRepository,
-    VehicleDocumentsRepository,
-  ],
+  providers: [VehiclesService, VehiclesRepository, VehicleDocumentsRepository],
   exports: [VehiclesService],
 })
 export class VehiclesModule {}

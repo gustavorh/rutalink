@@ -12,6 +12,7 @@ import {
   UnassignDriverFromVehicleDto,
   GenerateReportDto,
   BatchUploadOperationsDto,
+  OperationExcelRowDto,
 } from './dto/operation.dto';
 import { PdfService } from './pdf.service';
 import { ExcelService, ValidationError } from './excel.service';
@@ -106,7 +107,24 @@ export class OperationsService {
 
     // Create operation using repository
     const operationId = await this.operationsRepository.createOperation(
-      createOperationDto as any,
+      createOperationDto as Partial<{
+        operatorId: number;
+        clientId: number | null;
+        providerId: number | null;
+        routeId: number | null;
+        driverId: number;
+        vehicleId: number;
+        operationNumber: string;
+        operationType: string;
+        origin: string;
+        destination: string;
+        scheduledStartDate: Date | string;
+        scheduledEndDate: Date | string | null;
+        distance: number | null;
+        cargoDescription: string | null;
+        cargoWeight: number | null;
+        notes: string | null;
+      }>,
       userId,
     );
 
@@ -245,7 +263,25 @@ export class OperationsService {
     // Update operation using repository
     await this.operationsRepository.updateOperation(
       id,
-      updateOperationDto as any,
+      updateOperationDto as Partial<{
+        clientId: number | null;
+        providerId: number | null;
+        routeId: number | null;
+        driverId: number;
+        vehicleId: number;
+        operationType: string;
+        origin: string;
+        destination: string;
+        scheduledStartDate: Date | string;
+        scheduledEndDate: Date | string | null;
+        actualStartDate: Date | string | null;
+        actualEndDate: Date | string | null;
+        distance: number | null;
+        status: string;
+        cargoDescription: string | null;
+        cargoWeight: number | null;
+        notes: string | null;
+      }>,
       userId,
     );
 
@@ -450,11 +486,15 @@ export class OperationsService {
           result,
         );
       } catch (error) {
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : 'Error desconocido al procesar la fila';
         result.errorCount++;
         result.errors.push({
           row: rowNumber,
           field: 'general',
-          message: error.message || 'Error desconocido al procesar la fila',
+          message: errorMessage,
           value: null,
         });
       }
@@ -467,26 +507,30 @@ export class OperationsService {
 
   private async processOperationRow(
     operatorId: number,
-    rowData: any,
+    rowData: OperationExcelRowDto,
     rowNumber: number,
     userId: number,
     result: BatchUploadResult,
   ): Promise<void> {
+    const opNumber = rowData.operationNumber;
+    const driverRutValue = rowData.driverRut;
+    const vehiclePlate = rowData.vehiclePlateNumber;
+
     // Check for duplicate operation number
     const existingOperation =
       await this.operationsRepository.findByOperationNumber(
         operatorId,
-        rowData.operationNumber,
+        opNumber,
       );
 
     if (existingOperation) {
       result.errorCount++;
-      result.duplicates.push(rowData.operationNumber);
+      result.duplicates.push(opNumber);
       result.errors.push({
         row: rowNumber,
         field: 'operationNumber',
-        message: `El número de operación ${rowData.operationNumber} ya existe`,
-        value: rowData.operationNumber,
+        message: `El número de operación ${opNumber} ya existe`,
+        value: opNumber,
       });
       return;
     }
@@ -494,7 +538,7 @@ export class OperationsService {
     // Find driver by RUT
     const driver = await this.operationsRepository.findDriverByRut(
       operatorId,
-      rowData.driverRut,
+      driverRutValue,
     );
 
     if (!driver) {
@@ -502,8 +546,8 @@ export class OperationsService {
       result.errors.push({
         row: rowNumber,
         field: 'driverRut',
-        message: `No se encontró un chofer con RUT ${rowData.driverRut}`,
-        value: rowData.driverRut,
+        message: `No se encontró un chofer con RUT ${driverRutValue}`,
+        value: driverRutValue,
       });
       return;
     }
@@ -513,8 +557,8 @@ export class OperationsService {
       result.errors.push({
         row: rowNumber,
         field: 'driverRut',
-        message: `El chofer con RUT ${rowData.driverRut} está inactivo`,
-        value: rowData.driverRut,
+        message: `El chofer con RUT ${driverRutValue} está inactivo`,
+        value: driverRutValue,
       });
       return;
     }
@@ -522,7 +566,7 @@ export class OperationsService {
     // Find vehicle by plate number
     const vehicle = await this.operationsRepository.findVehicleByPlateNumber(
       operatorId,
-      rowData.vehiclePlateNumber,
+      vehiclePlate,
     );
 
     if (!vehicle) {
@@ -530,8 +574,8 @@ export class OperationsService {
       result.errors.push({
         row: rowNumber,
         field: 'vehiclePlateNumber',
-        message: `No se encontró un vehículo con patente ${rowData.vehiclePlateNumber}`,
-        value: rowData.vehiclePlateNumber,
+        message: `No se encontró un vehículo con patente ${vehiclePlate}`,
+        value: vehiclePlate,
       });
       return;
     }
@@ -541,18 +585,19 @@ export class OperationsService {
       result.errors.push({
         row: rowNumber,
         field: 'vehiclePlateNumber',
-        message: `El vehículo con patente ${rowData.vehiclePlateNumber} está inactivo`,
-        value: rowData.vehiclePlateNumber,
+        message: `El vehículo con patente ${vehiclePlate} está inactivo`,
+        value: vehiclePlate,
       });
       return;
     }
 
     // Find client if specified
     let clientId: number | undefined = undefined;
-    if (rowData.clientName) {
+    const clientNameValue = rowData.clientName;
+    if (clientNameValue) {
       const client = await this.operationsRepository.findClientByBusinessName(
         operatorId,
-        rowData.clientName,
+        clientNameValue,
       );
 
       if (!client) {
@@ -560,8 +605,8 @@ export class OperationsService {
         result.errors.push({
           row: rowNumber,
           field: 'clientName',
-          message: `No se encontró un cliente con el nombre ${rowData.clientName}`,
-          value: rowData.clientName,
+          message: `No se encontró un cliente con el nombre ${clientNameValue}`,
+          value: clientNameValue,
         });
         return;
       }
@@ -571,11 +616,12 @@ export class OperationsService {
 
     // Find provider if specified
     let providerId: number | undefined = undefined;
-    if (rowData.providerName) {
+    const providerNameValue = rowData.providerName;
+    if (providerNameValue) {
       const provider =
         await this.operationsRepository.findProviderByBusinessName(
           operatorId,
-          rowData.providerName,
+          providerNameValue,
         );
 
       if (!provider) {
@@ -583,8 +629,8 @@ export class OperationsService {
         result.errors.push({
           row: rowNumber,
           field: 'providerName',
-          message: `No se encontró un proveedor con el nombre ${rowData.providerName}`,
-          value: rowData.providerName,
+          message: `No se encontró un proveedor con el nombre ${providerNameValue}`,
+          value: providerNameValue,
         });
         return;
       }
@@ -594,10 +640,11 @@ export class OperationsService {
 
     // Find route if specified
     let routeId: number | undefined = undefined;
-    if (rowData.routeName) {
+    const routeNameValue = rowData.routeName;
+    if (routeNameValue) {
       const route = await this.operationsRepository.findRouteByName(
         operatorId,
-        rowData.routeName,
+        routeNameValue,
       );
 
       if (!route) {
@@ -605,8 +652,8 @@ export class OperationsService {
         result.errors.push({
           row: rowNumber,
           field: 'routeName',
-          message: `No se encontró un tramo/ruta con el nombre ${rowData.routeName}`,
-          value: rowData.routeName,
+          message: `No se encontró un tramo/ruta con el nombre ${routeNameValue}`,
+          value: routeNameValue,
         });
         return;
       }
@@ -622,7 +669,7 @@ export class OperationsService {
       routeId,
       driverId: driver.id,
       vehicleId: vehicle.id,
-      operationNumber: rowData.operationNumber,
+      operationNumber: opNumber,
       operationType: rowData.operationType,
       origin: rowData.origin,
       destination: rowData.destination,
@@ -639,11 +686,13 @@ export class OperationsService {
       result.successCount++;
       result.createdOperations.push(newOperation.operation.id);
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Error desconocido';
       result.errorCount++;
       result.errors.push({
         row: rowNumber,
         field: 'general',
-        message: `Error al crear la operación: ${error.message}`,
+        message: `Error al crear la operación: ${errorMessage}`,
         value: null,
       });
     }

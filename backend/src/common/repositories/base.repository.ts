@@ -1,6 +1,15 @@
 import { MySql2Database } from 'drizzle-orm/mysql2';
 import { eq, and, SQL } from 'drizzle-orm';
 
+// Table type with common columns
+interface TableWithId {
+  id: unknown;
+}
+
+interface TableWithOperatorId extends TableWithId {
+  operatorId: unknown;
+}
+
 /**
  * Base Repository Pattern
  *
@@ -10,18 +19,19 @@ import { eq, and, SQL } from 'drizzle-orm';
  */
 export abstract class BaseRepository<T> {
   constructor(
-    protected readonly db: MySql2Database<any>,
-    protected readonly table: any,
+    protected readonly db: MySql2Database<Record<string, unknown>>,
+    protected readonly table: TableWithId & TableWithOperatorId,
   ) {}
 
   /**
    * Find a single record by ID
    */
   async findById(id: number): Promise<T | null> {
+    const tableRef = this.table as TableWithId;
     const [record] = await this.db
       .select()
-      .from(this.table)
-      .where(eq(this.table.id, id))
+      .from(this.table as Parameters<typeof this.db.select>[0])
+      .where(eq(tableRef.id as Parameters<typeof eq>[0], id))
       .limit(1);
     return (record as T) || null;
   }
@@ -30,10 +40,13 @@ export abstract class BaseRepository<T> {
    * Find all records for a specific operator
    */
   async findByOperatorId(operatorId: number): Promise<T[]> {
+    const tableRef = this.table as TableWithOperatorId;
     return this.db
       .select()
-      .from(this.table)
-      .where(eq(this.table.operatorId, operatorId)) as Promise<T[]>;
+      .from(this.table as Parameters<typeof this.db.select>[0])
+      .where(
+        eq(tableRef.operatorId as Parameters<typeof eq>[0], operatorId),
+      ) as Promise<T[]>;
   }
 
   /**
@@ -41,11 +54,13 @@ export abstract class BaseRepository<T> {
    * @returns The ID of the created record
    */
   async create(data: Partial<T>, userId: number): Promise<number> {
-    const [result] = await this.db.insert(this.table).values({
-      ...data,
-      createdBy: userId,
-      updatedBy: userId,
-    });
+    const [result] = await this.db
+      .insert(this.table as Parameters<typeof this.db.insert>[0])
+      .values({
+        ...data,
+        createdBy: userId,
+        updatedBy: userId,
+      } as Record<string, unknown>);
     return result.insertId;
   }
 
@@ -53,20 +68,24 @@ export abstract class BaseRepository<T> {
    * Update an existing record
    */
   async update(id: number, data: Partial<T>, userId: number): Promise<void> {
+    const tableRef = this.table as TableWithId;
     await this.db
-      .update(this.table)
+      .update(this.table as Parameters<typeof this.db.update>[0])
       .set({
         ...data,
         updatedBy: userId,
-      })
-      .where(eq(this.table.id, id));
+      } as Record<string, unknown>)
+      .where(eq(tableRef.id as Parameters<typeof eq>[0], id));
   }
 
   /**
    * Delete a record by ID
    */
   async delete(id: number): Promise<void> {
-    await this.db.delete(this.table).where(eq(this.table.id, id));
+    const tableRef = this.table as TableWithId;
+    await this.db
+      .delete(this.table as Parameters<typeof this.db.delete>[0])
+      .where(eq(tableRef.id as Parameters<typeof eq>[0], id));
   }
 
   /**

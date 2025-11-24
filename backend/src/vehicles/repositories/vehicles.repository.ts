@@ -5,7 +5,6 @@ import { BaseRepository } from '../../common/repositories/base.repository';
 import { DATABASE } from '../../database/database.module';
 import * as schema from '../../database/schema';
 import { Vehicle } from '../../database/schema';
-import { QueryBuilder } from '../../common/query-builder/query-builder';
 import {
   PaginationFactory,
   PaginatedResponse,
@@ -100,7 +99,9 @@ export class VehiclesRepository extends BaseRepository<Vehicle> {
     const conditions: SQL[] = [eq(schema.vehicles.operatorId, operatorId)];
 
     if (search) {
-      const searchConditions = [ilike(schema.vehicles.plateNumber, `%${search}%`)];
+      const searchConditions = [
+        ilike(schema.vehicles.plateNumber, `%${search}%`),
+      ];
       if (schema.vehicles.brand) {
         searchConditions.push(ilike(schema.vehicles.brand, `%${search}%`));
       }
@@ -174,4 +175,3 @@ export class VehiclesRepository extends BaseRepository<Vehicle> {
     return Number(result.count);
   }
 }
-

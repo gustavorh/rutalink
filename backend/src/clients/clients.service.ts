@@ -176,7 +176,11 @@ export class ClientsService {
     }
 
     // Soft delete - cambiar status a false using repository
-    await this.clientsRepository.update(id, { status: false } as any, userId);
+    await this.clientsRepository.update(
+      id,
+      { status: false } as Partial<{ status: boolean }>,
+      userId,
+    );
 
     return { message: 'Client deactivated successfully' };
   }

@@ -145,11 +145,12 @@ export class VehiclesService {
 
     // Si se actualiza la patente, verificar que no exista otra con el mismo número
     if (updateTruckDto.plateNumber) {
-      const exists = await this.vehiclesRepository.existsByPlateNumberExcludingId(
-        operatorId,
-        updateTruckDto.plateNumber,
-        id,
-      );
+      const exists =
+        await this.vehiclesRepository.existsByPlateNumberExcludingId(
+          operatorId,
+          updateTruckDto.plateNumber,
+          id,
+        );
 
       if (exists) {
         throw new ConflictException(
@@ -217,7 +218,8 @@ export class VehiclesService {
   ): Promise<VehicleDocumentResponseDto[]> {
     await this.findOne(operatorId, vehicleId);
 
-    const docs = await this.vehicleDocumentsRepository.findByVehicleId(vehicleId);
+    const docs =
+      await this.vehicleDocumentsRepository.findByVehicleId(vehicleId);
 
     return docs.map((doc) => this.enrichDocumentData(doc));
   }

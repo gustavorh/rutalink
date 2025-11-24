@@ -8,7 +8,7 @@ import { DriverVehicle } from '../../database/schema';
 
 /**
  * Driver-Vehicles Repository
- * 
+ *
  * Handles all data access operations for driver-vehicle assignments.
  */
 @Injectable()
@@ -63,7 +63,10 @@ export class DriverVehiclesRepository extends BaseRepository<DriverVehicle> {
   /**
    * Deactivate all active assignments for a driver
    */
-  async deactivateActiveAssignments(driverId: number, userId: number): Promise<void> {
+  async deactivateActiveAssignments(
+    driverId: number,
+    userId: number,
+  ): Promise<void> {
     await this.db
       .update(schema.driverVehicles)
       .set({
@@ -108,7 +111,7 @@ export class DriverVehiclesRepository extends BaseRepository<DriverVehicle> {
     userId: number,
   ): Promise<void> {
     const assignment = await this.findById(assignmentId);
-    
+
     await this.db
       .update(schema.driverVehicles)
       .set({
@@ -120,5 +123,3 @@ export class DriverVehiclesRepository extends BaseRepository<DriverVehicle> {
       .where(eq(schema.driverVehicles.id, assignmentId));
   }
 }
-
-

@@ -182,7 +182,7 @@ export class OperatorsRepository extends BaseRepository<Operator> {
     if (!createdOperator) {
       throw new Error('Failed to retrieve created operator');
     }
-    return createdOperator as Operator;
+    return createdOperator;
   }
 
   /**
@@ -205,7 +205,7 @@ export class OperatorsRepository extends BaseRepository<Operator> {
     if (!updatedOperator) {
       throw new Error('Failed to retrieve updated operator');
     }
-    return updatedOperator as Operator;
+    return updatedOperator;
   }
 
   /**

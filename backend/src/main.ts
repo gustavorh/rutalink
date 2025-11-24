@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { SwaggerModule, DocumentBuilder, OpenAPIObject } from '@nestjs/swagger';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import * as yaml from 'js-yaml';
@@ -42,8 +42,8 @@ async function bootstrap() {
       openApiPath = join(__dirname, '..', 'docs', 'openapi.yaml');
     }
     const openApiYaml = readFileSync(openApiPath, 'utf-8');
-    const openApiSpec = yaml.load(openApiYaml) as any;
-    
+    const openApiSpec = yaml.load(openApiYaml) as OpenAPIObject;
+
     // Use the parsed YAML spec directly
     SwaggerModule.setup('api-docs', app, openApiSpec, {
       customSiteTitle: 'API Documentation',
@@ -59,14 +59,21 @@ async function bootstrap() {
       },
     });
 
-    console.log(`Swagger documentation available at: http://localhost:${process.env.PORT ?? 3000}/api-docs`);
+    console.log(
+      `Swagger documentation available at: http://localhost:${process.env.PORT ?? 3000}/api-docs`,
+    );
   } catch (error) {
-    console.warn('Could not load OpenAPI YAML file, using programmatic Swagger setup:', error);
-    
+    console.warn(
+      'Could not load OpenAPI YAML file, using programmatic Swagger setup:',
+      error,
+    );
+
     // Fallback to programmatic setup
     const config = new DocumentBuilder()
       .setTitle('Full Stack Template API')
-      .setDescription('Comprehensive API documentation for the Full Stack Template application')
+      .setDescription(
+        'Comprehensive API documentation for the Full Stack Template application',
+      )
       .setVersion('1.0.0')
       .addBearerAuth(
         {
