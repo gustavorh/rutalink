@@ -1,18 +1,22 @@
 import {
   Injectable,
-  Inject,
   NotFoundException,
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
-import { eq, and, like, or, count, sql, SQL } from 'drizzle-orm';
-import { MySql2Database } from 'drizzle-orm/mysql2';
-import { DATABASE } from '../database/database.module';
-import { users, operators, roles, NewUser } from '../database/schema';
+import { NewUser } from '../database/schema';
+import { UsersRepository } from './repositories/users.repository';
 
+/**
+ * Users Service
+ *
+ * Handles business logic for user operations.
+ * Delegates data access to UsersRepository following the Repository Pattern.
+ * Follows SOLID principles by separating business logic from data access.
+ */
 @Injectable()
 export class UsersService {
-  constructor(@Inject(DATABASE) private db: MySql2Database) {}
+  constructor(private readonly usersRepository: UsersRepository) {}
 
   /**
    * Find all users with their operator and role information
@@ -26,122 +30,17 @@ export class UsersService {
     page?: number;
     limit?: number;
   }) {
-    const page = params.page || 1;
-    const limit = params.limit || 10;
-    const offset = (page - 1) * limit;
-
-    // Build where conditions
-    const conditions: SQL[] = [];
-
-    if (params.operatorId !== undefined) {
-      conditions.push(eq(users.operatorId, params.operatorId));
-    }
-
-    if (params.search) {
-      const searchCondition = or(
-        like(users.username, `%${params.search}%`),
-        like(users.email, `%${params.search}%`),
-        like(users.firstName, `%${params.search}%`),
-        like(users.lastName, `%${params.search}%`),
-      );
-      if (searchCondition) {
-        conditions.push(searchCondition);
-      }
-    }
-
-    if (params.roleId !== undefined) {
-      conditions.push(eq(users.roleId, params.roleId));
-    }
-
-    if (params.status !== undefined) {
-      conditions.push(eq(users.status, params.status));
-    }
-
-    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
-
-    // Get total count
-    const [{ total }] = await this.db
-      .select({ total: count() })
-      .from(users)
-      .where(whereClause);
-
-    // Get paginated data
-    const data = await this.db
-      .select({
-        id: users.id,
-        username: users.username,
-        email: users.email,
-        firstName: users.firstName,
-        lastName: users.lastName,
-        status: users.status,
-        lastActivityAt: users.lastActivityAt,
-        operatorId: users.operatorId,
-        roleId: users.roleId,
-        createdAt: users.createdAt,
-        updatedAt: users.updatedAt,
-        operator: {
-          id: operators.id,
-          name: operators.name,
-        },
-        role: {
-          id: roles.id,
-          name: roles.name,
-        },
-      })
-      .from(users)
-      .leftJoin(operators, eq(users.operatorId, operators.id))
-      .leftJoin(roles, eq(users.roleId, roles.id))
-      .where(whereClause)
-      .limit(limit)
-      .offset(offset)
-      .orderBy(sql`${users.createdAt} DESC`);
-
-    return {
-      data,
-      pagination: {
-        page,
-        limit,
-        total: Number(total),
-        totalPages: Math.ceil(Number(total) / limit),
-      },
-    };
+    return this.usersRepository.findPaginatedWithRelations(params);
   }
 
   /**
    * Find user by ID with operator and role information
    */
   async findById(id: number, operatorId?: number) {
-    const conditions = operatorId
-      ? and(eq(users.id, id), eq(users.operatorId, operatorId))
-      : eq(users.id, id);
-
-    const [user] = await this.db
-      .select({
-        id: users.id,
-        username: users.username,
-        email: users.email,
-        password: users.password,
-        firstName: users.firstName,
-        lastName: users.lastName,
-        operatorId: users.operatorId,
-        roleId: users.roleId,
-        createdAt: users.createdAt,
-        updatedAt: users.updatedAt,
-        operator: {
-          id: operators.id,
-          name: operators.name,
-          super: operators.super,
-          status: operators.status,
-        },
-        role: {
-          id: roles.id,
-          name: roles.name,
-        },
-      })
-      .from(users)
-      .leftJoin(operators, eq(users.operatorId, operators.id))
-      .leftJoin(roles, eq(users.roleId, roles.id))
-      .where(conditions);
+    const user = await this.usersRepository.findByIdWithRelations(
+      id,
+      operatorId,
+    );
 
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
@@ -154,81 +53,24 @@ export class UsersService {
    * Find user by email
    */
   async findByEmail(email: string) {
-    const [user] = await this.db
-      .select({
-        id: users.id,
-        username: users.username,
-        email: users.email,
-        password: users.password,
-        firstName: users.firstName,
-        lastName: users.lastName,
-        operatorId: users.operatorId,
-        roleId: users.roleId,
-        createdAt: users.createdAt,
-        updatedAt: users.updatedAt,
-        operator: {
-          id: operators.id,
-          name: operators.name,
-          super: operators.super,
-          status: operators.status,
-        },
-        role: {
-          id: roles.id,
-          name: roles.name,
-        },
-      })
-      .from(users)
-      .leftJoin(operators, eq(users.operatorId, operators.id))
-      .leftJoin(roles, eq(users.roleId, roles.id))
-      .where(eq(users.email, email));
-
-    return user;
+    return this.usersRepository.findByEmailWithRelations(email);
   }
 
   /**
    * Find user by username
    */
   async findByUsername(username: string) {
-    const [user] = await this.db
-      .select({
-        id: users.id,
-        username: users.username,
-        email: users.email,
-        password: users.password,
-        firstName: users.firstName,
-        lastName: users.lastName,
-        operatorId: users.operatorId,
-        roleId: users.roleId,
-        createdAt: users.createdAt,
-        updatedAt: users.updatedAt,
-        operator: {
-          id: operators.id,
-          name: operators.name,
-          super: operators.super,
-          status: operators.status,
-        },
-        role: {
-          id: roles.id,
-          name: roles.name,
-        },
-      })
-      .from(users)
-      .leftJoin(operators, eq(users.operatorId, operators.id))
-      .leftJoin(roles, eq(users.roleId, roles.id))
-      .where(eq(users.username, username));
-
-    return user;
+    return this.usersRepository.findByUsernameWithRelations(username);
   }
 
   /**
    * Create a new user with operator and role validation
    */
-  async create(newUser: NewUser) {
+  async create(newUser: NewUser, userId: number = 0) {
     // Validate operator exists and is active
-    const [operator] = await this.db
-      .select()
-      .from(operators)
-      .where(eq(operators.id, newUser.operatorId));
+    const operator = await this.usersRepository.findOperatorById(
+      newUser.operatorId,
+    );
 
     if (!operator) {
       throw new BadRequestException(
@@ -243,15 +85,10 @@ export class UsersService {
     }
 
     // Validate role exists and belongs to the operator
-    const [role] = await this.db
-      .select()
-      .from(roles)
-      .where(
-        and(
-          eq(roles.id, newUser.roleId),
-          eq(roles.operatorId, newUser.operatorId),
-        ),
-      );
+    const role = await this.usersRepository.findRoleByIdAndOperator(
+      newUser.roleId,
+      newUser.operatorId,
+    );
 
     if (!role) {
       throw new BadRequestException(
@@ -260,53 +97,38 @@ export class UsersService {
     }
 
     // Check if username already exists
-    const [existingUsername] = await this.db
-      .select()
-      .from(users)
-      .where(eq(users.username, newUser.username));
-
-    if (existingUsername) {
+    if (await this.usersRepository.existsByUsername(newUser.username)) {
       throw new BadRequestException(
         `Username "${newUser.username}" already exists`,
       );
     }
 
     // Check if email already exists
-    const [existingEmail] = await this.db
-      .select()
-      .from(users)
-      .where(eq(users.email, newUser.email));
-
-    if (existingEmail) {
+    if (await this.usersRepository.existsByEmail(newUser.email)) {
       throw new BadRequestException(`Email "${newUser.email}" already exists`);
     }
 
-    const [insertedUser] = await this.db
-      .insert(users)
-      .values(newUser)
-      .$returningId();
-
-    return this.findById(insertedUser.id);
+    return this.usersRepository.createWithRelations(newUser, userId);
   }
 
   /**
    * Update user with tenant isolation
    */
-  async update(id: number, userData: Partial<NewUser>, operatorId?: number) {
+  async update(
+    id: number,
+    userData: Partial<NewUser>,
+    operatorId?: number,
+    userId: number = 0,
+  ) {
     // Check if user exists and belongs to operator (if provided)
     const existingUser = await this.findById(id, operatorId);
 
     // If roleId is being updated, validate it belongs to the user's operator
     if (userData.roleId) {
-      const [role] = await this.db
-        .select()
-        .from(roles)
-        .where(
-          and(
-            eq(roles.id, userData.roleId),
-            eq(roles.operatorId, existingUser.operatorId),
-          ),
-        );
+      const role = await this.usersRepository.findRoleByIdAndOperator(
+        userData.roleId,
+        existingUser.operatorId,
+      );
 
       if (!role) {
         throw new BadRequestException(
@@ -323,13 +145,37 @@ export class UsersService {
       throw new ForbiddenException('Cannot change user operator');
     }
 
-    const conditions = operatorId
-      ? and(eq(users.id, id), eq(users.operatorId, operatorId))
-      : eq(users.id, id);
+    // Check for username conflicts if username is being updated
+    if (userData.username && userData.username !== existingUser.username) {
+      if (
+        await this.usersRepository.existsByUsernameExcludingId(
+          userData.username,
+          id,
+        )
+      ) {
+        throw new BadRequestException(
+          `Username "${userData.username}" already exists`,
+        );
+      }
+    }
 
-    await this.db.update(users).set(userData).where(conditions);
+    // Check for email conflicts if email is being updated
+    if (userData.email && userData.email !== existingUser.email) {
+      if (
+        await this.usersRepository.existsByEmailExcludingId(userData.email, id)
+      ) {
+        throw new BadRequestException(
+          `Email "${userData.email}" already exists`,
+        );
+      }
+    }
 
-    return this.findById(id, operatorId);
+    return this.usersRepository.updateWithRelations(
+      id,
+      userData,
+      userId,
+      operatorId,
+    );
   }
 
   /**
@@ -339,20 +185,25 @@ export class UsersService {
     // Check if user exists and belongs to operator
     await this.findById(id, operatorId);
 
-    const conditions = operatorId
-      ? and(eq(users.id, id), eq(users.operatorId, operatorId))
-      : eq(users.id, id);
+    // Use repository's delete method
+    if (operatorId) {
+      // Verify user belongs to operator before deleting
+      const user = await this.usersRepository.findByIdAndOperator(
+        id,
+        operatorId,
+      );
+      if (!user) {
+        throw new NotFoundException(`User with ID ${id} not found`);
+      }
+    }
 
-    await this.db.delete(users).where(conditions);
+    await this.usersRepository.delete(id);
   }
 
   /**
    * Update user's last activity timestamp
    */
   async updateLastActivity(userId: number): Promise<void> {
-    await this.db
-      .update(users)
-      .set({ lastActivityAt: new Date() })
-      .where(eq(users.id, userId));
+    await this.usersRepository.updateLastActivity(userId);
   }
 }

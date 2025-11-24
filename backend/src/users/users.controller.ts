@@ -81,7 +81,7 @@ export class UsersController {
     if (!req.user.isSuper && createUserDto.operatorId !== req.user.operatorId) {
       throw new ForbiddenException('Cannot create users for other operators');
     }
-    return this.usersService.create(createUserDto);
+    return this.usersService.create(createUserDto, req.user.id);
   }
 
   @Put(':id')
@@ -93,7 +93,7 @@ export class UsersController {
   ) {
     // Non-super users can only update users from their own operator
     const operatorId = req.user.isSuper ? undefined : req.user.operatorId;
-    return this.usersService.update(id, updateUserDto, operatorId);
+    return this.usersService.update(id, updateUserDto, operatorId, req.user.id);
   }
 
   @Delete(':id')
