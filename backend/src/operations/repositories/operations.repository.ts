@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { MySql2Database } from 'drizzle-orm/mysql2';
-import { eq, and, desc, sql, SQL } from 'drizzle-orm';
+import { eq, and, desc, asc, sql, SQL } from 'drizzle-orm';
 import { BaseRepository } from '../../common/repositories/base.repository';
 import { DATABASE } from '../../database/database.module';
 import * as schema from '../../database/schema';
@@ -175,23 +175,39 @@ export class OperationsRepository extends BaseRepository<Operation> {
     data: Partial<Operation>,
     userId: number,
   ): Promise<number> {
-    const [result] = await this.db.insert(schema.operations).values({
-      ...data,
+    const insertData: any = {
+      operatorId: data.operatorId!,
+      driverId: data.driverId!,
+      vehicleId: data.vehicleId!,
+      operationNumber: data.operationNumber!,
+      operationType: data.operationType!,
+      origin: data.origin!,
+      destination: data.destination!,
       scheduledStartDate: data.scheduledStartDate
         ? new Date(data.scheduledStartDate as any)
         : undefined,
       scheduledEndDate: data.scheduledEndDate
         ? new Date(data.scheduledEndDate as any)
-        : undefined,
+        : null,
       actualStartDate: data.actualStartDate
         ? new Date(data.actualStartDate as any)
-        : undefined,
+        : null,
       actualEndDate: data.actualEndDate
         ? new Date(data.actualEndDate as any)
-        : undefined,
+        : null,
+      clientId: data.clientId ?? null,
+      providerId: data.providerId ?? null,
+      routeId: data.routeId ?? null,
+      distance: data.distance ?? null,
+      status: data.status ?? 'scheduled',
+      cargoDescription: data.cargoDescription ?? null,
+      cargoWeight: data.cargoWeight ?? null,
+      notes: data.notes ?? null,
       createdBy: userId,
       updatedBy: userId,
-    });
+    };
+
+    const [result] = await this.db.insert(schema.operations).values(insertData);
     return result.insertId;
   }
 
@@ -555,8 +571,7 @@ export class OperationsRepository extends BaseRepository<Operation> {
       conditions.push(eq(schema.clients.operatorId, operatorId));
     }
 
-    const whereClause =
-      conditions.length > 0 ? and(...conditions) : undefined;
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
     const topClients = await this.db
       .select({
@@ -579,6 +594,118 @@ export class OperationsRepository extends BaseRepository<Operation> {
       totalOperations: Number(item.totalOperations),
       completedOperations: Number(item.completedOperations),
     }));
+  }
+
+  /**
+   * Check if vehicle has active or scheduled operations
+   */
+  async hasActiveOperationsForVehicle(vehicleId: number): Promise<boolean> {
+    const [operation] = await this.db
+      .select()
+      .from(schema.operations)
+      .where(
+        and(
+          eq(schema.operations.vehicleId, vehicleId),
+          sql`${schema.operations.status} = 'scheduled' OR ${schema.operations.status} = 'in-progress'`,
+        ),
+      )
+      .limit(1);
+    return operation !== null;
+  }
+
+  /**
+   * Check if vehicle has in-progress operations
+   */
+  async hasInProgressOperationsForVehicle(vehicleId: number): Promise<boolean> {
+    const [operation] = await this.db
+      .select()
+      .from(schema.operations)
+      .where(
+        and(
+          eq(schema.operations.vehicleId, vehicleId),
+          eq(schema.operations.status, 'in-progress'),
+        ),
+      )
+      .limit(1);
+    return operation !== null;
+  }
+
+  /**
+   * Get operation history for a vehicle
+   */
+  async findHistoryByVehicle(
+    operatorId: number,
+    vehicleId: number,
+    limit: number = 10,
+  ): Promise<Operation[]> {
+    return this.db
+      .select()
+      .from(schema.operations)
+      .where(
+        and(
+          eq(schema.operations.vehicleId, vehicleId),
+          eq(schema.operations.operatorId, operatorId),
+        ),
+      )
+      .orderBy(desc(schema.operations.scheduledStartDate))
+      .limit(limit);
+  }
+
+  /**
+   * Get upcoming operations for a vehicle
+   */
+  async findUpcomingByVehicle(
+    operatorId: number,
+    vehicleId: number,
+  ): Promise<Operation[]> {
+    return this.db
+      .select()
+      .from(schema.operations)
+      .where(
+        and(
+          eq(schema.operations.vehicleId, vehicleId),
+          eq(schema.operations.operatorId, operatorId),
+          sql`${schema.operations.status} = 'scheduled' OR ${schema.operations.status} = 'in-progress'`,
+        ),
+      )
+      .orderBy(asc(schema.operations.scheduledStartDate));
+  }
+
+  /**
+   * Get vehicle statistics
+   */
+  async getVehicleStatistics(vehicleId: number) {
+    const [stats] = await this.db
+      .select({
+        totalOperations: sql<number>`count(*)`,
+      })
+      .from(schema.operations)
+      .where(eq(schema.operations.vehicleId, vehicleId));
+
+    const [upcoming] = await this.db
+      .select({
+        count: sql<number>`count(*)`,
+      })
+      .from(schema.operations)
+      .where(
+        and(
+          eq(schema.operations.vehicleId, vehicleId),
+          sql`${schema.operations.status} = 'scheduled' OR ${schema.operations.status} = 'in-progress'`,
+        ),
+      );
+
+    const [lastOp] = await this.db
+      .select()
+      .from(schema.operations)
+      .where(eq(schema.operations.vehicleId, vehicleId))
+      .orderBy(desc(schema.operations.actualEndDate))
+      .limit(1);
+
+    return {
+      totalOperations: Number(stats?.totalOperations || 0),
+      upcomingOperations: Number(upcoming?.count || 0),
+      lastOperationDate: lastOp?.actualEndDate || null,
+    };
   }
 
   /**

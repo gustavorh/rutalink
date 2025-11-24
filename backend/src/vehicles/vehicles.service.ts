@@ -3,19 +3,7 @@ import {
   NotFoundException,
   ConflictException,
   BadRequestException,
-  Inject,
 } from '@nestjs/common';
-import { and, eq, ilike, or, sql, desc, asc, lt, isNull } from 'drizzle-orm';
-import { MySql2Database } from 'drizzle-orm/mysql2';
-import { DATABASE } from '../database/database.module';
-import {
-  vehicles,
-  vehicleDocuments,
-  driverVehicles,
-  operations,
-  Vehicle,
-  VehicleDocument,
-} from '../database/schema';
 import {
   CreateVehicleDto,
   UpdateVehicleDto,
@@ -26,10 +14,18 @@ import {
   VehicleDocumentResponseDto,
   OperationalStatus,
 } from './dto/vehicle.dto';
+import { VehiclesRepository } from './repositories/vehicles.repository';
+import { VehicleDocumentsRepository } from './repositories/vehicle-documents.repository';
+import { OperationsRepository } from '../operations/repositories/operations.repository';
+import { Vehicle, VehicleDocument } from '../database/schema';
 
 @Injectable()
 export class VehiclesService {
-  constructor(@Inject(DATABASE) private readonly db: MySql2Database<any>) {}
+  constructor(
+    private vehiclesRepository: VehiclesRepository,
+    private vehicleDocumentsRepository: VehicleDocumentsRepository,
+    private operationsRepository: OperationsRepository,
+  ) {}
 
   // ============================================================================
   // CRUD OPERATIONS - VEHICLES
@@ -44,44 +40,28 @@ export class VehiclesService {
     userId: number,
   ): Promise<VehicleResponseDto> {
     // Verificar si ya existe un vehículo con la misma patente para este operador
-    const existingVehicle = await this.db
-      .select()
-      .from(vehicles)
-      .where(
-        and(
-          eq(vehicles.operatorId, operatorId),
-          eq(vehicles.plateNumber, createTruckDto.plateNumber),
-        ),
-      )
-      .limit(1);
+    const existingVehicle = await this.vehiclesRepository.findByPlateNumber(
+      operatorId,
+      createTruckDto.plateNumber,
+    );
 
-    if (existingVehicle.length > 0) {
+    if (existingVehicle) {
       throw new ConflictException(
         `Ya existe un vehículo con la patente ${createTruckDto.plateNumber}`,
       );
     }
 
-    const [newVehicle] = await this.db
-      .insert(vehicles)
-      .values({
+    // Create vehicle using repository
+    const vehicleId = await this.vehiclesRepository.create(
+      {
+        ...createTruckDto,
         operatorId,
-        plateNumber: createTruckDto.plateNumber,
-        brand: createTruckDto.brand,
-        model: createTruckDto.model,
-        year: createTruckDto.year,
-        vehicleType: createTruckDto.vehicleType,
-        capacity: createTruckDto.capacity,
-        capacityUnit: createTruckDto.capacityUnit,
-        vin: createTruckDto.vin,
-        color: createTruckDto.color,
         status: createTruckDto.status ?? true,
-        notes: createTruckDto.notes,
-        createdBy: userId,
-        updatedBy: userId,
-      })
-      .$returningId();
+      },
+      userId,
+    );
 
-    return this.findOne(operatorId, newVehicle.id, true);
+    return this.findOne(operatorId, vehicleId, true);
   }
 
   /**
@@ -109,68 +89,26 @@ export class VehiclesService {
       includeStats,
     } = query;
 
-    const offset = (page - 1) * limit;
-
-    // Construir condiciones
-    const conditions = [eq(vehicles.operatorId, operatorId)];
-
-    if (search) {
-      const searchConditions = [ilike(vehicles.plateNumber, `%${search}%`)];
-      if (vehicles.brand) {
-        searchConditions.push(ilike(vehicles.brand, `%${search}%`));
-      }
-      if (vehicles.model) {
-        searchConditions.push(ilike(vehicles.model, `%${search}%`));
-      }
-      if (searchConditions.length > 0) {
-        const searchOr = or(...searchConditions);
-        if (searchOr) {
-          conditions.push(searchOr);
-        }
-      }
-    }
-
-    if (vehicleType) {
-      conditions.push(eq(vehicles.vehicleType, vehicleType));
-    }
-
-    if (status !== undefined) {
-      conditions.push(eq(vehicles.status, status));
-    }
-
-    // Obtener total
-    const [{ count }] = await this.db
-      .select({ count: sql<number>`count(*)` })
-      .from(vehicles)
-      .where(and(...conditions));
-
-    // Obtener vehículos
-    const vehicleList = await this.db
-      .select()
-      .from(vehicles)
-      .where(and(...conditions))
-      .orderBy(desc(vehicles.createdAt))
-      .limit(limit)
-      .offset(offset);
+    // Use repository's findPaginated method
+    const paginatedResult = await this.vehiclesRepository.findPaginated(
+      operatorId,
+      search,
+      vehicleType,
+      status,
+      page,
+      limit,
+    );
 
     // Enriquecer con información adicional
     const enrichedVehicles = await Promise.all(
-      vehicleList.map((vehicle) =>
+      paginatedResult.data.map((vehicle) =>
         this.enrichVehicleData(vehicle, includeDocuments, includeStats),
       ),
     );
 
-    const total = Number(count);
-    const totalPages = Math.ceil(total / limit);
-
     return {
       data: enrichedVehicles,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages,
-      },
+      pagination: paginatedResult.pagination,
     };
   }
 
@@ -182,11 +120,10 @@ export class VehiclesService {
     id: number,
     includeRelations: boolean = false,
   ): Promise<VehicleResponseDto> {
-    const [vehicle] = await this.db
-      .select()
-      .from(vehicles)
-      .where(and(eq(vehicles.id, id), eq(vehicles.operatorId, operatorId)))
-      .limit(1);
+    const vehicle = await this.vehiclesRepository.findByIdAndOperator(
+      id,
+      operatorId,
+    );
 
     if (!vehicle) {
       throw new NotFoundException(`Camión con ID ${id} no encontrado`);
@@ -208,32 +145,21 @@ export class VehiclesService {
 
     // Si se actualiza la patente, verificar que no exista otra con el mismo número
     if (updateTruckDto.plateNumber) {
-      const existing = await this.db
-        .select()
-        .from(vehicles)
-        .where(
-          and(
-            eq(vehicles.operatorId, operatorId),
-            eq(vehicles.plateNumber, updateTruckDto.plateNumber),
-            sql`${vehicles.id} != ${id}`,
-          ),
-        )
-        .limit(1);
+      const exists = await this.vehiclesRepository.existsByPlateNumberExcludingId(
+        operatorId,
+        updateTruckDto.plateNumber,
+        id,
+      );
 
-      if (existing.length > 0) {
+      if (exists) {
         throw new ConflictException(
           `Ya existe otro vehículo con la patente ${updateTruckDto.plateNumber}`,
         );
       }
     }
 
-    await this.db
-      .update(vehicles)
-      .set({
-        ...updateTruckDto,
-        updatedBy: userId,
-      })
-      .where(and(eq(vehicles.id, id), eq(vehicles.operatorId, operatorId)));
+    // Update using repository
+    await this.vehiclesRepository.update(id, updateTruckDto, userId);
 
     return this.findOne(operatorId, id, true);
   }
@@ -245,29 +171,17 @@ export class VehiclesService {
     await this.findOne(operatorId, id);
 
     // Verificar si tiene operaciones activas
-    const activeOperations = await this.db
-      .select()
-      .from(operations)
-      .where(
-        and(
-          eq(operations.vehicleId, id),
-          or(
-            eq(operations.status, 'scheduled'),
-            eq(operations.status, 'in-progress'),
-          ),
-        ),
-      )
-      .limit(1);
+    const hasActiveOperations =
+      await this.operationsRepository.hasActiveOperationsForVehicle(id);
 
-    if (activeOperations.length > 0) {
+    if (hasActiveOperations) {
       throw new BadRequestException(
         'No se puede eliminar el vehículo porque tiene operaciones activas',
       );
     }
 
-    await this.db
-      .delete(vehicles)
-      .where(and(eq(vehicles.id, id), eq(vehicles.operatorId, operatorId)));
+    // Delete using repository
+    await this.vehiclesRepository.delete(id);
   }
 
   // ============================================================================
@@ -285,22 +199,13 @@ export class VehiclesService {
     // Verificar que el vehículo existe y pertenece al operador
     await this.findOne(operatorId, createDocumentDto.vehicleId);
 
-    const [newDocument] = await this.db
-      .insert(vehicleDocuments)
-      .values({
-        ...createDocumentDto,
-        issueDate: createDocumentDto.issueDate
-          ? new Date(createDocumentDto.issueDate)
-          : null,
-        expirationDate: createDocumentDto.expirationDate
-          ? new Date(createDocumentDto.expirationDate)
-          : null,
-        createdBy: userId,
-        updatedBy: userId,
-      })
-      .$returningId();
+    // Create document using repository
+    const documentId = await this.vehicleDocumentsRepository.createDocument(
+      createDocumentDto,
+      userId,
+    );
 
-    return this.findDocument(newDocument.id);
+    return this.findDocument(documentId);
   }
 
   /**
@@ -312,11 +217,7 @@ export class VehiclesService {
   ): Promise<VehicleDocumentResponseDto[]> {
     await this.findOne(operatorId, vehicleId);
 
-    const docs = await this.db
-      .select()
-      .from(vehicleDocuments)
-      .where(eq(vehicleDocuments.vehicleId, vehicleId))
-      .orderBy(desc(vehicleDocuments.expirationDate));
+    const docs = await this.vehicleDocumentsRepository.findByVehicleId(vehicleId);
 
     return docs.map((doc) => this.enrichDocumentData(doc));
   }
@@ -325,11 +226,7 @@ export class VehiclesService {
    * Obtener un documento por ID
    */
   async findDocument(id: number): Promise<VehicleDocumentResponseDto> {
-    const [document] = await this.db
-      .select()
-      .from(vehicleDocuments)
-      .where(eq(vehicleDocuments.id, id))
-      .limit(1);
+    const document = await this.vehicleDocumentsRepository.findById(id);
 
     if (!document) {
       throw new NotFoundException(`Documento con ID ${id} no encontrado`);
@@ -352,19 +249,12 @@ export class VehiclesService {
     // Verificar que el vehículo pertenece al operador
     await this.findOne(operatorId, document.vehicleId);
 
-    await this.db
-      .update(vehicleDocuments)
-      .set({
-        ...updateDocumentDto,
-        issueDate: updateDocumentDto.issueDate
-          ? new Date(updateDocumentDto.issueDate)
-          : undefined,
-        expirationDate: updateDocumentDto.expirationDate
-          ? new Date(updateDocumentDto.expirationDate)
-          : undefined,
-        updatedBy: userId,
-      })
-      .where(eq(vehicleDocuments.id, documentId));
+    // Update using repository
+    await this.vehicleDocumentsRepository.updateDocument(
+      documentId,
+      updateDocumentDto,
+      userId,
+    );
 
     return this.findDocument(documentId);
   }
@@ -376,9 +266,8 @@ export class VehiclesService {
     const document = await this.findDocument(documentId);
     await this.findOne(operatorId, document.vehicleId);
 
-    await this.db
-      .delete(vehicleDocuments)
-      .where(eq(vehicleDocuments.id, documentId));
+    // Delete using repository
+    await this.vehicleDocumentsRepository.delete(documentId);
   }
 
   /**
@@ -388,24 +277,10 @@ export class VehiclesService {
     operatorId: number,
     days: number = 30,
   ): Promise<VehicleDocumentResponseDto[]> {
-    const futureDate = new Date();
-    futureDate.setDate(futureDate.getDate() + days);
-
-    const docs = await this.db
-      .select({
-        document: vehicleDocuments,
-        vehicle: vehicles,
-      })
-      .from(vehicleDocuments)
-      .innerJoin(vehicles, eq(vehicleDocuments.vehicleId, vehicles.id))
-      .where(
-        and(
-          eq(vehicles.operatorId, operatorId),
-          lt(vehicleDocuments.expirationDate, futureDate),
-          sql`${vehicleDocuments.expirationDate} >= CURDATE()`,
-        ),
-      )
-      .orderBy(asc(vehicleDocuments.expirationDate));
+    const docs = await this.vehicleDocumentsRepository.findExpiringDocuments(
+      operatorId,
+      days,
+    );
 
     return docs.map((row) => this.enrichDocumentData(row.document));
   }
@@ -428,34 +303,20 @@ export class VehiclesService {
     }
 
     // Verificar si tiene operaciones activas
-    const activeOps = await this.db
-      .select()
-      .from(operations)
-      .where(
-        and(
-          eq(operations.vehicleId, vehicleId),
-          eq(operations.status, 'in-progress'),
-        ),
-      )
-      .limit(1);
+    const hasInProgressOps =
+      await this.operationsRepository.hasInProgressOperationsForVehicle(
+        vehicleId,
+      );
 
-    if (activeOps.length > 0) {
+    if (hasInProgressOps) {
       return OperationalStatus.RESERVED;
     }
 
     // Verificar documentos vencidos
-    const expiredDocs = await this.db
-      .select()
-      .from(vehicleDocuments)
-      .where(
-        and(
-          eq(vehicleDocuments.vehicleId, vehicleId),
-          lt(vehicleDocuments.expirationDate, new Date()),
-        ),
-      )
-      .limit(1);
+    const hasExpiredDocs =
+      await this.vehicleDocumentsRepository.hasExpiredDocuments(vehicleId);
 
-    if (expiredDocs.length > 0) {
+    if (hasExpiredDocs) {
       return OperationalStatus.OUT_OF_SERVICE;
     }
 
@@ -472,17 +333,11 @@ export class VehiclesService {
   ) {
     await this.findOne(operatorId, vehicleId);
 
-    return this.db
-      .select()
-      .from(operations)
-      .where(
-        and(
-          eq(operations.vehicleId, vehicleId),
-          eq(operations.operatorId, operatorId),
-        ),
-      )
-      .orderBy(desc(operations.scheduledStartDate))
-      .limit(limit);
+    return this.operationsRepository.findHistoryByVehicle(
+      operatorId,
+      vehicleId,
+      limit,
+    );
   }
 
   /**
@@ -491,20 +346,10 @@ export class VehiclesService {
   async getUpcomingOperations(operatorId: number, vehicleId: number) {
     await this.findOne(operatorId, vehicleId);
 
-    return this.db
-      .select()
-      .from(operations)
-      .where(
-        and(
-          eq(operations.vehicleId, vehicleId),
-          eq(operations.operatorId, operatorId),
-          or(
-            eq(operations.status, 'scheduled'),
-            eq(operations.status, 'in-progress'),
-          ),
-        ),
-      )
-      .orderBy(asc(operations.scheduledStartDate));
+    return this.operationsRepository.findUpcomingByVehicle(
+      operatorId,
+      vehicleId,
+    );
   }
 
   // ============================================================================
@@ -541,52 +386,22 @@ export class VehiclesService {
 
     // Incluir documentos
     if (includeDocuments) {
-      const docs = await this.db
-        .select()
-        .from(vehicleDocuments)
-        .where(eq(vehicleDocuments.vehicleId, vehicle.id));
+      const docs = await this.vehicleDocumentsRepository.findByVehicleId(
+        vehicle.id,
+      );
 
       response.documents = docs.map((doc) => this.enrichDocumentData(doc));
     }
 
     // Incluir estadísticas
     if (includeStats) {
-      const [stats] = await this.db
-        .select({
-          total: sql<number>`COUNT(*)`,
-        })
-        .from(operations)
-        .where(eq(operations.vehicleId, vehicle.id));
+      const stats = await this.operationsRepository.getVehicleStatistics(
+        vehicle.id,
+      );
 
-      const [upcoming] = await this.db
-        .select({
-          count: sql<number>`COUNT(*)`,
-        })
-        .from(operations)
-        .where(
-          and(
-            eq(operations.vehicleId, vehicle.id),
-            or(
-              eq(operations.status, 'scheduled'),
-              eq(operations.status, 'in-progress'),
-            ),
-          ),
-        );
-
-      response.totalOperations = Number(stats?.total || 0);
-      response.upcomingOperations = Number(upcoming?.count || 0);
-
-      // Última operación
-      const [lastOp] = await this.db
-        .select()
-        .from(operations)
-        .where(eq(operations.vehicleId, vehicle.id))
-        .orderBy(desc(operations.actualEndDate))
-        .limit(1);
-
-      if (lastOp && lastOp.actualEndDate) {
-        response.lastOperationDate = lastOp.actualEndDate;
-      }
+      response.totalOperations = stats.totalOperations;
+      response.upcomingOperations = stats.upcomingOperations;
+      response.lastOperationDate = stats.lastOperationDate || undefined;
 
       // Estado operativo
       response.operationalStatus = await this.getOperationalStatus(
@@ -596,17 +411,8 @@ export class VehiclesService {
     }
 
     // Conductor actual
-    const [currentAssignment] = await this.db
-      .select()
-      .from(driverVehicles)
-      .where(
-        and(
-          eq(driverVehicles.vehicleId, vehicle.id),
-          eq(driverVehicles.isActive, true),
-          isNull(driverVehicles.unassignedAt),
-        ),
-      )
-      .limit(1);
+    const currentAssignment =
+      await this.vehiclesRepository.getCurrentDriverAssignment(vehicle.id);
 
     if (currentAssignment) {
       // Aquí se podría hacer join con drivers para obtener el nombre
