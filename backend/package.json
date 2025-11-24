@@ -1,8 +1,8 @@
 {
-  "name": "backend",
+  "name": "rutalink-backend",
   "version": "0.1.0",
-  "description": "",
-  "author": "",
+  "description": "Backend for Rutalink",
+  "author": "gustavorh",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {

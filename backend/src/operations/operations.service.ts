@@ -106,25 +106,9 @@ export class OperationsService {
     );
 
     // Create operation using repository
+
     const operationId = await this.operationsRepository.createOperation(
-      createOperationDto as Partial<{
-        operatorId: number;
-        clientId: number | null;
-        providerId: number | null;
-        routeId: number | null;
-        driverId: number;
-        vehicleId: number;
-        operationNumber: string;
-        operationType: string;
-        origin: string;
-        destination: string;
-        scheduledStartDate: Date | string;
-        scheduledEndDate: Date | string | null;
-        distance: number | null;
-        cargoDescription: string | null;
-        cargoWeight: number | null;
-        notes: string | null;
-      }>,
+      createOperationDto as any,
       userId,
     );
 
@@ -261,27 +245,10 @@ export class OperationsService {
     }
 
     // Update operation using repository
+
     await this.operationsRepository.updateOperation(
       id,
-      updateOperationDto as Partial<{
-        clientId: number | null;
-        providerId: number | null;
-        routeId: number | null;
-        driverId: number;
-        vehicleId: number;
-        operationType: string;
-        origin: string;
-        destination: string;
-        scheduledStartDate: Date | string;
-        scheduledEndDate: Date | string | null;
-        actualStartDate: Date | string | null;
-        actualEndDate: Date | string | null;
-        distance: number | null;
-        status: string;
-        cargoDescription: string | null;
-        cargoWeight: number | null;
-        notes: string | null;
-      }>,
+      updateOperationDto as any,
       userId,
     );
 

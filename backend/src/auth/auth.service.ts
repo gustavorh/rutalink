@@ -3,29 +3,9 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
 import { RegisterDto, AuthResponseDto } from './dto/auth.dto';
+import { UserWithRelations } from '../users/repositories/users.repository';
 
-export interface UserWithRelations {
-  id: number;
-  username: string;
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  operatorId: number;
-  roleId: number;
-  createdAt: Date;
-  updatedAt: Date;
-  operator: {
-    id: number;
-    name: string;
-    super: boolean;
-    status: boolean;
-  } | null;
-  role: {
-    id: number;
-    name: string;
-  } | null;
-}
+export type { UserWithRelations };
 
 @Injectable()
 export class AuthService {
@@ -78,7 +58,13 @@ export class AuthService {
         lastName: newUser.lastName,
         operatorId: newUser.operatorId,
         roleId: newUser.roleId,
-        operator: newUser.operator || undefined,
+        operator: newUser.operator
+          ? {
+              id: newUser.operator.id,
+              name: newUser.operator.name,
+              super: newUser.operator.super ?? false,
+            }
+          : undefined,
         role: newUser.role || undefined,
       },
     };
@@ -101,6 +87,10 @@ export class AuthService {
 
     // Check if operator is active
     if (user.operator && !user.operator.status) {
+      return null;
+    }
+
+    if (!user.password) {
       return null;
     }
 
@@ -132,7 +122,13 @@ export class AuthService {
         lastName: user.lastName,
         operatorId: user.operatorId,
         roleId: user.roleId,
-        operator: user.operator || undefined,
+        operator: user.operator
+          ? {
+              id: user.operator.id,
+              name: user.operator.name,
+              super: user.operator.super ?? false,
+            }
+          : undefined,
         role: user.role || undefined,
       },
     };

@@ -354,7 +354,8 @@ export class ExcelService {
     errors: ValidationError[];
   }> {
     const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.load(fileBuffer);
+
+    await workbook.xlsx.load(fileBuffer as unknown as ArrayBuffer);
 
     const worksheet = workbook.getWorksheet('Operaciones');
     if (!worksheet) {
@@ -596,7 +597,7 @@ export class ExcelService {
     }
 
     if (typeof cell.value === 'object') {
-      const cellValue = cell.value as Record<string, unknown>;
+      const cellValue = cell.value as unknown as Record<string, unknown>;
       if ('text' in cellValue) {
         return String(cellValue.text).trim();
       }

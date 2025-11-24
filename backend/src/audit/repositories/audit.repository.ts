@@ -41,6 +41,8 @@ export interface AuditLogFilter {
   resource?: string;
   startDate?: Date;
   endDate?: Date;
+  page?: number;
+  limit?: number;
 }
 
 @Injectable()

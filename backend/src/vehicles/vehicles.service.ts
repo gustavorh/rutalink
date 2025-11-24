@@ -201,8 +201,9 @@ export class VehiclesService {
     await this.findOne(operatorId, createDocumentDto.vehicleId);
 
     // Create document using repository
+
     const documentId = await this.vehicleDocumentsRepository.createDocument(
-      createDocumentDto,
+      createDocumentDto as any,
       userId,
     );
 
@@ -252,9 +253,10 @@ export class VehiclesService {
     await this.findOne(operatorId, document.vehicleId);
 
     // Update using repository
+
     await this.vehicleDocumentsRepository.updateDocument(
       documentId,
-      updateDocumentDto,
+      updateDocumentDto as any,
       userId,
     );
 
