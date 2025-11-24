@@ -3,105 +3,43 @@ import {
   NotFoundException,
   BadRequestException,
   ConflictException,
-  Inject,
 } from '@nestjs/common';
-import { and, eq, or, ilike, sql, SQL } from 'drizzle-orm';
-import { MySql2Database } from 'drizzle-orm/mysql2';
-import { DATABASE } from '../database/database.module';
-import * as schema from '../database/schema';
-import { routes, operations } from '../database/schema';
 import { CreateRouteDto, UpdateRouteDto, RouteQueryDto } from './dto/route.dto';
+import { RoutesRepository } from './repositories/routes.repository';
 
+/**
+ * Routes Service
+ *
+ * Handles business logic for route operations.
+ * Delegates data access to RoutesRepository following the Repository Pattern.
+ */
 @Injectable()
 export class RoutesService {
-  constructor(
-    @Inject(DATABASE) private readonly db: MySql2Database<typeof schema>,
-  ) {}
+  constructor(private readonly routesRepository: RoutesRepository) {}
   // ==========================================================================
   // GET ALL ROUTES (con búsqueda y filtros)
   // ==========================================================================
   async getRoutes(operatorId: number, query: RouteQueryDto) {
-    const {
-      search,
-      routeType,
-      difficulty,
-      status,
-      tollsRequired,
-      page = 1,
-      limit = 10,
-    } = query;
-
-    // Condiciones base
-    const conditions: SQL[] = [eq(routes.operatorId, operatorId)];
-
-    // Búsqueda por texto
-    if (search) {
-      const searchCondition = or(
-        ilike(routes.name, `%${search}%`),
-        ilike(routes.code, `%${search}%`),
-        ilike(routes.origin, `%${search}%`),
-        ilike(routes.destination, `%${search}%`),
-      );
-      if (searchCondition) {
-        conditions.push(searchCondition);
-      }
-    }
-
-    // Filtros
-    if (routeType) {
-      conditions.push(eq(routes.routeType, routeType));
-    }
-
-    if (difficulty) {
-      conditions.push(eq(routes.difficulty, difficulty));
-    }
-
-    if (typeof status === 'boolean') {
-      conditions.push(eq(routes.status, status));
-    }
-
-    if (typeof tollsRequired === 'boolean') {
-      conditions.push(eq(routes.tollsRequired, tollsRequired));
-    }
-
-    // Consulta con paginación
-    const offset = (page - 1) * limit;
-    const [data, totalResult] = await Promise.all([
-      this.db
-        .select()
-        .from(routes)
-        .where(and(...conditions))
-        .limit(limit)
-        .offset(offset)
-        .orderBy(routes.name),
-      this.db
-        .select({ count: sql<number>`count(*)` })
-        .from(routes)
-        .where(and(...conditions)),
-    ]);
-
-    const total = Number(totalResult[0]?.count || 0);
-
-    return {
-      data,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
+    return this.routesRepository.findPaginated({
+      operatorId,
+      search: query.search,
+      routeType: query.routeType,
+      difficulty: query.difficulty,
+      status: query.status,
+      tollsRequired: query.tollsRequired,
+      page: query.page,
+      limit: query.limit,
+    });
   }
 
   // ==========================================================================
   // GET ROUTE BY ID
   // ==========================================================================
   async getRouteById(operatorId: number, routeId: number) {
-    const [route] = await this.db
-      .select()
-      .from(routes)
-      .where(and(eq(routes.id, routeId), eq(routes.operatorId, operatorId)))
-      .limit(1);
+    const route = await this.routesRepository.findByIdAndOperator(
+      routeId,
+      operatorId,
+    );
 
     if (!route) {
       throw new NotFoundException(`Ruta con ID ${routeId} no encontrada`);
@@ -120,18 +58,12 @@ export class RoutesService {
   ) {
     // Validar que no exista otra ruta con el mismo código (si se proporciona)
     if (createRouteDto.code) {
-      const [existingRoute] = await this.db
-        .select()
-        .from(routes)
-        .where(
-          and(
-            eq(routes.operatorId, operatorId),
-            eq(routes.code, createRouteDto.code),
-          ),
+      if (
+        await this.routesRepository.existsByCode(
+          createRouteDto.code,
+          operatorId,
         )
-        .limit(1);
-
-      if (existingRoute) {
+      ) {
         throw new ConflictException(
           `Ya existe una ruta con el código ${createRouteDto.code}`,
         );
@@ -139,18 +71,9 @@ export class RoutesService {
     }
 
     // Validar que no exista una ruta con el mismo nombre
-    const [existingByName] = await this.db
-      .select()
-      .from(routes)
-      .where(
-        and(
-          eq(routes.operatorId, operatorId),
-          eq(routes.name, createRouteDto.name),
-        ),
-      )
-      .limit(1);
-
-    if (existingByName) {
+    if (
+      await this.routesRepository.existsByName(createRouteDto.name, operatorId)
+    ) {
       throw new ConflictException(
         `Ya existe una ruta con el nombre ${createRouteDto.name}`,
       );
@@ -178,15 +101,13 @@ export class RoutesService {
     }
 
     // Crear ruta
-    const [route] = await this.db
-      .insert(routes)
-      .values({
+    const route = await this.routesRepository.createRoute(
+      {
         operatorId,
         ...createRouteDto,
-        createdBy: userId,
-        updatedBy: userId,
-      })
-      .$returningId();
+      },
+      userId,
+    );
 
     return this.getRouteById(operatorId, route.id);
   }
@@ -201,23 +122,17 @@ export class RoutesService {
     updateRouteDto: UpdateRouteDto,
   ) {
     // Verificar que la ruta existe
-    await this.getRouteById(operatorId, routeId);
+    const existingRoute = await this.getRouteById(operatorId, routeId);
 
     // Si se actualiza el código, validar que no exista otro con el mismo
-    if (updateRouteDto.code) {
-      const [existingRoute] = await this.db
-        .select()
-        .from(routes)
-        .where(
-          and(
-            eq(routes.operatorId, operatorId),
-            eq(routes.code, updateRouteDto.code),
-            sql`${routes.id} != ${routeId}`,
-          ),
+    if (updateRouteDto.code && updateRouteDto.code !== existingRoute.code) {
+      if (
+        await this.routesRepository.existsByCodeExcludingId(
+          updateRouteDto.code,
+          operatorId,
+          routeId,
         )
-        .limit(1);
-
-      if (existingRoute) {
+      ) {
         throw new ConflictException(
           `Ya existe otra ruta con el código ${updateRouteDto.code}`,
         );
@@ -225,20 +140,14 @@ export class RoutesService {
     }
 
     // Si se actualiza el nombre, validar que no exista otro con el mismo
-    if (updateRouteDto.name) {
-      const [existingByName] = await this.db
-        .select()
-        .from(routes)
-        .where(
-          and(
-            eq(routes.operatorId, operatorId),
-            eq(routes.name, updateRouteDto.name),
-            sql`${routes.id} != ${routeId}`,
-          ),
+    if (updateRouteDto.name && updateRouteDto.name !== existingRoute.name) {
+      if (
+        await this.routesRepository.existsByNameExcludingId(
+          updateRouteDto.name,
+          operatorId,
+          routeId,
         )
-        .limit(1);
-
-      if (existingByName) {
+      ) {
         throw new ConflictException(
           `Ya existe otra ruta con el nombre ${updateRouteDto.name}`,
         );
@@ -267,15 +176,14 @@ export class RoutesService {
     }
 
     // Actualizar ruta
-    await this.db
-      .update(routes)
-      .set({
-        ...updateRouteDto,
-        updatedBy: userId,
-      })
-      .where(and(eq(routes.id, routeId), eq(routes.operatorId, operatorId)));
+    const updatedRoute = await this.routesRepository.updateRoute(
+      routeId,
+      updateRouteDto,
+      userId,
+      operatorId,
+    );
 
-    return this.getRouteById(operatorId, routeId);
+    return updatedRoute;
   }
 
   // ==========================================================================
@@ -286,27 +194,19 @@ export class RoutesService {
     const route = await this.getRouteById(operatorId, routeId);
 
     // Verificar que no esté siendo usada en operaciones
-    const [operationsUsingRoute] = await this.db
-      .select({ count: sql<number>`count(*)` })
-      .from(operations)
-      .where(
-        and(
-          eq(operations.routeId, routeId),
-          eq(operations.operatorId, operatorId),
-        ),
-      );
+    const operationsCount = await this.routesRepository.countOperationsByRoute(
+      routeId,
+      operatorId,
+    );
 
-    const count = Number(operationsUsingRoute?.count || 0);
-    if (count > 0) {
+    if (operationsCount > 0) {
       throw new BadRequestException(
-        `No se puede eliminar la ruta porque está siendo usada en ${count} operación(es)`,
+        `No se puede eliminar la ruta porque está siendo usada en ${operationsCount} operación(es)`,
       );
     }
 
     // Eliminar ruta
-    await this.db
-      .delete(routes)
-      .where(and(eq(routes.id, routeId), eq(routes.operatorId, operatorId)));
+    await this.routesRepository.delete(routeId);
 
     return {
       message: 'Ruta eliminada correctamente',
@@ -322,31 +222,14 @@ export class RoutesService {
     const route = await this.getRouteById(operatorId, routeId);
 
     // Obtener estadísticas de operaciones asociadas
-    const [stats] = await this.db
-      .select({
-        totalOperations: sql<number>`count(*)`,
-        completedOperations: sql<number>`sum(case when ${operations.status} = 'completed' then 1 else 0 end)`,
-        scheduledOperations: sql<number>`sum(case when ${operations.status} = 'scheduled' then 1 else 0 end)`,
-        inProgressOperations: sql<number>`sum(case when ${operations.status} = 'in-progress' then 1 else 0 end)`,
-        cancelledOperations: sql<number>`sum(case when ${operations.status} = 'cancelled' then 1 else 0 end)`,
-      })
-      .from(operations)
-      .where(
-        and(
-          eq(operations.routeId, routeId),
-          eq(operations.operatorId, operatorId),
-        ),
-      );
+    const statistics = await this.routesRepository.getRouteStatistics(
+      routeId,
+      operatorId,
+    );
 
     return {
       route,
-      statistics: {
-        totalOperations: Number(stats?.totalOperations || 0),
-        completedOperations: Number(stats?.completedOperations || 0),
-        scheduledOperations: Number(stats?.scheduledOperations || 0),
-        inProgressOperations: Number(stats?.inProgressOperations || 0),
-        cancelledOperations: Number(stats?.cancelledOperations || 0),
-      },
+      statistics,
     };
   }
 }

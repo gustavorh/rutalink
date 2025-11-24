@@ -12,7 +12,6 @@ import { UsersRepository } from './repositories/users.repository';
  *
  * Handles business logic for user operations.
  * Delegates data access to UsersRepository following the Repository Pattern.
- * Follows SOLID principles by separating business logic from data access.
  */
 @Injectable()
 export class UsersService {

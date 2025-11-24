@@ -44,7 +44,6 @@ export interface UserWithRelations {
  *
  * Handles all data access operations for users.
  * Extends BaseRepository for common CRUD operations.
- * Follows SOLID principles by separating data access from business logic.
  */
 @Injectable()
 export class UsersRepository extends BaseRepository<User> {
