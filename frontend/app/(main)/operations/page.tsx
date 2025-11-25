@@ -81,6 +81,7 @@ import {
   CheckCircle,
   ChevronLeft,
   ChevronRight,
+  X,
 } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/ui/delete-confirmation-dialog";
 import { StatisticsCard } from "@/components/ui/statistics-card";
@@ -115,7 +116,6 @@ export default function OperationsPage() {
   const [formLoading, setFormLoading] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   // Form data
   const [formData, setFormData] = useState<OperationFormData>({
@@ -186,6 +186,8 @@ export default function OperationsPage() {
     filterState.provider,
     viewMode,
     currentMonth,
+    dateRangeFilter.start,
+    dateRangeFilter.end,
   ]);
 
   const fetchCatalogs = async () => {
@@ -574,13 +576,24 @@ export default function OperationsPage() {
     );
   };
 
-  const isSameDate = (date1: Date | null, date2: Date) => {
-    if (!date1) return false;
-    return (
-      date1.getDate() === date2.getDate() &&
-      date1.getMonth() === date2.getMonth() &&
-      date1.getFullYear() === date2.getFullYear()
-    );
+  const handleDayClick = (date: Date) => {
+    // Set date filter for the selected day (start of day to end of day)
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    setDateRangeFilter({
+      start: startOfDay.toISOString(),
+      end: endOfDay.toISOString(),
+    });
+
+    // Switch to list view
+    setViewMode("list");
+
+    // Reset to first page
+    setPage(1);
   };
 
   // Render calendar view
@@ -628,11 +641,11 @@ export default function OperationsPage() {
     }
 
     return (
-      <div className="space-y-4">
+      <div className="space-y-3">
         {/* Calendar Header with Filters */}
-        <div className="space-y-4">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-            <h2 className="text-xl font-semibold text-foreground capitalize">
+        <div className="space-y-3">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+            <h2 className="text-lg font-semibold text-foreground capitalize">
               {formatMonthYear(currentMonth)}
             </h2>
             <div className="flex flex-wrap items-center gap-2">
@@ -666,9 +679,9 @@ export default function OperationsPage() {
           </div>
 
           {/* Integrated Filters */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
             <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">
                 Tipo de Operación
               </label>
               <Select
@@ -690,7 +703,7 @@ export default function OperationsPage() {
             </div>
 
             <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">
                 Cliente
               </label>
               <Select
@@ -712,7 +725,7 @@ export default function OperationsPage() {
             </div>
 
             <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">
                 Proveedor
               </label>
               <Select
@@ -745,7 +758,7 @@ export default function OperationsPage() {
             {["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"].map((day) => (
               <div
                 key={day}
-                className="p-3 text-center text-sm font-semibold text-muted-foreground"
+                className="p-2 text-center text-xs font-semibold text-muted-foreground"
               >
                 {day}
               </div>
@@ -764,63 +777,40 @@ export default function OperationsPage() {
                     date.getMonth() === currentMonth.getMonth();
                   const dayOperations = getOperationsForDate(date);
                   const todayCheck = isToday(date);
-                  const selected = isSameDate(selectedDate, date);
 
                   return (
                     <div
                       key={dayIdx}
-                      onClick={() => setSelectedDate(date)}
-                      className={`min-h-[120px] p-2 cursor-pointer transition-colors ${
+                      onClick={() => handleDayClick(date)}
+                      className={`min-h-[80px] p-2 cursor-pointer transition-colors relative ${
                         !isCurrentMonth
-                          ? "bg-ui-surface-elevated/50"
+                          ? dayOperations.length > 0
+                            ? "bg-primary/5 border border-primary/20"
+                            : "bg-ui-surface-elevated/30"
+                          : dayOperations.length > 0
+                          ? "bg-primary/5 border border-primary/20 hover:bg-primary/10"
                           : "bg-card hover:bg-ui-surface-elevated"
-                      } ${selected ? "ring-2 ring-purple-500" : ""}`}
+                      }`}
                     >
-                      <div className="flex flex-col h-full">
+                      <div className="relative h-full">
                         <div
-                          className={`text-sm font-medium mb-1 ${
+                          className={`text-sm font-medium ${
                             todayCheck
                               ? "bg-purple-600 text-white rounded-full w-7 h-7 flex items-center justify-center"
                               : isCurrentMonth
                               ? "text-foreground"
-                              : "text-muted-foreground"
+                              : "text-muted-foreground/50"
                           }`}
                         >
                           {date.getDate()}
                         </div>
-                        <div className="flex-1 space-y-1 overflow-y-auto">
-                          {dayOperations.slice(0, 3).map((op) => (
-                            <div
-                              key={op.operation.id}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                router.push(`/operations/${op.operation.id}`);
-                              }}
-                              className="text-xs p-1 rounded bg-primary/10 border border-primary/50 hover:bg-primary/20 transition-colors cursor-pointer"
-                            >
-                              <div className="font-medium text-primary truncate">
-                                {new Date(
-                                  op.operation.scheduledStartDate
-                                ).toLocaleTimeString("es-CL", {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })}
-                              </div>
-                              <div className="text-foreground truncate">
-                                {op.operation.operationNumber}
-                              </div>
-                              <div className="text-muted-foreground truncate">
-                                {op.operation.origin} →{" "}
-                                {op.operation.destination}
-                              </div>
+                        {dayOperations.length > 0 && (
+                          <div className="absolute top-0 right-0">
+                            <div className="bg-primary text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold shadow-sm">
+                              {dayOperations.length}
                             </div>
-                          ))}
-                          {dayOperations.length > 3 && (
-                            <div className="text-xs text-center text-muted-foreground font-medium">
-                              +{dayOperations.length - 3} más
-                            </div>
-                          )}
-                        </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
@@ -829,131 +819,6 @@ export default function OperationsPage() {
             ))}
           </div>
         </div>
-
-        {/* Selected Date Details */}
-        {selectedDate && (
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <CardTitle className="text-foreground">
-                Operaciones del{" "}
-                {new Intl.DateTimeFormat("es-CL", {
-                  weekday: "long",
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                }).format(selectedDate)}
-              </CardTitle>
-              <CardDescription className="text-muted-foreground">
-                {getOperationsForDate(selectedDate).length} operación(es)
-                programada(s)
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {getOperationsForDate(selectedDate).length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">
-                  No hay operaciones programadas para este día
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {getOperationsForDate(selectedDate).map((op) => (
-                    <div
-                      key={op.operation.id}
-                      onClick={() =>
-                        router.push(`/operations/${op.operation.id}`)
-                      }
-                      className="p-4 rounded-lg border border-border hover:bg-ui-surface-elevated cursor-pointer transition-colors"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Badge
-                              variant="outline"
-                              className="border-secondary/50 text-secondary"
-                            >
-                              {getOperationTypeLabel(
-                                op.operation.operationType
-                              )}
-                            </Badge>
-                            <span className="font-mono font-medium text-foreground">
-                              {op.operation.operationNumber}
-                            </span>
-                          </div>
-                          <div className="grid grid-cols-2 gap-2 text-sm">
-                            <div>
-                              <span className="text-muted-foreground">
-                                Hora:{" "}
-                              </span>
-                              <span className="text-foreground">
-                                {formatDateTime(
-                                  op.operation.scheduledStartDate
-                                )}
-                              </span>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground">
-                                Cliente:{" "}
-                              </span>
-                              <span className="text-foreground">
-                                {op.client?.businessName || "Sin cliente"}
-                              </span>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground">
-                                Origen:{" "}
-                              </span>
-                              <span className="text-foreground">
-                                {op.operation.origin}
-                              </span>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground">
-                                Destino:{" "}
-                              </span>
-                              <span className="text-foreground">
-                                {op.operation.destination}
-                              </span>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground">
-                                Chofer:{" "}
-                              </span>
-                              <span className="text-foreground">
-                                {op.driver.firstName} {op.driver.lastName}
-                              </span>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground">
-                                Vehículo:{" "}
-                              </span>
-                              <span className="text-foreground">
-                                {op.vehicle.plateNumber}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex flex-col items-end gap-2">
-                          {getStatusBadge(op.operation.status)}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditClick(op);
-                            }}
-                            className="text-secondary hover:text-secondary hover:bg-secondary/10"
-                          >
-                            <Edit className="h-4 w-4 mr-1" />
-                            Editar
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
       </div>
     );
   };
@@ -1271,48 +1136,154 @@ export default function OperationsPage() {
               setPage(1);
             };
 
+            const formatDateFilter = () => {
+              if (!dateRangeFilter.start) return null;
+
+              const startDate = new Date(dateRangeFilter.start);
+              const endDate = dateRangeFilter.end
+                ? new Date(dateRangeFilter.end)
+                : startDate;
+
+              // Check if it's the same day
+              const isSameDay =
+                startDate.getDate() === endDate.getDate() &&
+                startDate.getMonth() === endDate.getMonth() &&
+                startDate.getFullYear() === endDate.getFullYear();
+
+              if (isSameDay) {
+                // Compact format for single day
+                return new Intl.DateTimeFormat("es-CL", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                }).format(startDate);
+              } else {
+                return `${new Intl.DateTimeFormat("es-CL", {
+                  day: "numeric",
+                  month: "short",
+                }).format(startDate)} - ${new Intl.DateTimeFormat("es-CL", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                }).format(endDate)}`;
+              }
+            };
+
+            const hasDateFilter = dateRangeFilter.start || dateRangeFilter.end;
+            const activeFiltersCount = [
+              filterState.type !== "all",
+              filterState.client !== "all",
+              filterState.provider !== "all",
+              hasDateFilter,
+            ].filter(Boolean).length;
+
             return (
-              <DataTable
-                data={operations}
-                columns={columns}
-                pagination={pagination}
-                onPageChange={setPage}
-                searchValue={search}
-                onSearchChange={setSearch}
-                searchPlaceholder="Buscar por número de operación, origen, destino..."
-                onSearchSubmit={handleSearch}
-                filters={tableFilters}
-                showFilters={showFilters}
-                onToggleFilters={toggleFilters}
-                onClearFilters={handleClearFilters}
-                actions={actions}
-                loading={loading}
-                error={error}
-                lastUpdate={lastUpdate}
-                onRefresh={handleRefresh}
-                onExport={() => {
-                  /* TODO: Implement export functionality */
-                }}
-                title="Listado de Operaciones"
-                description={`Total de ${total} operaciones registradas`}
-                icon={<Package className="w-5 h-5 text-secondary" />}
-                getRowKey={(op) => op.operation.id}
-                emptyState={
-                  <div className="text-center py-12">
-                    <Calendar className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                    <p className="text-muted-foreground">
-                      No se encontraron operaciones
-                    </p>
-                    <Button
-                      onClick={handleCreateClick}
-                      className="mt-4 bg-purple-600 hover:bg-purple-700"
-                    >
-                      <Plus className="mr-2 h-4 w-4" />
-                      Programar Primera Operación
-                    </Button>
+              <>
+                {/* Active Filters Badges */}
+                {activeFiltersCount > 0 && (
+                  <div className="flex flex-wrap items-center gap-2 px-1 py-2">
+                    <span className="text-sm text-muted-foreground font-medium">
+                      Filtros activos:
+                    </span>
+                    {hasDateFilter && formatDateFilter() && (
+                      <Badge
+                        variant="outline"
+                        className="bg-primary/10 text-primary border-primary/50 hover:bg-primary/20 cursor-pointer group"
+                        onClick={() => {
+                          setDateRangeFilter({ start: "", end: "" });
+                          setPage(1);
+                        }}
+                      >
+                        <Calendar className="h-3 w-3 mr-1.5" />
+                        {formatDateFilter()}
+                        <X className="h-3 w-3 ml-1.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </Badge>
+                    )}
+                    {filterState.type !== "all" && (
+                      <Badge
+                        variant="outline"
+                        className="bg-secondary/10 text-secondary border-secondary/50"
+                      >
+                        {OperationTypes.find(
+                          (t) => t.value === filterState.type
+                        )?.label || filterState.type}
+                      </Badge>
+                    )}
+                    {filterState.client !== "all" && (
+                      <Badge
+                        variant="outline"
+                        className="bg-secondary/10 text-secondary border-secondary/50"
+                      >
+                        {clients.find(
+                          (c) => c.id.toString() === filterState.client
+                        )?.businessName || "Cliente"}
+                      </Badge>
+                    )}
+                    {filterState.provider !== "all" && (
+                      <Badge
+                        variant="outline"
+                        className="bg-secondary/10 text-secondary border-secondary/50"
+                      >
+                        {providers.find(
+                          (p) => p.id.toString() === filterState.provider
+                        )?.businessName || "Proveedor"}
+                      </Badge>
+                    )}
+                    {activeFiltersCount > 1 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleClearFilters}
+                        className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
+                      >
+                        <X className="h-3 w-3 mr-1" />
+                        Limpiar todos
+                      </Button>
+                    )}
                   </div>
-                }
-              />
+                )}
+                <DataTable
+                  data={operations}
+                  columns={columns}
+                  pagination={pagination}
+                  onPageChange={setPage}
+                  searchValue={search}
+                  onSearchChange={setSearch}
+                  searchPlaceholder="Buscar por número de operación, origen, destino..."
+                  onSearchSubmit={handleSearch}
+                  filters={tableFilters}
+                  showFilters={showFilters}
+                  onToggleFilters={toggleFilters}
+                  onClearFilters={handleClearFilters}
+                  actions={actions}
+                  loading={loading}
+                  error={error}
+                  lastUpdate={lastUpdate}
+                  onRefresh={handleRefresh}
+                  onExport={() => {
+                    /* TODO: Implement export functionality */
+                  }}
+                  title="Listado de Operaciones"
+                  description={`Total de ${total} operaciones registradas`}
+                  icon={<Package className="w-5 h-5 text-secondary" />}
+                  getRowKey={(op) => op.operation.id}
+                  emptyState={
+                    <div className="text-center py-12">
+                      <Calendar className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+                      <p className="text-muted-foreground">
+                        No se encontraron operaciones
+                      </p>
+                      <Button
+                        onClick={handleCreateClick}
+                        className="mt-4 bg-purple-600 hover:bg-purple-700"
+                      >
+                        <Plus className="mr-2 h-4 w-4" />
+                        Programar Primera Operación
+                      </Button>
+                    </div>
+                  }
+                />
+              </>
             );
           })()
         )}
