@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { MySql2Database } from 'drizzle-orm/mysql2';
-import { eq, and, or, desc, sql, SQL, ilike } from 'drizzle-orm';
+import { eq, and, or, desc, sql, SQL, like } from 'drizzle-orm';
 import { BaseRepository } from '../../common/repositories/base.repository';
 import { DATABASE } from '../../database/database.module';
 import * as schema from '../../database/schema';
@@ -100,13 +100,13 @@ export class VehiclesRepository extends BaseRepository<Vehicle> {
 
     if (search) {
       const searchConditions = [
-        ilike(schema.vehicles.plateNumber, `%${search}%`),
+        like(schema.vehicles.plateNumber, `%${search}%`),
       ];
       if (schema.vehicles.brand) {
-        searchConditions.push(ilike(schema.vehicles.brand, `%${search}%`));
+        searchConditions.push(like(schema.vehicles.brand, `%${search}%`));
       }
       if (schema.vehicles.model) {
-        searchConditions.push(ilike(schema.vehicles.model, `%${search}%`));
+        searchConditions.push(like(schema.vehicles.model, `%${search}%`));
       }
       if (searchConditions.length > 0) {
         const searchOr = or(...searchConditions);
