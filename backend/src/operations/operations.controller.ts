@@ -32,17 +32,7 @@ import {
   BatchUploadOperationsDto,
   OperationExcelRowDto,
 } from './dto/operation.dto';
-
-interface RequestWithUser extends Request {
-  user: {
-    userId: number;
-    username: string;
-    email: string;
-    operatorId: number;
-    roleId: number;
-    isSuper: boolean;
-  };
-}
+import type { RequestWithUser } from '../common/types/request.types';
 
 @Controller('operations')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
@@ -61,7 +51,7 @@ export class OperationsController {
   ) {
     return this.operationsService.createOperation(
       createOperationDto,
-      req.user.userId,
+      req.user.id,
     );
   }
 
@@ -107,7 +97,7 @@ export class OperationsController {
     return this.operationsService.updateOperation(
       id,
       updateOperationDto,
-      req.user.userId,
+      req.user.id,
     );
   }
 
@@ -159,7 +149,7 @@ export class OperationsController {
   ): Promise<BatchUploadResult> {
     return await this.operationsService.batchUploadOperations(
       batchUploadDto,
-      req.user.userId,
+      req.user.id,
     );
   }
 
@@ -210,7 +200,7 @@ export class OperationsController {
 
     return await this.operationsService.batchUploadOperations(
       batchUploadDto,
-      req.user.userId,
+      req.user.id,
     );
   }
 
@@ -226,7 +216,7 @@ export class OperationsController {
   ) {
     return this.operationsService.assignDriverToVehicle(
       assignDto,
-      req.user.userId,
+      req.user.id,
     );
   }
 
@@ -240,7 +230,7 @@ export class OperationsController {
     return this.operationsService.unassignDriverFromVehicle(
       assignmentId,
       unassignDto,
-      req.user.userId,
+      req.user.id,
     );
   }
 

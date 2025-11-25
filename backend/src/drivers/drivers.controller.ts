@@ -22,17 +22,7 @@ import {
   CreateDriverDocumentDto,
   UpdateDriverDocumentDto,
 } from './dto/driver.dto';
-
-interface RequestWithUser extends Request {
-  user: {
-    userId: number;
-    username: string;
-    email: string;
-    operatorId: number;
-    roleId: number;
-    isSuper: boolean;
-  };
-}
+import type { RequestWithUser } from '../common/types/request.types';
 
 @Controller('drivers')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
@@ -49,7 +39,7 @@ export class DriversController {
     @Body() createDriverDto: CreateDriverDto,
     @Request() req: RequestWithUser,
   ) {
-    return this.driversService.createDriver(createDriverDto, req.user.userId);
+    return this.driversService.createDriver(createDriverDto, req.user.id);
   }
 
   @Get()
@@ -71,11 +61,7 @@ export class DriversController {
     @Body() updateDriverDto: UpdateDriverDto,
     @Request() req: RequestWithUser,
   ) {
-    return this.driversService.updateDriver(
-      id,
-      updateDriverDto,
-      req.user.userId,
-    );
+    return this.driversService.updateDriver(id, updateDriverDto, req.user.id);
   }
 
   @Delete(':id')
@@ -99,7 +85,7 @@ export class DriversController {
     createDocumentDto.driverId = driverId;
     return this.driversService.createDriverDocument(
       createDocumentDto,
-      req.user.userId,
+      req.user.id,
     );
   }
 
@@ -127,7 +113,7 @@ export class DriversController {
     return this.driversService.updateDriverDocument(
       documentId,
       updateDocumentDto,
-      req.user.userId,
+      req.user.id,
     );
   }
 

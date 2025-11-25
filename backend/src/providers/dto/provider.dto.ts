@@ -9,6 +9,7 @@ import {
   Min,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { PaginationQueryDto } from '../../common/dto/pagination.dto';
 
 // ============================================================================
 // CREATE PROVIDER DTO
@@ -188,7 +189,7 @@ export class UpdateProviderDto {
 // QUERY DTO
 // ============================================================================
 
-export class ProviderQueryDto {
+export class ProviderQueryDto extends PaginationQueryDto {
   @IsInt()
   @IsOptional()
   @Type(() => Number)
@@ -212,16 +213,4 @@ export class ProviderQueryDto {
   @Type(() => Number)
   @Min(1)
   minRating?: number;
-
-  @IsInt()
-  @IsOptional()
-  @Type(() => Number)
-  @Min(1)
-  page?: number = 1;
-
-  @IsInt()
-  @IsOptional()
-  @Type(() => Number)
-  @Min(1)
-  limit?: number = 10;
 }

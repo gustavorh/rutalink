@@ -5,11 +5,12 @@ import {
   IsOptional,
   IsNotEmpty,
   MaxLength,
-  Min,
   IsEnum,
   IsDateString,
+  Min,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { PaginationQueryDto } from '../../common/dto/pagination.dto';
 
 // ============================================================================
 // ENUMS
@@ -353,16 +354,7 @@ export class VehicleResponseDto {
 // ============================================================================
 // QUERY DTOs
 // ============================================================================
-export class VehicleQueryDto {
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  page?: number = 1;
-
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  limit?: number = 10;
+export class VehicleQueryDto extends PaginationQueryDto {
 
   @IsOptional()
   @IsString()

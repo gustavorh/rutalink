@@ -20,17 +20,7 @@ import {
   UpdateProviderDto,
   ProviderQueryDto,
 } from './dto/provider.dto';
-
-interface RequestWithUser extends Request {
-  user: {
-    userId: number;
-    username: string;
-    email: string;
-    operatorId: number;
-    roleId: number;
-    isSuper: boolean;
-  };
-}
+import type { RequestWithUser } from '../common/types/request.types';
 
 @Controller('providers')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
@@ -53,7 +43,7 @@ export class ProvidersController {
   ) {
     return this.providersService.createProvider(
       createProviderDto,
-      req.user.userId,
+      req.user.id,
     );
   }
 
@@ -91,7 +81,7 @@ export class ProvidersController {
     return this.providersService.updateProvider(
       id,
       updateProviderDto,
-      req.user.userId,
+      req.user.id,
     );
   }
 

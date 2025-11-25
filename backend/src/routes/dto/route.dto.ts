@@ -4,11 +4,12 @@ import {
   IsOptional,
   IsInt,
   IsBoolean,
-  Min,
   MaxLength,
   IsIn,
+  Min,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { PaginationQueryDto } from '../../common/dto/pagination.dto';
 
 // ============================================================================
 // CREATE ROUTE DTO
@@ -184,7 +185,7 @@ export class UpdateRouteDto {
 // ============================================================================
 // QUERY ROUTE DTO
 // ============================================================================
-export class RouteQueryDto {
+export class RouteQueryDto extends PaginationQueryDto {
   @IsString()
   @IsOptional()
   search?: string; // búsqueda por nombre, código, origen, destino
@@ -216,16 +217,4 @@ export class RouteQueryDto {
   @IsOptional()
   @Type(() => Boolean)
   tollsRequired?: boolean;
-
-  @IsInt()
-  @IsOptional()
-  @Min(1)
-  @Type(() => Number)
-  page?: number;
-
-  @IsInt()
-  @IsOptional()
-  @Min(1)
-  @Type(() => Number)
-  limit?: number;
 }

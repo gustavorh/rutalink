@@ -6,10 +6,10 @@ import {
   IsInt,
   IsNotEmpty,
   MaxLength,
-  Min,
   IsIn,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { PaginationQueryDto } from '../../common/dto/pagination.dto';
 
 // ============================================================================
 // CLIENT DTOs
@@ -181,7 +181,7 @@ export class UpdateClientDto {
   notes?: string;
 }
 
-export class ClientQueryDto {
+export class ClientQueryDto extends PaginationQueryDto {
   @IsInt()
   @IsOptional()
   @Type(() => Number)
@@ -207,25 +207,13 @@ export class ClientQueryDto {
   @IsString()
   @IsOptional()
   region?: string; // filtrar por región
-
-  @IsInt()
-  @IsOptional()
-  @Type(() => Number)
-  @Min(1)
-  page?: number = 1;
-
-  @IsInt()
-  @IsOptional()
-  @Type(() => Number)
-  @Min(1)
-  limit?: number = 10;
 }
 
 // ============================================================================
 // CLIENT OPERATIONS QUERY DTO
 // ============================================================================
 
-export class ClientOperationsQueryDto {
+export class ClientOperationsQueryDto extends PaginationQueryDto {
   @IsString()
   @IsOptional()
   status?: string; // filtrar por estado de operación
@@ -241,16 +229,4 @@ export class ClientOperationsQueryDto {
   @IsString()
   @IsOptional()
   endDate?: string; // fecha fin del rango
-
-  @IsInt()
-  @IsOptional()
-  @Type(() => Number)
-  @Min(1)
-  page?: number = 1;
-
-  @IsInt()
-  @IsOptional()
-  @Type(() => Number)
-  @Min(1)
-  limit?: number = 10;
 }

@@ -12,6 +12,7 @@ import {
 } from './dto/client.dto';
 import { ClientsRepository } from './repositories/clients.repository';
 import { OperationsRepository } from '../operations/repositories/operations.repository';
+import { ResponseBuilder } from '../common/responses/api-response';
 
 @Injectable()
 export class ClientsService {
@@ -90,7 +91,7 @@ export class ClientsService {
     } = query;
 
     // Use repository's findPaginated method with QueryBuilder
-    return this.clientsRepository.findPaginated(
+    const result = await this.clientsRepository.findPaginated(
       operatorId,
       search,
       status,
@@ -100,6 +101,9 @@ export class ClientsService {
       page,
       limit,
     );
+
+    // Return standardized paginated response
+    return ResponseBuilder.paginated(result.data, result.pagination);
   }
 
   /**
@@ -182,7 +186,7 @@ export class ClientsService {
       userId,
     );
 
-    return { message: 'Client deactivated successfully' };
+    return ResponseBuilder.success(null, 'Client deactivated successfully');
   }
 
   /**
@@ -203,7 +207,10 @@ export class ClientsService {
     // Delete using repository
     await this.clientsRepository.delete(id);
 
-    return { message: 'Client permanently deleted successfully' };
+    return ResponseBuilder.success(
+      null,
+      'Client permanently deleted successfully',
+    );
   }
 
   // ============================================================================
@@ -226,7 +233,7 @@ export class ClientsService {
     } = query;
 
     // Use repository method
-    return this.operationsRepository.findPaginatedByClient(
+    const result = await this.operationsRepository.findPaginatedByClient(
       clientId,
       status,
       operationType,
@@ -235,6 +242,9 @@ export class ClientsService {
       page,
       limit,
     );
+
+    // Return standardized paginated response
+    return ResponseBuilder.paginated(result.data, result.pagination);
   }
 
   /**

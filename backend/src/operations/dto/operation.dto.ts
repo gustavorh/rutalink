@@ -6,9 +6,9 @@ import {
   IsNotEmpty,
   MaxLength,
   IsIn,
-  Min,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { PaginationQueryDto } from '../../common/dto/pagination.dto';
 
 // ============================================================================
 // OPERATION DTOs
@@ -162,7 +162,7 @@ export class UpdateOperationDto {
   notes?: string;
 }
 
-export class OperationQueryDto {
+export class OperationQueryDto extends PaginationQueryDto {
   @IsInt()
   @IsOptional()
   @Type(() => Number)
@@ -203,18 +203,6 @@ export class OperationQueryDto {
   @IsDateString()
   @IsOptional()
   endDate?: string;
-
-  @IsInt()
-  @IsOptional()
-  @Type(() => Number)
-  @Min(1)
-  page?: number = 1;
-
-  @IsInt()
-  @IsOptional()
-  @Type(() => Number)
-  @Min(1)
-  limit?: number = 10;
 }
 
 // ============================================================================

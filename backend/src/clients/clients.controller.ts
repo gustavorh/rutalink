@@ -21,17 +21,7 @@ import {
   ClientQueryDto,
   ClientOperationsQueryDto,
 } from './dto/client.dto';
-
-interface RequestWithUser extends Request {
-  user: {
-    userId: number;
-    username: string;
-    email: string;
-    operatorId: number;
-    roleId: number;
-    isSuper: boolean;
-  };
-}
+import type { RequestWithUser } from '../common/types/request.types';
 
 @Controller('clients')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
@@ -52,7 +42,7 @@ export class ClientsController {
     @Body() createClientDto: CreateClientDto,
     @Request() req: RequestWithUser,
   ) {
-    return this.clientsService.createClient(createClientDto, req.user.userId);
+    return this.clientsService.createClient(createClientDto, req.user.id);
   }
 
   /**
@@ -86,11 +76,7 @@ export class ClientsController {
     @Body() updateClientDto: UpdateClientDto,
     @Request() req: RequestWithUser,
   ) {
-    return this.clientsService.updateClient(
-      id,
-      updateClientDto,
-      req.user.userId,
-    );
+    return this.clientsService.updateClient(id, updateClientDto, req.user.id);
   }
 
   /**
@@ -103,7 +89,7 @@ export class ClientsController {
     @Param('id', ParseIntPipe) id: number,
     @Request() req: RequestWithUser,
   ) {
-    return this.clientsService.deleteClient(id, req.user.userId);
+    return this.clientsService.deleteClient(id, req.user.id);
   }
 
   /**

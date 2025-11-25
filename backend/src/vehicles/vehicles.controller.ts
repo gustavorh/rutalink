@@ -24,17 +24,7 @@ import {
   UpdateVehicleDocumentDto,
   VehicleQueryDto,
 } from './dto/vehicle.dto';
-
-interface RequestWithUser extends Request {
-  user: {
-    userId: number;
-    username: string;
-    email: string;
-    operatorId: number;
-    roleId: number;
-    isSuper: boolean;
-  };
-}
+import type { RequestWithUser } from '../common/types/request.types';
 
 @Controller('vehicles')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
@@ -58,7 +48,7 @@ export class VehiclesController {
     return this.vehiclesService.create(
       req.user.operatorId,
       createTruckDto,
-      req.user.userId,
+      req.user.id,
     );
   }
 
@@ -136,7 +126,7 @@ export class VehiclesController {
       req.user.operatorId,
       id,
       updateTruckDto,
-      req.user.userId,
+      req.user.id,
     );
   }
 
@@ -171,7 +161,7 @@ export class VehiclesController {
     return this.vehiclesService.addDocument(
       req.user.operatorId,
       createDocumentDto,
-      req.user.userId,
+      req.user.id,
     );
   }
 
@@ -203,7 +193,7 @@ export class VehiclesController {
       req.user.operatorId,
       documentId,
       updateDocumentDto,
-      req.user.userId,
+      req.user.id,
     );
   }
 

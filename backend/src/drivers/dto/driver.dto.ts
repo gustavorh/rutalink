@@ -8,9 +8,9 @@ import {
   IsNotEmpty,
   MaxLength,
   IsIn,
-  Min,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { PaginationQueryDto } from '../../common/dto/pagination.dto';
 
 // ============================================================================
 // DRIVER DTOs
@@ -191,7 +191,7 @@ export class UpdateDriverDto {
   notes?: string;
 }
 
-export class DriverQueryDto {
+export class DriverQueryDto extends PaginationQueryDto {
   @IsInt()
   @IsOptional()
   @Type(() => Number)
@@ -214,18 +214,6 @@ export class DriverQueryDto {
   @IsString()
   @IsOptional()
   licenseType?: string;
-
-  @IsInt()
-  @IsOptional()
-  @Type(() => Number)
-  @Min(1)
-  page?: number = 1;
-
-  @IsInt()
-  @IsOptional()
-  @Type(() => Number)
-  @Min(1)
-  limit?: number = 10;
 }
 
 // ============================================================================

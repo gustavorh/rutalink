@@ -16,17 +16,7 @@ import { CreateRouteDto, UpdateRouteDto, RouteQueryDto } from './dto/route.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../auth/guards/permissions.guard';
 import { RequirePermission } from '../auth/decorators/require-permission.decorator';
-
-interface RequestWithUser extends Request {
-  user: {
-    userId: number;
-    username: string;
-    email: string;
-    operatorId: number;
-    roleId: number;
-    isSuper: boolean;
-  };
-}
+import type { RequestWithUser } from '../common/types/request.types';
 
 @Controller('routes')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
@@ -68,7 +58,7 @@ export class RoutesController {
   ) {
     return this.routesService.createRoute(
       req.user.operatorId,
-      req.user.userId,
+      req.user.id,
       createRouteDto,
     );
   }
@@ -85,7 +75,7 @@ export class RoutesController {
   ) {
     return this.routesService.updateRoute(
       req.user.operatorId,
-      req.user.userId,
+      req.user.id,
       id,
       updateRouteDto,
     );

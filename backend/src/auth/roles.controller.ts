@@ -19,17 +19,7 @@ import { CreateRoleDto, UpdateRoleDto } from './dto/role.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { PermissionsGuard } from './guards/permissions.guard';
 import { RequirePermission } from './decorators/require-permission.decorator';
-
-interface RequestWithUser extends Request {
-  user: {
-    id: number;
-    username: string;
-    email: string;
-    operatorId: number;
-    roleId: number;
-    isSuper: boolean;
-  };
-}
+import type { RequestWithUser } from '../common/types/request.types';
 
 @Controller('roles')
 @UseGuards(JwtAuthGuard, PermissionsGuard)

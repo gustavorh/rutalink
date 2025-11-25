@@ -5,6 +5,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import * as yaml from 'js-yaml';
 import { AppModule } from './app.module';
+import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -19,6 +20,9 @@ async function bootstrap() {
 
   // Use global prefix 'api'
   app.setGlobalPrefix('api');
+
+  // Enable global exception filter
+  app.useGlobalFilters(new GlobalExceptionFilter());
 
   // Enable validation globally
   app.useGlobalPipes(
