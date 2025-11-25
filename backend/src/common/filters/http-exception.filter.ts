@@ -9,23 +9,40 @@ import {
 import { Response } from 'express';
 import { ApiErrorResponse } from '../responses/api-response';
 
+// Static file patterns that shouldn't be logged as errors (browser auto-requests)
+const SILENT_404_PATTERNS = [
+  /^\/favicon\.ico$/,
+  /^\/apple-touch-icon/,
+  /^\/site\.webmanifest$/,
+];
+
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(GlobalExceptionFilter.name);
 
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
+    const request = ctx.getRequest<{ url?: string }>();
     const response = ctx.getResponse<Response>();
 
     const { status, errorResponse } = this.getErrorDetails(exception);
 
-    // Log error details
-    this.logger.error(
-      `Exception: ${JSON.stringify(errorResponse)}`,
-      exception instanceof Error ? exception.stack : undefined,
-    );
+    // Skip logging for expected browser 404s (favicon, etc.)
+    const shouldLog = !this.isSilent404(status, request.url);
+
+    if (shouldLog) {
+      this.logger.error(
+        `Exception: ${JSON.stringify(errorResponse)}`,
+        exception instanceof Error ? exception.stack : undefined,
+      );
+    }
 
     response.status(status).json(errorResponse);
+  }
+
+  private isSilent404(status: number, url?: string): boolean {
+    if (status !== 404 || !url) return false;
+    return SILENT_404_PATTERNS.some((pattern) => pattern.test(url));
   }
 
   private getErrorDetails(exception: unknown): {
