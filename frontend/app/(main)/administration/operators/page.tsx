@@ -120,9 +120,9 @@ export default function OperatorsPage() {
 
       if (search) params.search = search;
       if (filterState.status !== "all")
-        params.status = filterState.status === "active" ? true : false;
+        params.status = filterState.status === "active" ? "true" : "false";
       if (filterState.super !== "all")
-        params.super = filterState.super === "super" ? true : false;
+        params.super = filterState.super === "super" ? "true" : "false";
 
       const response = await api.operators.list(params);
       setOperators(response.data);
