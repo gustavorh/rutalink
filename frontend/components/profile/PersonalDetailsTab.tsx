@@ -57,7 +57,6 @@ export function PersonalDetailsTab({
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
-        username: formData.username,
       });
 
       setSuccess("Información actualizada correctamente");

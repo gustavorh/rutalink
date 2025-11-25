@@ -13,8 +13,7 @@ import { Label } from "@/components/ui/label";
 import type { LiveOperation } from "@/types/dashboard";
 import type { FilterOption } from "@/types/dashboard";
 import type { UpdateOperationDto } from "@/lib/api-types";
-import { updateOperation } from "@/lib/api";
-import { getToken } from "@/lib/auth";
+import { api } from "@/lib/client-api";
 
 interface EditOperationModalProps {
   operation: LiveOperation | null;
@@ -70,11 +69,6 @@ export function EditOperationModal({
     setError(null);
 
     try {
-      const token = getToken();
-      if (!token) {
-        throw new Error("No authentication token found");
-      }
-
       const updateData: UpdateOperationDto = {
         clientId: formData.clientId || undefined,
         providerId: formData.providerId || undefined,
@@ -82,7 +76,7 @@ export function EditOperationModal({
         vehicleId: formData.vehicleId,
       };
 
-      await updateOperation(token, operation.operation.id, updateData);
+      await api.operations.update(operation.operation.id, updateData);
       onSuccess();
       onClose();
     } catch (err) {

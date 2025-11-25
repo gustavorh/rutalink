@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { getToken, getUser } from "@/lib/auth";
-import { getUserById, updateUser } from "@/lib/api";
+import { getUser } from "@/lib/auth";
+import { api } from "@/lib/client-api";
 import type { User } from "@/types/users";
 import type { UpdateUserDto } from "@/lib/api-types";
 import { PersonalDetailsTab, SecurityTab, HelpTab } from "@/components/profile";
@@ -21,14 +21,13 @@ export default function ProfilePage() {
     try {
       setLoading(true);
       const authUser = getUser();
-      const token = getToken();
 
-      if (!authUser || !token) {
+      if (!authUser) {
         router.push("/login");
         return;
       }
 
-      const userData = await getUserById(token, authUser.id);
+      const userData = await api.users.get(authUser.id);
       setUser(userData);
     } catch (err) {
       console.error("Error loading user data:", err);
@@ -44,28 +43,13 @@ export default function ProfilePage() {
 
   const handleUpdateUser = async (data: UpdateUserDto) => {
     try {
-      const token = getToken();
-      if (!token || !user) return;
+      if (!user) return;
 
-      const updatedUser = await updateUser(token, user.id, data);
+      const updatedUser = await api.users.update(user.id, data);
       setUser(updatedUser);
 
-      // Update local storage if user data changed
-      if (data.firstName || data.lastName || data.email || data.username) {
-        const currentUser = getUser();
-        if (currentUser) {
-          localStorage.setItem(
-            "user",
-            JSON.stringify({
-              ...currentUser,
-              firstName: data.firstName || currentUser.firstName,
-              lastName: data.lastName || currentUser.lastName,
-              email: data.email || currentUser.email,
-              username: data.username || currentUser.username,
-            })
-          );
-        }
-      }
+      // User info is stored in cookies, no need to update localStorage
+      // The cookie will be updated on next login/refresh
 
       return updatedUser;
     } catch (err) {

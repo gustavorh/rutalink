@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { getToken, isAuthenticated, getUser } from "@/lib/auth";
-import { createTruck } from "@/lib/api";
+import { isAuthenticated, getUser } from "@/lib/auth";
+import { api } from "@/lib/client-api";
 import type { CreateVehicleDto } from "@/lib/api-types";
 import {
   VEHICLE_TYPES,
@@ -61,13 +61,8 @@ export default function NewTruckPage() {
     try {
       setLoading(true);
       setError(null);
-      const token = getToken();
-      if (!token) {
-        router.push("/login");
-        return;
-      }
 
-      await createTruck(token, formData);
+      await api.vehicles.create(formData);
       router.push("/dashboard/trucks");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al crear camión");

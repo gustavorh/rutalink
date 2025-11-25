@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { getToken, isAuthenticated } from "@/lib/auth";
-import { getRouteById, getRouteStatistics } from "@/lib/api";
+import { isAuthenticated } from "@/lib/auth";
+import { api } from "@/lib/client-api";
 import type { Route, RouteStatistics } from "@/types/routes";
 import { ROUTE_TYPES, DIFFICULTY_LEVELS } from "@/types/routes";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -52,15 +52,9 @@ export default function RouteDetailPage() {
     try {
       setLoading(true);
       setError(null);
-      const token = getToken();
-      if (!token) {
-        router.push("/login");
-        return;
-      }
-
       const [routeData, statsData] = await Promise.all([
-        getRouteById(token, routeId),
-        getRouteStatistics(token, routeId),
+        api.routes.get(routeId),
+        api.routes.getStatistics(routeId),
       ]);
 
       setRoute(routeData);

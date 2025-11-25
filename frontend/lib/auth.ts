@@ -1,40 +1,22 @@
 /**
  * Authentication utilities for managing user session
+ * Now uses HTTP-only cookies instead of localStorage for security
  */
-
-import { AuthResponse } from "./api";
-
-const TOKEN_KEY = "auth_token";
-const USER_KEY = "auth_user";
 
 /**
- * Store authentication data in localStorage
+ * Get stored user data from cookie (non-sensitive info)
  */
-export function storeAuth(authData: AuthResponse): void {
-  if (typeof window === "undefined") return;
-
-  localStorage.setItem(TOKEN_KEY, authData.access_token);
-  localStorage.setItem(USER_KEY, JSON.stringify(authData.user));
-}
-
-/**
- * Get stored token
- */
-export function getToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem(TOKEN_KEY);
-}
-
-/**
- * Get stored user data
- */
-export function getUser(): AuthResponse["user"] | null {
+export function getUser(): any | null {
   if (typeof window === "undefined") return null;
 
-  const userData = localStorage.getItem(USER_KEY);
-  if (!userData) return null;
+  // Try to get user info from cookie
+  const cookies = document.cookie.split(";");
+  const userCookie = cookies.find((c) => c.trim().startsWith("user_info="));
+
+  if (!userCookie) return null;
 
   try {
+    const userData = decodeURIComponent(userCookie.split("=")[1]);
     return JSON.parse(userData);
   } catch {
     return null;
@@ -43,25 +25,37 @@ export function getUser(): AuthResponse["user"] | null {
 
 /**
  * Check if user is authenticated
+ * Note: Token is now in HTTP-only cookie, so we check user_info cookie
  */
 export function isAuthenticated(): boolean {
-  return !!getToken();
+  if (typeof window === "undefined") return false;
+
+  const cookies = document.cookie.split(";");
+  return cookies.some((c) => c.trim().startsWith("user_info="));
 }
 
 /**
- * Clear authentication data
+ * Logout user - calls API to clear cookies
  */
-export function clearAuth(): void {
+export async function logout(): Promise<void> {
   if (typeof window === "undefined") return;
 
-  localStorage.removeItem(TOKEN_KEY);
-  localStorage.removeItem(USER_KEY);
+  try {
+    await fetch("/api/auth/logout", {
+      method: "POST",
+      credentials: "include",
+    });
+  } catch (error) {
+    console.error("Logout error:", error);
+  }
+
+  window.location.href = "/login";
 }
 
 /**
- * Logout user
+ * Clear authentication data (legacy support)
+ * @deprecated Use logout() instead
  */
-export function logout(): void {
-  clearAuth();
-  window.location.href = "/login";
+export function clearAuth(): void {
+  logout();
 }

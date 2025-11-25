@@ -9,8 +9,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { login, ApiError } from "@/lib/api";
-import { storeAuth } from "@/lib/auth";
+import { api, ApiError } from "@/lib/client-api";
 import Link from "next/dist/client/link";
 
 // Form validation schema
@@ -59,10 +58,10 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      const response = await login(data);
+      const response = await api.auth.login(data);
 
-      // Store authentication data
-      storeAuth(response);
+      // Authentication is now handled via HTTP-only cookies
+      // User info is stored in a non-HTTP-only cookie for UI access
 
       // Check if there's a redirect path stored from session expiration
       const redirectPath = sessionStorage.getItem("redirectAfterLogin");

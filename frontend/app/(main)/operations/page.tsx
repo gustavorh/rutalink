@@ -2,18 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getToken, isAuthenticated, getUser } from "@/lib/auth";
-import {
-  getOperations,
-  deleteOperation,
-  createOperation,
-  updateOperation,
-  getClients,
-  getProviders,
-  getDrivers,
-  getVehicles,
-  getRoutes,
-} from "@/lib/api";
+import { isAuthenticated, getUser } from "@/lib/auth";
+import { api } from "@/lib/client-api";
 import type { OperationWithDetails } from "@/types/operations";
 import type {
   CreateOperationDto,
@@ -23,7 +13,7 @@ import type {
 import type { Client } from "@/types/clients";
 import type { Provider } from "@/types/providers";
 import type { Driver } from "@/types/drivers";
-import type { Vehicle } from "@/types/drivers";
+import type { Truck as TruckType } from "@/types/trucks";
 import type { Route } from "@/types/routes";
 
 // Form data type for operation create/edit forms
@@ -144,7 +134,7 @@ export default function OperationsPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [providers, setProviders] = useState<Provider[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [vehicles, setVehicles] = useState<TruckType[]>([]);
   const [routes, setRoutes] = useState<Route[]>([]);
 
   // Filters
@@ -202,39 +192,38 @@ export default function OperationsPage() {
 
   const fetchCatalogs = async () => {
     try {
-      const token = getToken();
       const user = getUser();
-      if (!token || !user) return;
+      if (!user) return;
 
       const [clientsRes, providersRes, driversRes, vehiclesRes, routesRes] =
         await Promise.all([
-          getClients(token, {
+          api.clients.list({
             operatorId: user.operatorId,
             status: true,
-            limit: 1000,
+            limit: 100,
           }),
-          getProviders(token, {
+          api.providers.list({
             operatorId: user.operatorId,
             status: true,
-            limit: 1000,
+            limit: 100,
           }),
-          getDrivers(token, {
+          api.drivers.list({
             operatorId: user.operatorId,
             status: true,
-            limit: 1000,
+            limit: 100,
           }),
-          getVehicles(token, {
+          api.vehicles.list({
             status: true,
-            limit: 1000,
+            limit: 100,
           }),
-          getRoutes(token, { status: true, limit: 1000 }),
+          api.routes.list({ status: true, limit: 100 }),
         ]);
 
-      setClients(clientsRes.data);
-      setProviders(providersRes.data);
-      setDrivers(driversRes.data);
-      setVehicles(vehiclesRes.data);
-      setRoutes(routesRes.data);
+      setClients(clientsRes.data || (clientsRes as any).items || []);
+      setProviders(providersRes.data || (providersRes as any).items || []);
+      setDrivers(driversRes.data || (driversRes as any).items || []);
+      setVehicles(vehiclesRes.data || (vehiclesRes as any).items || []);
+      setRoutes(routesRes.data || (routesRes as any).items || []);
     } catch (err) {
       console.error("Error loading catalogs:", err);
     }
@@ -244,9 +233,8 @@ export default function OperationsPage() {
     try {
       setLoading(true);
       setError(null);
-      const token = getToken();
       const user = getUser();
-      if (!token || !user) {
+      if (!user) {
         router.push("/login");
         return;
       }
@@ -254,7 +242,7 @@ export default function OperationsPage() {
       const params: OperationQueryDto = {
         operatorId: user.operatorId,
         page: page,
-        limit: viewMode === "calendar" ? 1000 : pagination.limit, // Fetch all for calendar view
+        limit: viewMode === "calendar" ? 100 : pagination.limit, // Fetch up to 100 for calendar view
         status: "scheduled", // Only fetch programmed operations
       };
       if (filterState.type !== "all") params.operationType = filterState.type;
@@ -286,8 +274,9 @@ export default function OperationsPage() {
         if (dateRangeFilter.end) params.endDate = dateRangeFilter.end;
       }
 
-      const response = await getOperations(token, params);
-      setOperations(response.data);
+      const response = await api.operations.list(params);
+      const items = response.data || (response as any).items || [];
+      setOperations(items);
       setTotalPages(response.pagination.totalPages);
       setTotal(response.pagination.total);
       setLastUpdate(new Date()); // Update timestamp
@@ -320,10 +309,7 @@ export default function OperationsPage() {
     if (!operationToDelete) return;
 
     try {
-      const token = getToken();
-      if (!token) return;
-
-      await deleteOperation(token, operationToDelete.operation.id);
+      await api.operations.delete(operationToDelete.operation.id);
       setDeleteDialogOpen(false);
       setOperationToDelete(null);
       fetchOperations();
@@ -398,9 +384,8 @@ export default function OperationsPage() {
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const token = getToken();
     const user = getUser();
-    if (!token || !user) return;
+    if (!user) return;
 
     try {
       setFormLoading(true);
@@ -437,7 +422,7 @@ export default function OperationsPage() {
             : undefined,
           notes: formData.notes || undefined,
         };
-        await updateOperation(token, operationToEdit.operation.id, updateData);
+        await api.operations.update(operationToEdit.operation.id, updateData);
         setEditDialogOpen(false);
         setOperationToEdit(null);
       } else {
@@ -471,7 +456,7 @@ export default function OperationsPage() {
             : undefined,
           notes: formData.notes || undefined,
         };
-        await createOperation(token, createData);
+        await api.operations.create(createData);
         setCreateDialogOpen(false);
       }
 

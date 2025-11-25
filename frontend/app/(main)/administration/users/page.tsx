@@ -2,14 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getToken, isAuthenticated, getUser } from "@/lib/auth";
-import {
-  getUsers,
-  deleteUser,
-  createUser,
-  updateUser,
-  getRoles,
-} from "@/lib/api";
+import { isAuthenticated, getUser } from "@/lib/auth";
+import { api } from "@/lib/client-api";
 import type { User } from "@/types/users";
 import type {
   CreateUserDto,
@@ -17,6 +11,18 @@ import type {
   UserQueryDto,
 } from "@/lib/api-types";
 import type { Role } from "@/types/roles";
+
+// Form data type that includes all fields used in the form
+interface UserFormData {
+  username: string;
+  email: string;
+  password?: string;
+  firstName: string;
+  lastName: string;
+  operatorId?: number;
+  roleId?: number;
+  status?: boolean;
+}
 import {
   Card,
   CardContent,
@@ -74,7 +80,7 @@ export default function UsersPage() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [userToEdit, setUserToEdit] = useState<User | null>(null);
-  const [formData, setFormData] = useState<CreateUserDto | UpdateUserDto>({
+  const [formData, setFormData] = useState<UserFormData>({
     username: "",
     email: "",
     password: "",
@@ -109,9 +115,8 @@ export default function UsersPage() {
     try {
       setLoading(true);
       setError(null);
-      const token = getToken();
       const user = getUser();
-      if (!token || !user) {
+      if (!user) {
         router.push("/login");
         return;
       }
@@ -123,7 +128,7 @@ export default function UsersPage() {
 
       if (search) params.search = search;
 
-      const response = await getUsers(token, params);
+      const response = await api.users.list(params);
       setUsers(response.data);
       setTotalPages(response.pagination.totalPages);
       setTotal(response.pagination.total);
@@ -136,12 +141,10 @@ export default function UsersPage() {
 
   const fetchRoles = async () => {
     try {
-      const token = getToken();
       const user = getUser();
-      if (!token || !user) return;
+      if (!user) return;
 
-      const response = await getRoles(token, {
-        status: true,
+      const response = await api.roles.list({
         limit: 100,
       });
       setRoles(response.data);
@@ -158,9 +161,7 @@ export default function UsersPage() {
   const handleDeleteConfirm = async () => {
     if (!userToDelete) return;
     try {
-      const token = getToken();
-      if (!token) return;
-      await deleteUser(token, userToDelete.id);
+      await api.users.delete(userToDelete.id);
       setDeleteDialogOpen(false);
       setUserToDelete(null);
       fetchUsers();
@@ -202,9 +203,8 @@ export default function UsersPage() {
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const token = getToken();
     const user = getUser();
-    if (!token || !user) return;
+    if (!user) return;
 
     try {
       setFormLoading(true);
@@ -212,12 +212,12 @@ export default function UsersPage() {
 
       if (editDialogOpen && userToEdit) {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { password, ...updateData } = formData as CreateUserDto;
-        await updateUser(token, userToEdit.id, updateData as UpdateUserDto);
+        const { password, username, ...updateData } = formData;
+        await api.users.update(userToEdit.id, updateData as UpdateUserDto);
         setEditDialogOpen(false);
         setUserToEdit(null);
       } else {
-        await createUser(token, formData as CreateUserDto);
+        await api.users.create(formData as unknown as CreateUserDto);
         setCreateDialogOpen(false);
       }
       fetchUsers();
@@ -578,7 +578,7 @@ export default function UsersPage() {
                 <Input
                   id="password"
                   type="password"
-                  value={(formData as CreateUserDto).password}
+                  value={formData.password}
                   onChange={(e) =>
                     setFormData({ ...formData, password: e.target.value })
                   }

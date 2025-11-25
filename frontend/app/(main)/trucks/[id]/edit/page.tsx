@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { getToken, isAuthenticated, getUser, logout } from "@/lib/auth";
-import { getTruckById, updateTruck } from "@/lib/api";
+import { isAuthenticated, getUser, logout } from "@/lib/auth";
+import { api } from "@/lib/client-api";
 import type { Truck } from "@/types/trucks";
 import type { UpdateVehicleDto } from "@/lib/api-types";
 import {
@@ -74,13 +74,7 @@ export default function EditTruckPage() {
     try {
       setLoading(true);
       setError(null);
-      const token = getToken();
-      if (!token) {
-        router.push("/login");
-        return;
-      }
-
-      const data = await getTruckById(token, truckId);
+      const data = await api.vehicles.get(truckId);
       setTruck(data);
       setFormData({
         plateNumber: data.plateNumber,
@@ -109,13 +103,8 @@ export default function EditTruckPage() {
     try {
       setSaving(true);
       setError(null);
-      const token = getToken();
-      if (!token) {
-        router.push("/login");
-        return;
-      }
 
-      await updateTruck(token, truckId, formData);
+      await api.vehicles.update(truckId, formData);
       router.push(`/dashboard/trucks/${truckId}`);
     } catch (err) {
       setError(
@@ -222,7 +211,8 @@ export default function EditTruckPage() {
 
                     <div className="space-y-2">
                       <Label htmlFor="vehicleType" className="text-foreground">
-                        Tipo de Vehículo <span className="text-destructive">*</span>
+                        Tipo de Vehículo{" "}
+                        <span className="text-destructive">*</span>
                       </Label>
                       <Select
                         value={formData.vehicleType}

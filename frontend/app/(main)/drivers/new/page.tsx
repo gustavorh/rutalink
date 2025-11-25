@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { getToken, isAuthenticated, getUser } from "@/lib/auth";
-import { createDriver, updateDriver, getDriverById } from "@/lib/api";
+import { isAuthenticated, getUser } from "@/lib/auth";
+import { api } from "@/lib/client-api";
 import type { CreateDriverDto, UpdateDriverDto } from "@/lib/api-types";
 import { LICENSE_TYPES } from "@/types/drivers";
 import {
@@ -81,13 +81,7 @@ export default function DriverFormPage() {
 
     try {
       setLoading(true);
-      const token = getToken();
-      if (!token) {
-        router.push("/login");
-        return;
-      }
-
-      const driver = await getDriverById(token, driverId);
+      const driver = await api.drivers.get(driverId);
 
       // Format dates for input fields
       const formatDateForInput = (dateString?: string) => {
@@ -138,11 +132,6 @@ export default function DriverFormPage() {
     try {
       setLoading(true);
       setError(null);
-      const token = getToken();
-      if (!token) {
-        router.push("/login");
-        return;
-      }
 
       // Validate required fields
       if (!formData.rut || !formData.firstName || !formData.lastName) {
@@ -161,9 +150,9 @@ export default function DriverFormPage() {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { operatorId, rut, ...cleanData } =
           updateData as CreateDriverDto;
-        await updateDriver(token, driverId, cleanData as UpdateDriverDto);
+        await api.drivers.update(driverId, cleanData as UpdateDriverDto);
       } else {
-        await createDriver(token, formData);
+        await api.drivers.create(formData);
       }
 
       router.push("/dashboard/drivers");

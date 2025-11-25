@@ -2,17 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getToken, isAuthenticated, getUser } from "@/lib/auth";
-import {
-  getClients,
-  deleteClient,
-  createClient,
-  updateClient,
-} from "@/lib/api";
-import type {
-  Client,
-  ClientQueryParams,
-} from "@/types/clients";
+import { isAuthenticated, getUser } from "@/lib/auth";
+import { api } from "@/lib/client-api";
+import type { Client } from "@/types/clients";
 import type {
   CreateClientDto,
   UpdateClientDto,
@@ -69,9 +61,7 @@ export default function ClientsPage() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [clientToEdit, setClientToEdit] = useState<Client | null>(null);
-  const [formData, setFormData] = useState<
-    CreateClientDto | UpdateClientDto
-  >({
+  const [formData, setFormData] = useState<CreateClientDto | UpdateClientDto>({
     businessName: "",
     taxId: "",
     contactName: "",
@@ -128,9 +118,8 @@ export default function ClientsPage() {
     try {
       setLoading(true);
       setError(null);
-      const token = getToken();
       const user = getUser();
-      if (!token || !user) {
+      if (!user) {
         router.push("/login");
         return;
       }
@@ -147,7 +136,8 @@ export default function ClientsPage() {
       if (filterState.industry !== "all")
         params.industry = filterState.industry;
 
-      const response = await getClients(token, params);
+      const response = await api.clients.list(params);
+      // Backend returns { data: [], pagination: {} }
       setClients(response.data);
       setTotalPages(response.pagination.totalPages);
       setTotal(response.pagination.total);
@@ -172,10 +162,7 @@ export default function ClientsPage() {
     if (!clientToDelete) return;
 
     try {
-      const token = getToken();
-      if (!token) return;
-
-      await deleteClient(token, clientToDelete.id);
+      await api.clients.delete(clientToDelete.id);
       setDeleteDialogOpen(false);
       setClientToDelete(null);
       fetchClients();
@@ -232,9 +219,8 @@ export default function ClientsPage() {
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const token = getToken();
     const user = getUser();
-    if (!token || !user) return;
+    if (!user) return;
 
     try {
       setFormLoading(true);
@@ -242,11 +228,7 @@ export default function ClientsPage() {
 
       if (editDialogOpen && clientToEdit) {
         // Update existing client
-        await updateClient(
-          token,
-          clientToEdit.id,
-          formData as UpdateClientDto
-        );
+        await api.clients.update(clientToEdit.id, formData as UpdateClientDto);
         setEditDialogOpen(false);
         setClientToEdit(null);
       } else {
@@ -255,7 +237,7 @@ export default function ClientsPage() {
           ...(formData as CreateClientDto),
           operatorId: user.operatorId,
         };
-        await createClient(token, createData);
+        await api.clients.create(createData);
         setCreateDialogOpen(false);
       }
 
@@ -590,221 +572,217 @@ export default function ClientsPage() {
         }}
       >
         <FormSection title="Información Comercial">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2">
+              <Label htmlFor="businessName" className="text-foreground">
+                Razón Social *
+              </Label>
+              <Input
+                id="businessName"
+                value={formData.businessName}
+                onChange={(e) =>
+                  setFormData({ ...formData, businessName: e.target.value })
+                }
+                required
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+                placeholder="Ej: Constructora ABC S.A."
+              />
+            </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2">
-                  <Label htmlFor="businessName" className="text-foreground">
-                    Razón Social *
-                  </Label>
-                  <Input
-                    id="businessName"
-                    value={formData.businessName}
-                    onChange={(e) =>
-                      setFormData({ ...formData, businessName: e.target.value })
-                    }
-                    required
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                    placeholder="Ej: Constructora ABC S.A."
-                  />
-                </div>
+            <div>
+              <Label htmlFor="taxId" className="text-foreground">
+                RUT
+              </Label>
+              <Input
+                id="taxId"
+                value={formData.taxId}
+                onChange={(e) =>
+                  setFormData({ ...formData, taxId: e.target.value })
+                }
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+                placeholder="Ej: 76.123.456-7"
+              />
+            </div>
 
-                <div>
-                  <Label htmlFor="taxId" className="text-foreground">
-                    RUT
-                  </Label>
-                  <Input
-                    id="taxId"
-                    value={formData.taxId}
-                    onChange={(e) =>
-                      setFormData({ ...formData, taxId: e.target.value })
-                    }
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                    placeholder="Ej: 76.123.456-7"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="industry" className="text-foreground">
-                    Rubro / Industria
-                  </Label>
-                  <Select
-                    value={formData.industry || ""}
-                    onValueChange={(value) =>
-                      setFormData({
-                        ...formData,
-                        industry: value as (typeof INDUSTRIES)[number]["value"],
-                      })
-                    }
-                  >
-                    <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground mt-1">
-                      <SelectValue placeholder="Seleccionar rubro" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {INDUSTRIES.map((industry) => (
-                        <SelectItem key={industry.value} value={industry.value}>
-                          {industry.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+            <div>
+              <Label htmlFor="industry" className="text-foreground">
+                Rubro / Industria
+              </Label>
+              <Select
+                value={formData.industry || ""}
+                onValueChange={(value) =>
+                  setFormData({
+                    ...formData,
+                    industry: value as (typeof INDUSTRIES)[number]["value"],
+                  })
+                }
+              >
+                <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground mt-1">
+                  <SelectValue placeholder="Seleccionar rubro" />
+                </SelectTrigger>
+                <SelectContent>
+                  {INDUSTRIES.map((industry) => (
+                    <SelectItem key={industry.value} value={industry.value}>
+                      {industry.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </FormSection>
 
         <FormSection title="Información de Contacto">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2">
+              <Label htmlFor="contactName" className="text-foreground">
+                Nombre de Contacto
+              </Label>
+              <Input
+                id="contactName"
+                value={formData.contactName}
+                onChange={(e) =>
+                  setFormData({ ...formData, contactName: e.target.value })
+                }
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+                placeholder="Ej: Juan Pérez"
+              />
+            </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2">
-                  <Label htmlFor="contactName" className="text-foreground">
-                    Nombre de Contacto
-                  </Label>
-                  <Input
-                    id="contactName"
-                    value={formData.contactName}
-                    onChange={(e) =>
-                      setFormData({ ...formData, contactName: e.target.value })
-                    }
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                    placeholder="Ej: Juan Pérez"
-                  />
-                </div>
+            <div>
+              <Label htmlFor="contactEmail" className="text-foreground">
+                Email de Contacto
+              </Label>
+              <Input
+                id="contactEmail"
+                type="email"
+                value={formData.contactEmail}
+                onChange={(e) =>
+                  setFormData({ ...formData, contactEmail: e.target.value })
+                }
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+                placeholder="contacto@empresa.cl"
+              />
+            </div>
 
-                <div>
-                  <Label htmlFor="contactEmail" className="text-foreground">
-                    Email de Contacto
-                  </Label>
-                  <Input
-                    id="contactEmail"
-                    type="email"
-                    value={formData.contactEmail}
-                    onChange={(e) =>
-                      setFormData({ ...formData, contactEmail: e.target.value })
-                    }
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                    placeholder="contacto@empresa.cl"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="contactPhone" className="text-foreground">
-                    Teléfono de Contacto
-                  </Label>
-                  <Input
-                    id="contactPhone"
-                    value={formData.contactPhone}
-                    onChange={(e) =>
-                      setFormData({ ...formData, contactPhone: e.target.value })
-                    }
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                    placeholder="+56 9 1234 5678"
-                  />
-                </div>
-              </div>
+            <div>
+              <Label htmlFor="contactPhone" className="text-foreground">
+                Teléfono de Contacto
+              </Label>
+              <Input
+                id="contactPhone"
+                value={formData.contactPhone}
+                onChange={(e) =>
+                  setFormData({ ...formData, contactPhone: e.target.value })
+                }
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+                placeholder="+56 9 1234 5678"
+              />
+            </div>
+          </div>
         </FormSection>
 
         <FormSection title="Ubicación">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2">
+              <Label htmlFor="address" className="text-foreground">
+                Dirección
+              </Label>
+              <Input
+                id="address"
+                value={formData.address}
+                onChange={(e) =>
+                  setFormData({ ...formData, address: e.target.value })
+                }
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+                placeholder="Ej: Av. Principal 123"
+              />
+            </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2">
-                  <Label htmlFor="address" className="text-foreground">
-                    Dirección
-                  </Label>
-                  <Input
-                    id="address"
-                    value={formData.address}
-                    onChange={(e) =>
-                      setFormData({ ...formData, address: e.target.value })
-                    }
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                    placeholder="Ej: Av. Principal 123"
-                  />
-                </div>
+            <div>
+              <Label htmlFor="city" className="text-foreground">
+                Ciudad
+              </Label>
+              <Input
+                id="city"
+                value={formData.city}
+                onChange={(e) =>
+                  setFormData({ ...formData, city: e.target.value })
+                }
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+                placeholder="Ej: Santiago"
+              />
+            </div>
 
-                <div>
-                  <Label htmlFor="city" className="text-foreground">
-                    Ciudad
-                  </Label>
-                  <Input
-                    id="city"
-                    value={formData.city}
-                    onChange={(e) =>
-                      setFormData({ ...formData, city: e.target.value })
-                    }
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                    placeholder="Ej: Santiago"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="region" className="text-foreground">
-                    Región
-                  </Label>
-                  <Input
-                    id="region"
-                    value={formData.region}
-                    onChange={(e) =>
-                      setFormData({ ...formData, region: e.target.value })
-                    }
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                    placeholder="Ej: Metropolitana"
-                  />
-                </div>
-              </div>
+            <div>
+              <Label htmlFor="region" className="text-foreground">
+                Región
+              </Label>
+              <Input
+                id="region"
+                value={formData.region}
+                onChange={(e) =>
+                  setFormData({ ...formData, region: e.target.value })
+                }
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+                placeholder="Ej: Metropolitana"
+              />
+            </div>
+          </div>
         </FormSection>
 
         <FormSection title="Información Adicional">
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="observations" className="text-foreground">
+                Observaciones
+              </Label>
+              <Textarea
+                id="observations"
+                value={formData.observations}
+                onChange={(e) =>
+                  setFormData({ ...formData, observations: e.target.value })
+                }
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+                placeholder="Observaciones generales del cliente..."
+                rows={3}
+              />
+            </div>
 
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="observations" className="text-foreground">
-                    Observaciones
-                  </Label>
-                  <Textarea
-                    id="observations"
-                    value={formData.observations}
-                    onChange={(e) =>
-                      setFormData({ ...formData, observations: e.target.value })
-                    }
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                    placeholder="Observaciones generales del cliente..."
-                    rows={3}
-                  />
-                </div>
+            <div>
+              <Label htmlFor="notes" className="text-foreground">
+                Notas Internas
+              </Label>
+              <Textarea
+                id="notes"
+                value={formData.notes}
+                onChange={(e) =>
+                  setFormData({ ...formData, notes: e.target.value })
+                }
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+                placeholder="Notas internas sobre el cliente..."
+                rows={3}
+              />
+            </div>
 
-                <div>
-                  <Label htmlFor="notes" className="text-foreground">
-                    Notas Internas
-                  </Label>
-                  <Textarea
-                    id="notes"
-                    value={formData.notes}
-                    onChange={(e) =>
-                      setFormData({ ...formData, notes: e.target.value })
-                    }
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                    placeholder="Notas internas sobre el cliente..."
-                    rows={3}
-                  />
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="status"
-                    checked={formData.status}
-                    onChange={(e) =>
-                      setFormData({ ...formData, status: e.target.checked })
-                    }
-                    className="rounded border-border bg-ui-surface-elevated text-primary focus:ring-blue-500"
-                  />
-                  <Label
-                    htmlFor="status"
-                    className="text-foreground cursor-pointer"
-                  >
-                    Cliente Activo
-                  </Label>
-                </div>
-              </div>
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="status"
+                checked={formData.status}
+                onChange={(e) =>
+                  setFormData({ ...formData, status: e.target.checked })
+                }
+                className="rounded border-border bg-ui-surface-elevated text-primary focus:ring-blue-500"
+              />
+              <Label
+                htmlFor="status"
+                className="text-foreground cursor-pointer"
+              >
+                Cliente Activo
+              </Label>
+            </div>
+          </div>
         </FormSection>
       </FormDialog>
     </main>

@@ -2,13 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { getToken, isAuthenticated } from "@/lib/auth";
-import {
-  getClientById,
-  getClientOperations,
-  getClientStatistics,
-  deleteClient,
-} from "@/lib/api";
+import { isAuthenticated } from "@/lib/auth";
+import { api } from "@/lib/client-api";
 import type {
   Client,
   ClientStatistics,
@@ -95,22 +90,17 @@ export default function ClientDetailPage() {
     try {
       setLoading(true);
       setError(null);
-      const token = getToken();
-      if (!token) {
-        router.push("/login");
-        return;
-      }
 
       // Fetch client details, statistics, and operations in parallel
       const [clientData, statsData, opsData] = await Promise.all([
-        getClientById(token, clientId),
-        getClientStatistics(token, clientId),
-        getClientOperations(token, clientId, { page, limit }),
+        api.clients.get(clientId),
+        api.clients.getStatistics(clientId),
+        api.clients.getOperations(clientId, { page, limit }),
       ]);
 
       setClient(clientData);
       setStatistics(statsData);
-      setOperations(opsData.data);
+      setOperations(opsData.data || (opsData as any).items || []);
       setTotalPages(opsData.pagination.totalPages);
       setTotal(opsData.pagination.total);
     } catch (err) {
@@ -130,10 +120,7 @@ export default function ClientDetailPage() {
     if (!client) return;
 
     try {
-      const token = getToken();
-      if (!token) return;
-
-      await deleteClient(token, client.id);
+      await api.clients.delete(client.id);
       router.push("/clients");
     } catch (err) {
       setError(

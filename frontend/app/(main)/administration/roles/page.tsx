@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getToken, isAuthenticated, getUser } from "@/lib/auth";
-import { getRoles, deleteRole, createRole, updateRole } from "@/lib/api";
+import { isAuthenticated, getUser } from "@/lib/auth";
+import { api } from "@/lib/client-api";
 import type { Role } from "@/types/roles";
 import type {
   RoleCreateDto,
@@ -90,9 +90,8 @@ export default function RolesPage() {
     try {
       setLoading(true);
       setError(null);
-      const token = getToken();
       const user = getUser();
-      if (!token || !user) {
+      if (!user) {
         router.push("/login");
         return;
       }
@@ -104,7 +103,7 @@ export default function RolesPage() {
 
       if (search) params.search = search;
 
-      const response = await getRoles(token, params);
+      const response = await api.roles.list(params);
       setRoles(response.data);
       setTotalPages(response.pagination.totalPages);
       setTotal(response.pagination.total);
@@ -123,9 +122,7 @@ export default function RolesPage() {
   const handleDeleteConfirm = async () => {
     if (!roleToDelete) return;
     try {
-      const token = getToken();
-      if (!token) return;
-      await deleteRole(token, roleToDelete.id);
+      await api.roles.delete(roleToDelete.id);
       setDeleteDialogOpen(false);
       setRoleToDelete(null);
       fetchRoles();
@@ -153,20 +150,19 @@ export default function RolesPage() {
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const token = getToken();
     const user = getUser();
-    if (!token || !user) return;
+    if (!user) return;
 
     try {
       setFormLoading(true);
       setError(null);
 
       if (editDialogOpen && roleToEdit) {
-        await updateRole(token, roleToEdit.id, formData as RoleUpdateDto);
+        await api.roles.update(roleToEdit.id, formData as RoleUpdateDto);
         setEditDialogOpen(false);
         setRoleToEdit(null);
       } else {
-        await createRole(token, formData as RoleCreateDto);
+        await api.roles.create(formData as RoleCreateDto);
         setCreateDialogOpen(false);
       }
       fetchRoles();

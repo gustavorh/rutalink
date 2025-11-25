@@ -3,15 +3,9 @@
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getUser, isAuthenticated, getToken } from "@/lib/auth";
+import { getUser, isAuthenticated } from "@/lib/auth";
 import { EditOperationModal } from "@/components/dashboard/EditOperationModal";
-import {
-  getOperations,
-  getClients,
-  getProviders,
-  getVehicles,
-  getRoutes,
-} from "@/lib/api";
+import { api } from "@/lib/client-api";
 import type {
   DashboardFilters,
   DashboardFilterOptions,
@@ -109,9 +103,8 @@ export default function DashboardPage() {
     setMounted(true);
   }, [router]);
 
-  // Memoize user and token to prevent unnecessary re-renders
+  // Memoize user to prevent unnecessary re-renders
   const user = useMemo(() => getUser(), []);
-  const token = useMemo(() => getToken(), []);
 
   // Calculate stats from operations - memoized to prevent unnecessary recalculations
   const stats = useMemo(
@@ -151,7 +144,7 @@ export default function DashboardPage() {
 
   // Refresh operations function
   const refreshOperations = useCallback(async () => {
-    if (!token || !user || loadingRef.current) return; // Prevent concurrent requests
+    if (!user || loadingRef.current) return; // Prevent concurrent requests
 
     loadingRef.current = true;
     setLoading(true);
@@ -159,7 +152,7 @@ export default function DashboardPage() {
       const params: Record<string, unknown> = {
         operatorId: user.operatorId,
         page: 1,
-        limit: 1000, // Fetch up to 1000 operations (all operations)
+        limit: 100, // Fetch up to 100 operations per page
       };
 
       // Apply filters from ref to get latest values
@@ -174,10 +167,12 @@ export default function DashboardPage() {
       if (currentFilters.startDate) params.startDate = currentFilters.startDate;
       if (currentFilters.endDate) params.endDate = currentFilters.endDate;
 
-      const response = await getOperations(token, params as never);
+      const response = await api.operations.list(params as any);
 
       // Convert to LiveOperation format
-      const liveOps: LiveOperation[] = response.data.map(
+      // Handle both old format (items) and new format (data)
+      const items = (response as any).items || response.data || [];
+      const liveOps: LiveOperation[] = items.map(
         (op: OperationWithDetails) => ({
           ...op,
           currentStatus:
@@ -209,7 +204,7 @@ export default function DashboardPage() {
       loadingRef.current = false;
       setLoading(false);
     }
-  }, [token, user]);
+  }, [user]);
 
   // Handle window focus/blur for smart refetching
   useEffect(() => {
@@ -228,7 +223,7 @@ export default function DashboardPage() {
         if (timeSinceLastFetch > REFETCH_THRESHOLD) {
           console.log("Refreshing data after window focus...");
           // Call refresh directly without relying on the callback
-          if (token && user) {
+          if (user) {
             refreshOperations();
           }
         }
@@ -243,11 +238,11 @@ export default function DashboardPage() {
     };
     // Only depend on mounted - we'll access current values directly
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mounted]);
+  }, [mounted, refreshOperations]);
 
   // Load filter options (only once)
   useEffect(() => {
-    if (!mounted || !token || !user || filterOptionsLoaded) return;
+    if (!mounted || !user || filterOptionsLoaded) return;
 
     let isMounted = true;
 
@@ -255,23 +250,23 @@ export default function DashboardPage() {
       try {
         const [clientsRes, providersRes, vehiclesRes, routesRes] =
           await Promise.all([
-            getClients(token, {
+            api.clients.list({
               operatorId: user.operatorId,
               status: true,
-              limit: 1000,
+              limit: 100,
             }),
-            getProviders(token, {
+            api.providers.list({
               operatorId: user.operatorId,
               status: true,
-              limit: 1000,
+              limit: 100,
             }),
-            getVehicles(token, {
+            api.vehicles.list({
               status: true,
-              limit: 1000,
+              limit: 100,
             }),
-            getRoutes(token, {
+            api.routes.list({
               status: true,
-              limit: 1000,
+              limit: 100,
             }),
           ]);
 
@@ -279,25 +274,25 @@ export default function DashboardPage() {
 
         setFilterOptions((prev) => ({
           ...prev,
-          clients: clientsRes.data.map(
+          clients: (clientsRes.data || (clientsRes as any).items || []).map(
             (c: { id: number; businessName: string }) => ({
               value: c.id,
               label: c.businessName,
             })
           ),
-          providers: providersRes.data.map(
+          providers: (providersRes.data || (providersRes as any).items || []).map(
             (p: { id: number; businessName: string }) => ({
               value: p.id,
               label: p.businessName,
             })
           ),
-          vehicles: vehiclesRes.data.map(
+          vehicles: (vehiclesRes.data || (vehiclesRes as any).items || []).map(
             (v: { id: number; plateNumber: string }) => ({
               value: v.id,
               label: v.plateNumber,
             })
           ),
-          routes: routesRes.data.map(
+          routes: (routesRes.data || (routesRes as any).items || []).map(
             (r: {
               id: number;
               name: string;
@@ -320,15 +315,14 @@ export default function DashboardPage() {
     return () => {
       isMounted = false;
     };
-  }, [mounted, token, user, filterOptionsLoaded]);
+  }, [mounted, user, filterOptionsLoaded]);
 
   // Initial load and filter change handler
   useEffect(() => {
-    if (!mounted || !token || !user) return;
+    if (!mounted || !user) return;
     refreshOperations();
   }, [
     mounted,
-    token,
     user,
     refreshOperations,
     filters.clientId,

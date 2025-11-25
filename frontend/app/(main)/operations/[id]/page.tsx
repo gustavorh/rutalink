@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { getToken, isAuthenticated } from "@/lib/auth";
-import { getOperationById, generateOperationReport } from "@/lib/api";
+import { isAuthenticated } from "@/lib/auth";
+import { api } from "@/lib/client-api";
 import type { OperationWithDetails } from "@/types/operations";
 import type {
   OperationTrackingData,
@@ -58,13 +58,7 @@ export default function OperationDetailPage() {
     try {
       setLoading(true);
       setError(null);
-      const token = getToken();
-      if (!token) {
-        router.push("/login");
-        return;
-      }
-
-      const operationData = await getOperationById(token, operationId);
+      const operationData = await api.operations.get(operationId);
       setOperation(operationData);
 
       // Generate tracking data
@@ -239,12 +233,6 @@ export default function OperationDetailPage() {
     if (!operation) return;
 
     try {
-      const token = getToken();
-      if (!token) {
-        router.push("/login");
-        return;
-      }
-
       // Show loading state (you could add a loading state if desired)
       console.log(
         "Generating PDF report for operation:",
@@ -252,8 +240,7 @@ export default function OperationDetailPage() {
       );
 
       // Call the API to generate the PDF
-      const pdfBlob = await generateOperationReport(
-        token,
+      const pdfBlob = await api.operations.generateReport(
         operation.operation.id,
         {
           includePhotos: true,

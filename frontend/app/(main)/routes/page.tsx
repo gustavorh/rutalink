@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getToken, isAuthenticated, getUser } from "@/lib/auth";
-import { getRoutes, deleteRoute, createRoute, updateRoute } from "@/lib/api";
+import { isAuthenticated, getUser } from "@/lib/auth";
+import { api } from "@/lib/client-api";
 import type { Route } from "@/types/routes";
 import type {
   CreateRouteDto,
@@ -125,9 +125,8 @@ export default function RoutesPage() {
     try {
       setLoading(true);
       setError(null);
-      const token = getToken();
       const user = getUser();
-      if (!token || !user) {
+      if (!user) {
         router.push("/login");
         return;
       }
@@ -146,7 +145,7 @@ export default function RoutesPage() {
         params.difficulty =
           filterState.difficulty as RouteQueryDto["difficulty"];
 
-      const response = await getRoutes(token, params);
+      const response = await api.routes.list(params);
       setRoutes(response.data);
       setTotalPages(response.pagination.totalPages);
       setTotal(response.pagination.total);
@@ -171,10 +170,7 @@ export default function RoutesPage() {
     if (!routeToDelete) return;
 
     try {
-      const token = getToken();
-      if (!token) return;
-
-      await deleteRoute(token, routeToDelete.id);
+      await api.routes.delete(routeToDelete.id);
       setDeleteDialogOpen(false);
       setRouteToDelete(null);
       fetchRoutes();
@@ -228,8 +224,6 @@ export default function RoutesPage() {
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const token = getToken();
-    if (!token) return;
 
     try {
       setFormLoading(true);
@@ -237,12 +231,12 @@ export default function RoutesPage() {
 
       if (editDialogOpen && routeToEdit) {
         // Update existing route
-        await updateRoute(token, routeToEdit.id, formData as UpdateRouteDto);
+        await api.routes.update(routeToEdit.id, formData as UpdateRouteDto);
         setEditDialogOpen(false);
         setRouteToEdit(null);
       } else {
         // Create new route
-        await createRoute(token, formData as CreateRouteDto);
+        await api.routes.create(formData as CreateRouteDto);
         setCreateDialogOpen(false);
       }
 

@@ -2,13 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getToken, isAuthenticated, getUser } from "@/lib/auth";
-import {
-  getProviders,
-  deleteProvider,
-  createProvider,
-  updateProvider,
-} from "@/lib/api";
+import { isAuthenticated, getUser } from "@/lib/auth";
+import { api } from "@/lib/client-api";
 import type { Provider } from "@/types/providers";
 import type {
   CreateProviderDto,
@@ -131,9 +126,8 @@ export default function ProvidersPage() {
     try {
       setLoading(true);
       setError(null);
-      const token = getToken();
       const user = getUser();
-      if (!token || !user) {
+      if (!user) {
         router.push("/login");
         return;
       }
@@ -150,7 +144,7 @@ export default function ProvidersPage() {
       if (filterState.businessType !== "all")
         params.businessType = filterState.businessType;
 
-      const response = await getProviders(token, params);
+      const response = await api.providers.list(params);
       setProviders(response.data);
       setTotalPages(response.pagination.totalPages);
       setTotal(response.pagination.total);
@@ -177,10 +171,7 @@ export default function ProvidersPage() {
     if (!providerToDelete) return;
 
     try {
-      const token = getToken();
-      if (!token) return;
-
-      await deleteProvider(token, providerToDelete.id);
+      await api.providers.delete(providerToDelete.id);
       setDeleteDialogOpen(false);
       setProviderToDelete(null);
       fetchProviders();
@@ -243,9 +234,8 @@ export default function ProvidersPage() {
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const token = getToken();
     const user = getUser();
-    if (!token || !user) return;
+    if (!user) return;
 
     try {
       setFormLoading(true);
@@ -253,8 +243,7 @@ export default function ProvidersPage() {
 
       if (editDialogOpen && providerToEdit) {
         // Update existing provider
-        await updateProvider(
-          token,
+        await api.providers.update(
           providerToEdit.id,
           formData as UpdateProviderDto
         );
@@ -266,7 +255,7 @@ export default function ProvidersPage() {
           ...(formData as CreateProviderDto),
           operatorId: user.operatorId,
         };
-        await createProvider(token, createData);
+        await api.providers.create(createData);
         setCreateDialogOpen(false);
       }
 

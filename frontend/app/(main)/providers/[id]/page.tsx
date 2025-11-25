@@ -2,17 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { getToken, isAuthenticated } from "@/lib/auth";
-import {
-  getProviderById,
-  getProviderStatistics,
-  getProviderOperations,
-} from "@/lib/api";
-import type {
-  Provider,
-  ProviderStatistics,
-  ProviderOperation,
-} from "@/types/providers";
+import { isAuthenticated } from "@/lib/auth";
+import { api } from "@/lib/client-api";
+import type { Provider, ProviderStatistics } from "@/types/providers";
+import type { OperationWithDetails } from "@/types/operations";
 import { BUSINESS_TYPES } from "@/types/providers";
 import {
   Card,
@@ -64,7 +57,7 @@ export default function ProviderDetailPage() {
   const [mounted, setMounted] = useState(false);
   const [provider, setProvider] = useState<Provider | null>(null);
   const [statistics, setStatistics] = useState<ProviderStatistics | null>(null);
-  const [operations, setOperations] = useState<ProviderOperation[]>([]);
+  const [operations, setOperations] = useState<OperationWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<
@@ -91,21 +84,15 @@ export default function ProviderDetailPage() {
     try {
       setLoading(true);
       setError(null);
-      const token = getToken();
-      if (!token) {
-        router.push("/login");
-        return;
-      }
-
       const [providerData, statsData, opsData] = await Promise.all([
-        getProviderById(token, providerId),
-        getProviderStatistics(token, providerId),
-        getProviderOperations(token, providerId, page, limit),
+        api.providers.get(providerId),
+        api.providers.getStatistics(providerId),
+        api.operations.list({ providerId, page, limit }),
       ]);
 
       setProvider(providerData);
       setStatistics(statsData);
-      setOperations(opsData.data);
+      setOperations(opsData.data || []);
       setTotalPages(opsData.pagination.totalPages);
       setTotal(opsData.pagination.total);
     } catch (err) {

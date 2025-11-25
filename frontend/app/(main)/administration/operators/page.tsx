@@ -2,13 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getToken, isAuthenticated, getUser } from "@/lib/auth";
-import {
-  getOperators,
-  deleteOperator,
-  createOperator,
-  updateOperator,
-} from "@/lib/api";
+import { isAuthenticated, getUser } from "@/lib/auth";
+import { api } from "@/lib/client-api";
 import type { Operator } from "@/types/operators";
 import type {
   CreateOperatorDto,
@@ -108,9 +103,8 @@ export default function OperatorsPage() {
     try {
       setLoading(true);
       setError(null);
-      const token = getToken();
       const user = getUser();
-      if (!token || !user) {
+      if (!user) {
         router.push("/login");
         return;
       }
@@ -122,7 +116,7 @@ export default function OperatorsPage() {
 
       if (search) params.search = search;
 
-      const response = await getOperators(token, params);
+      const response = await api.operators.list(params);
       setOperators(response.data);
       setTotalPages(response.pagination.totalPages);
       setTotal(response.pagination.total);
@@ -149,10 +143,7 @@ export default function OperatorsPage() {
     if (!operatorToDelete) return;
 
     try {
-      const token = getToken();
-      if (!token) return;
-
-      await deleteOperator(token, operatorToDelete.id);
+      await api.operators.delete(operatorToDelete.id);
       setDeleteDialogOpen(false);
       setOperatorToDelete(null);
       fetchOperators();
@@ -188,8 +179,6 @@ export default function OperatorsPage() {
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const token = getToken();
-    if (!token) return;
 
     try {
       setFormLoading(true);
@@ -197,8 +186,7 @@ export default function OperatorsPage() {
 
       if (editDialogOpen && operatorToEdit) {
         // Update existing operator
-        await updateOperator(
-          token,
+        await api.operators.update(
           operatorToEdit.id,
           formData as UpdateOperatorDto
         );
@@ -206,7 +194,7 @@ export default function OperatorsPage() {
         setOperatorToEdit(null);
       } else {
         // Create new operator
-        await createOperator(token, formData as CreateOperatorDto);
+        await api.operators.create(formData as CreateOperatorDto);
         setCreateDialogOpen(false);
       }
 

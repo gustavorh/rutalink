@@ -2,15 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getToken, isAuthenticated, getUser } from "@/lib/auth";
-import {
-  getDrivers,
-  deleteDriver,
-  createDriver,
-  updateDriver,
-} from "@/lib/api";
+import { isAuthenticated, getUser } from "@/lib/auth";
+import { api } from "@/lib/client-api";
 import type { Driver } from "@/types/drivers";
-import type { CreateDriverDto, UpdateDriverDto, DriverQueryDto } from "@/lib/api-types";
+import type {
+  CreateDriverDto,
+  UpdateDriverDto,
+  DriverQueryDto,
+} from "@/lib/api-types";
 import { LICENSE_TYPES } from "@/types/drivers";
 import {
   DataTable,
@@ -126,15 +125,20 @@ export default function DriversPage() {
     setMounted(true);
     fetchDrivers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, search, filterState.status, filterState.isExternal, filterState.licenseType]);
+  }, [
+    page,
+    search,
+    filterState.status,
+    filterState.isExternal,
+    filterState.licenseType,
+  ]);
 
   const fetchDrivers = async () => {
     try {
       setLoading(true);
       setError(null);
-      const token = getToken();
       const user = getUser();
-      if (!token || !user) {
+      if (!user) {
         router.push("/login");
         return;
       }
@@ -149,11 +153,12 @@ export default function DriversPage() {
       if (filterState.status !== "all")
         params.status = filterState.status === "active" ? true : false;
       if (filterState.isExternal !== "all")
-        params.isExternal = filterState.isExternal === "external" ? true : false;
+        params.isExternal =
+          filterState.isExternal === "external" ? true : false;
       if (filterState.licenseType !== "all")
         params.licenseType = filterState.licenseType;
 
-      const response = await getDrivers(token, params);
+      const response = await api.drivers.list(params);
       setDrivers(response.data);
       setTotalPages(response.pagination.totalPages);
       setTotal(response.pagination.total);
@@ -179,10 +184,7 @@ export default function DriversPage() {
     if (!driverToDelete) return;
 
     try {
-      const token = getToken();
-      if (!token) return;
-
-      await deleteDriver(token, driverToDelete.id);
+      await api.drivers.delete(driverToDelete.id);
       setDeleteDialogOpen(false);
       setDriverToDelete(null);
       fetchDrivers();
@@ -254,9 +256,8 @@ export default function DriversPage() {
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const token = getToken();
     const user = getUser();
-    if (!token || !user) return;
+    if (!user) return;
 
     try {
       setFormLoading(true);
@@ -267,12 +268,12 @@ export default function DriversPage() {
         // Remove fields that shouldn't be updated
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { operatorId, rut, ...cleanData } = formData as CreateDriverDto;
-        await updateDriver(token, driverToEdit.id, cleanData as UpdateDriverDto);
+        await api.drivers.update(driverToEdit.id, cleanData as UpdateDriverDto);
         setEditDialogOpen(false);
         setDriverToEdit(null);
       } else {
         // Create new driver
-        await createDriver(token, formData as CreateDriverDto);
+        await api.drivers.create(formData as CreateDriverDto);
         setCreateDialogOpen(false);
       }
 
@@ -654,19 +655,7 @@ export default function DriversPage() {
         }
         onSubmit={handleFormSubmit}
         loading={formLoading}
-        submitLabel={
-          editDialogOpen ? (
-            <>
-              <Save className="mr-2 h-4 w-4" />
-              Actualizar Chofer
-            </>
-          ) : (
-            <>
-              <Save className="mr-2 h-4 w-4" />
-              Crear Chofer
-            </>
-          )
-        }
+        submitLabel={editDialogOpen ? "Actualizar Chofer" : "Crear Chofer"}
         maxWidth="4xl"
         onCancel={() => {
           setCreateDialogOpen(false);
@@ -675,296 +664,281 @@ export default function DriversPage() {
         }}
       >
         <FormSection title="Información Personal">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="rut" className="text-foreground">
+                RUT *
+              </Label>
+              <Input
+                id="rut"
+                value={formData.rut}
+                onChange={(e) => handleChange("rut", e.target.value)}
+                placeholder="12.345.678-9"
+                required
+                disabled={editDialogOpen}
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+              />
+            </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="rut" className="text-foreground">
-                    RUT *
-                  </Label>
-                  <Input
-                    id="rut"
-                    value={formData.rut}
-                    onChange={(e) => handleChange("rut", e.target.value)}
-                    placeholder="12.345.678-9"
-                    required
-                    disabled={editDialogOpen}
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                  />
-                </div>
+            <div>
+              <Label htmlFor="firstName" className="text-foreground">
+                Nombre *
+              </Label>
+              <Input
+                id="firstName"
+                value={formData.firstName}
+                onChange={(e) => handleChange("firstName", e.target.value)}
+                required
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+              />
+            </div>
 
-                <div>
-                  <Label htmlFor="firstName" className="text-foreground">
-                    Nombre *
-                  </Label>
-                  <Input
-                    id="firstName"
-                    value={formData.firstName}
-                    onChange={(e) => handleChange("firstName", e.target.value)}
-                    required
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                  />
-                </div>
+            <div>
+              <Label htmlFor="lastName" className="text-foreground">
+                Apellido *
+              </Label>
+              <Input
+                id="lastName"
+                value={formData.lastName}
+                onChange={(e) => handleChange("lastName", e.target.value)}
+                required
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+              />
+            </div>
 
-                <div>
-                  <Label htmlFor="lastName" className="text-foreground">
-                    Apellido *
-                  </Label>
-                  <Input
-                    id="lastName"
-                    value={formData.lastName}
-                    onChange={(e) => handleChange("lastName", e.target.value)}
-                    required
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                  />
-                </div>
+            <div>
+              <Label htmlFor="dateOfBirth" className="text-foreground">
+                Fecha de Nacimiento
+              </Label>
+              <Input
+                id="dateOfBirth"
+                type="date"
+                value={formData.dateOfBirth}
+                onChange={(e) => handleChange("dateOfBirth", e.target.value)}
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+              />
+            </div>
 
-                <div>
-                  <Label htmlFor="dateOfBirth" className="text-foreground">
-                    Fecha de Nacimiento
-                  </Label>
-                  <Input
-                    id="dateOfBirth"
-                    type="date"
-                    value={formData.dateOfBirth}
-                    onChange={(e) =>
-                      handleChange("dateOfBirth", e.target.value)
-                    }
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                  />
-                </div>
+            <div>
+              <Label htmlFor="email" className="text-foreground">
+                Email
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => handleChange("email", e.target.value)}
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+              />
+            </div>
 
-                <div>
-                  <Label htmlFor="email" className="text-foreground">
-                    Email
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => handleChange("email", e.target.value)}
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                  />
-                </div>
+            <div>
+              <Label htmlFor="phone" className="text-foreground">
+                Teléfono
+              </Label>
+              <Input
+                id="phone"
+                value={formData.phone}
+                onChange={(e) => handleChange("phone", e.target.value)}
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+              />
+            </div>
 
-                <div>
-                  <Label htmlFor="phone" className="text-foreground">
-                    Teléfono
-                  </Label>
-                  <Input
-                    id="phone"
-                    value={formData.phone}
-                    onChange={(e) => handleChange("phone", e.target.value)}
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                  />
-                </div>
+            <div className="col-span-2">
+              <Label htmlFor="address" className="text-foreground">
+                Dirección
+              </Label>
+              <Input
+                id="address"
+                value={formData.address}
+                onChange={(e) => handleChange("address", e.target.value)}
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+              />
+            </div>
 
-                <div className="col-span-2">
-                  <Label htmlFor="address" className="text-foreground">
-                    Dirección
-                  </Label>
-                  <Input
-                    id="address"
-                    value={formData.address}
-                    onChange={(e) => handleChange("address", e.target.value)}
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                  />
-                </div>
+            <div>
+              <Label htmlFor="city" className="text-foreground">
+                Ciudad
+              </Label>
+              <Input
+                id="city"
+                value={formData.city}
+                onChange={(e) => handleChange("city", e.target.value)}
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+              />
+            </div>
 
-                <div>
-                  <Label htmlFor="city" className="text-foreground">
-                    Ciudad
-                  </Label>
-                  <Input
-                    id="city"
-                    value={formData.city}
-                    onChange={(e) => handleChange("city", e.target.value)}
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="region" className="text-foreground">
-                    Región
-                  </Label>
-                  <Input
-                    id="region"
-                    value={formData.region}
-                    onChange={(e) => handleChange("region", e.target.value)}
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                  />
-                </div>
-              </div>
+            <div>
+              <Label htmlFor="region" className="text-foreground">
+                Región
+              </Label>
+              <Input
+                id="region"
+                value={formData.region}
+                onChange={(e) => handleChange("region", e.target.value)}
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+              />
+            </div>
+          </div>
         </FormSection>
 
         <FormSection title="Información de Licencia">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="licenseType" className="text-foreground">
+                Tipo de Licencia *
+              </Label>
+              <Select
+                value={formData.licenseType}
+                onValueChange={(value) => handleChange("licenseType", value)}
+              >
+                <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground mt-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {LICENSE_TYPES.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.value}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="licenseType" className="text-foreground">
-                    Tipo de Licencia *
-                  </Label>
-                  <Select
-                    value={formData.licenseType}
-                    onValueChange={(value) =>
-                      handleChange("licenseType", value)
-                    }
-                  >
-                    <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {LICENSE_TYPES.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
-                          {type.value}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+            <div>
+              <Label htmlFor="licenseNumber" className="text-foreground">
+                Número de Licencia *
+              </Label>
+              <Input
+                id="licenseNumber"
+                value={formData.licenseNumber}
+                onChange={(e) => handleChange("licenseNumber", e.target.value)}
+                required
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+              />
+            </div>
 
-                <div>
-                  <Label htmlFor="licenseNumber" className="text-foreground">
-                    Número de Licencia *
-                  </Label>
-                  <Input
-                    id="licenseNumber"
-                    value={formData.licenseNumber}
-                    onChange={(e) =>
-                      handleChange("licenseNumber", e.target.value)
-                    }
-                    required
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                  />
-                </div>
-
-                <div className="col-span-2">
-                  <Label
-                    htmlFor="licenseExpirationDate"
-                    className="text-foreground"
-                  >
-                    Fecha de Vencimiento *
-                  </Label>
-                  <Input
-                    id="licenseExpirationDate"
-                    type="date"
-                    value={formData.licenseExpirationDate}
-                    onChange={(e) =>
-                      handleChange("licenseExpirationDate", e.target.value)
-                    }
-                    required
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                  />
-                </div>
-              </div>
+            <div className="col-span-2">
+              <Label
+                htmlFor="licenseExpirationDate"
+                className="text-foreground"
+              >
+                Fecha de Vencimiento *
+              </Label>
+              <Input
+                id="licenseExpirationDate"
+                type="date"
+                value={formData.licenseExpirationDate}
+                onChange={(e) =>
+                  handleChange("licenseExpirationDate", e.target.value)
+                }
+                required
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+              />
+            </div>
+          </div>
         </FormSection>
 
         <FormSection title="Contacto de Emergencia">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="emergencyContactName" className="text-foreground">
+                Nombre de Contacto
+              </Label>
+              <Input
+                id="emergencyContactName"
+                value={formData.emergencyContactName}
+                onChange={(e) =>
+                  handleChange("emergencyContactName", e.target.value)
+                }
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+              />
+            </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label
-                    htmlFor="emergencyContactName"
-                    className="text-foreground"
-                  >
-                    Nombre de Contacto
-                  </Label>
-                  <Input
-                    id="emergencyContactName"
-                    value={formData.emergencyContactName}
-                    onChange={(e) =>
-                      handleChange("emergencyContactName", e.target.value)
-                    }
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                  />
-                </div>
-
-                <div>
-                  <Label
-                    htmlFor="emergencyContactPhone"
-                    className="text-foreground"
-                  >
-                    Teléfono de Contacto
-                  </Label>
-                  <Input
-                    id="emergencyContactPhone"
-                    value={formData.emergencyContactPhone}
-                    onChange={(e) =>
-                      handleChange("emergencyContactPhone", e.target.value)
-                    }
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                  />
-                </div>
-              </div>
+            <div>
+              <Label
+                htmlFor="emergencyContactPhone"
+                className="text-foreground"
+              >
+                Teléfono de Contacto
+              </Label>
+              <Input
+                id="emergencyContactPhone"
+                value={formData.emergencyContactPhone}
+                onChange={(e) =>
+                  handleChange("emergencyContactPhone", e.target.value)
+                }
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+              />
+            </div>
+          </div>
         </FormSection>
 
         <FormSection title="Información Adicional">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="status"
+                checked={formData.status}
+                onChange={(e) => handleChange("status", e.target.checked)}
+                className="rounded border-border bg-ui-surface-elevated text-primary focus:ring-blue-500"
+              />
+              <Label
+                htmlFor="status"
+                className="text-foreground cursor-pointer"
+              >
+                Chofer Activo
+              </Label>
+            </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="status"
-                    checked={formData.status}
-                    onChange={(e) => handleChange("status", e.target.checked)}
-                    className="rounded border-border bg-ui-surface-elevated text-primary focus:ring-blue-500"
-                  />
-                  <Label
-                    htmlFor="status"
-                    className="text-foreground cursor-pointer"
-                  >
-                    Chofer Activo
-                  </Label>
-                </div>
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="isExternal"
+                checked={formData.isExternal}
+                onChange={(e) => handleChange("isExternal", e.target.checked)}
+                className="rounded border-border bg-ui-surface-elevated text-primary focus:ring-blue-500"
+              />
+              <Label
+                htmlFor="isExternal"
+                className="text-foreground cursor-pointer"
+              >
+                Chofer Externo
+              </Label>
+            </div>
+          </div>
 
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="isExternal"
-                    checked={formData.isExternal}
-                    onChange={(e) =>
-                      handleChange("isExternal", e.target.checked)
-                    }
-                    className="rounded border-border bg-ui-surface-elevated text-primary focus:ring-blue-500"
-                  />
-                  <Label
-                    htmlFor="isExternal"
-                    className="text-foreground cursor-pointer"
-                  >
-                    Chofer Externo
-                  </Label>
-                </div>
-              </div>
+          {formData.isExternal && (
+            <div>
+              <Label htmlFor="externalCompany" className="text-foreground">
+                Empresa Externa
+              </Label>
+              <Input
+                id="externalCompany"
+                value={formData.externalCompany}
+                onChange={(e) =>
+                  handleChange("externalCompany", e.target.value)
+                }
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+                placeholder="Nombre de la empresa"
+              />
+            </div>
+          )}
 
-              {formData.isExternal && (
-                <div>
-                  <Label htmlFor="externalCompany" className="text-foreground">
-                    Empresa Externa
-                  </Label>
-                  <Input
-                    id="externalCompany"
-                    value={formData.externalCompany}
-                    onChange={(e) =>
-                      handleChange("externalCompany", e.target.value)
-                    }
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                    placeholder="Nombre de la empresa"
-                  />
-                </div>
-              )}
-
-              <div>
-                <Label htmlFor="notes" className="text-foreground">
-                  Notas
-                </Label>
-                <Textarea
-                  id="notes"
-                  value={formData.notes}
-                  onChange={(e) => handleChange("notes", e.target.value)}
-                  rows={3}
-                  placeholder="Información adicional sobre el chofer"
-                  className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                />
-              </div>
+          <div>
+            <Label htmlFor="notes" className="text-foreground">
+              Notas
+            </Label>
+            <Textarea
+              id="notes"
+              value={formData.notes}
+              onChange={(e) => handleChange("notes", e.target.value)}
+              rows={3}
+              placeholder="Información adicional sobre el chofer"
+              className="bg-ui-surface-elevated border-border text-foreground mt-1"
+            />
+          </div>
         </FormSection>
       </FormDialog>
     </main>

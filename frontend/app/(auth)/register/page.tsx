@@ -9,8 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { register as registerUser, ApiError } from '@/lib/api';
-import { storeAuth } from '@/lib/auth';
+import { api, ApiError } from '@/lib/client-api';
 
 // Form validation schema matching backend requirements
 const registerSchema = z.object({
@@ -88,11 +87,9 @@ export default function RegisterPage() {
         roleId: parseInt(data.roleId, 10),
       };
 
-      const response = await registerUser(registrationData);
+      const response = await api.auth.register(registrationData);
       
-      // Store authentication data
-      storeAuth(response);
-      
+      // Authentication is handled via HTTP-only cookies automatically
       // Redirect to dashboard
       router.push('/dashboard');
     } catch (err) {

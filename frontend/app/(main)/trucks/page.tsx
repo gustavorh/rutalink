@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getToken, isAuthenticated, getUser } from "@/lib/auth";
-import { getTrucks, deleteTruck, createTruck, updateTruck } from "@/lib/api";
+import { isAuthenticated, getUser } from "@/lib/auth";
+import { api } from "@/lib/client-api";
 import type { Truck } from "@/types/trucks";
 import type {
   CreateVehicleDto,
@@ -125,15 +125,20 @@ export default function TrucksPage() {
     setMounted(true);
     fetchTrucks();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, search, filterState.status, filterState.vehicleType, filterState.operationalStatus]);
+  }, [
+    page,
+    search,
+    filterState.status,
+    filterState.vehicleType,
+    filterState.operationalStatus,
+  ]);
 
   const fetchTrucks = async () => {
     try {
       setLoading(true);
       setError(null);
-      const token = getToken();
       const user = getUser();
-      if (!token || !user) {
+      if (!user) {
         router.push("/login");
         return;
       }
@@ -156,7 +161,7 @@ export default function TrucksPage() {
           filterState.operationalStatus as VehicleQueryDto["operationalStatus"];
       }
 
-      const response = await getTrucks(token, params);
+      const response = await api.vehicles.list(params);
       setTrucks(response.data);
       setTotalPages(response.pagination.totalPages);
       setTotal(response.pagination.total);
@@ -182,10 +187,7 @@ export default function TrucksPage() {
     if (!truckToDelete) return;
 
     try {
-      const token = getToken();
-      if (!token) return;
-
-      await deleteTruck(token, truckToDelete.id);
+      await api.vehicles.delete(truckToDelete.id);
       setDeleteDialogOpen(false);
       setTruckToDelete(null);
       fetchTrucks();
@@ -231,19 +233,17 @@ export default function TrucksPage() {
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const token = getToken();
-    if (!token) return;
 
     try {
       setFormLoading(true);
       setError(null);
 
       if (editDialogOpen && truckToEdit) {
-        await updateTruck(token, truckToEdit.id, formData as UpdateVehicleDto);
+        await api.vehicles.update(truckToEdit.id, formData as UpdateVehicleDto);
         setEditDialogOpen(false);
         setTruckToEdit(null);
       } else {
-        await createTruck(token, formData as CreateVehicleDto);
+        await api.vehicles.create(formData as CreateVehicleDto);
         setCreateDialogOpen(false);
       }
 
@@ -602,20 +602,8 @@ export default function TrucksPage() {
         }
         onSubmit={handleFormSubmit}
         loading={formLoading}
-        submitLabel={
-          editDialogOpen ? (
-            <>
-              <Save className="mr-2 h-4 w-4" />
-              Guardar Cambios
-            </>
-          ) : (
-            <>
-              <Save className="mr-2 h-4 w-4" />
-              Guardar Camión
-            </>
-          )
-        }
-        maxWidth="3xl"
+        submitLabel={editDialogOpen ? "Guardar Cambios" : "Guardar Camión"}
+        maxWidth="4xl"
         onCancel={() => {
           setCreateDialogOpen(false);
           setEditDialogOpen(false);
@@ -623,197 +611,193 @@ export default function TrucksPage() {
         }}
       >
         <FormSection title="Información del Camión">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="plateNumber" className="text-foreground">
+                Patente <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="plateNumber"
+                value={formData.plateNumber}
+                onChange={(e) =>
+                  handleChange("plateNumber", e.target.value.toUpperCase())
+                }
+                placeholder="AB-1234"
+                required
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+              />
+            </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="plateNumber" className="text-foreground">
-                    Patente <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="plateNumber"
-                    value={formData.plateNumber}
-                    onChange={(e) =>
-                      handleChange("plateNumber", e.target.value.toUpperCase())
-                    }
-                    placeholder="AB-1234"
-                    required
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                  />
-                </div>
+            <div>
+              <Label htmlFor="vehicleType" className="text-foreground">
+                Tipo de Vehículo <span className="text-destructive">*</span>
+              </Label>
+              <Select
+                value={formData.vehicleType}
+                onValueChange={(value) =>
+                  handleChange("vehicleType", value as VehicleType)
+                }
+              >
+                <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground mt-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {VEHICLE_TYPES.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-                <div>
-                  <Label htmlFor="vehicleType" className="text-foreground">
-                    Tipo de Vehículo <span className="text-destructive">*</span>
-                  </Label>
-                  <Select
-                    value={formData.vehicleType}
-                    onValueChange={(value) =>
-                      handleChange("vehicleType", value as VehicleType)
-                    }
-                  >
-                    <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {VEHICLE_TYPES.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
-                          {type.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+            <div>
+              <Label htmlFor="brand" className="text-foreground">
+                Marca
+              </Label>
+              <Input
+                id="brand"
+                value={formData.brand}
+                onChange={(e) => handleChange("brand", e.target.value)}
+                placeholder="Mercedes-Benz, Volvo, etc."
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+              />
+            </div>
 
-                <div>
-                  <Label htmlFor="brand" className="text-foreground">
-                    Marca
-                  </Label>
-                  <Input
-                    id="brand"
-                    value={formData.brand}
-                    onChange={(e) => handleChange("brand", e.target.value)}
-                    placeholder="Mercedes-Benz, Volvo, etc."
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                  />
-                </div>
+            <div>
+              <Label htmlFor="model" className="text-foreground">
+                Modelo
+              </Label>
+              <Input
+                id="model"
+                value={formData.model}
+                onChange={(e) => handleChange("model", e.target.value)}
+                placeholder="Actros, FH16, etc."
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+              />
+            </div>
 
-                <div>
-                  <Label htmlFor="model" className="text-foreground">
-                    Modelo
-                  </Label>
-                  <Input
-                    id="model"
-                    value={formData.model}
-                    onChange={(e) => handleChange("model", e.target.value)}
-                    placeholder="Actros, FH16, etc."
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                  />
-                </div>
+            <div>
+              <Label htmlFor="year" className="text-foreground">
+                Año
+              </Label>
+              <Input
+                id="year"
+                type="number"
+                value={formData.year || ""}
+                onChange={(e) =>
+                  handleChange("year", parseInt(e.target.value) || undefined)
+                }
+                min="1900"
+                max={new Date().getFullYear() + 1}
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+              />
+            </div>
 
-                <div>
-                  <Label htmlFor="year" className="text-foreground">
-                    Año
-                  </Label>
-                  <Input
-                    id="year"
-                    type="number"
-                    value={formData.year || ""}
-                    onChange={(e) =>
-                      handleChange(
-                        "year",
-                        parseInt(e.target.value) || undefined
-                      )
-                    }
-                    min="1900"
-                    max={new Date().getFullYear() + 1}
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                  />
-                </div>
+            <div>
+              <Label htmlFor="color" className="text-foreground">
+                Color
+              </Label>
+              <Input
+                id="color"
+                value={formData.color}
+                onChange={(e) => handleChange("color", e.target.value)}
+                placeholder="Blanco, Rojo, etc."
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+              />
+            </div>
 
-                <div>
-                  <Label htmlFor="color" className="text-foreground">
-                    Color
-                  </Label>
-                  <Input
-                    id="color"
-                    value={formData.color}
-                    onChange={(e) => handleChange("color", e.target.value)}
-                    placeholder="Blanco, Rojo, etc."
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                  />
-                </div>
+            <div>
+              <Label htmlFor="capacity" className="text-foreground">
+                Capacidad
+              </Label>
+              <Input
+                id="capacity"
+                type="number"
+                value={formData.capacity || ""}
+                onChange={(e) =>
+                  handleChange(
+                    "capacity",
+                    parseInt(e.target.value) || undefined
+                  )
+                }
+                min="0"
+                placeholder="20"
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+              />
+            </div>
 
-                <div>
-                  <Label htmlFor="capacity" className="text-foreground">
-                    Capacidad
-                  </Label>
-                  <Input
-                    id="capacity"
-                    type="number"
-                    value={formData.capacity || ""}
-                    onChange={(e) =>
-                      handleChange(
-                        "capacity",
-                        parseInt(e.target.value) || undefined
-                      )
-                    }
-                    min="0"
-                    placeholder="20"
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                  />
-                </div>
+            <div>
+              <Label htmlFor="capacityUnit" className="text-foreground">
+                Unidad de Capacidad
+              </Label>
+              <Select
+                value={formData.capacityUnit}
+                onValueChange={(value) =>
+                  handleChange("capacityUnit", value as CapacityUnit)
+                }
+              >
+                <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground mt-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {CAPACITY_UNITS.map((unit) => (
+                    <SelectItem key={unit.value} value={unit.value}>
+                      {unit.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-                <div>
-                  <Label htmlFor="capacityUnit" className="text-foreground">
-                    Unidad de Capacidad
-                  </Label>
-                  <Select
-                    value={formData.capacityUnit}
-                    onValueChange={(value) =>
-                      handleChange("capacityUnit", value as CapacityUnit)
-                    }
-                  >
-                    <SelectTrigger className="bg-ui-surface-elevated border-border text-foreground mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {CAPACITY_UNITS.map((unit) => (
-                        <SelectItem key={unit.value} value={unit.value}>
-                          {unit.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+            <div className="col-span-2">
+              <Label htmlFor="vin" className="text-foreground">
+                VIN (Número de Identificación)
+              </Label>
+              <Input
+                id="vin"
+                value={formData.vin}
+                onChange={(e) =>
+                  handleChange("vin", e.target.value.toUpperCase())
+                }
+                placeholder="1HGBH41JXMN109186"
+                maxLength={50}
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+              />
+            </div>
 
-                <div className="col-span-2">
-                  <Label htmlFor="vin" className="text-foreground">
-                    VIN (Número de Identificación)
-                  </Label>
-                  <Input
-                    id="vin"
-                    value={formData.vin}
-                    onChange={(e) =>
-                      handleChange("vin", e.target.value.toUpperCase())
-                    }
-                    placeholder="1HGBH41JXMN109186"
-                    maxLength={50}
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                  />
-                </div>
+            <div className="col-span-2">
+              <Label htmlFor="notes" className="text-foreground">
+                Notas
+              </Label>
+              <Textarea
+                id="notes"
+                value={formData.notes}
+                onChange={(e) => handleChange("notes", e.target.value)}
+                placeholder="Información adicional sobre el camión..."
+                rows={4}
+                className="bg-ui-surface-elevated border-border text-foreground mt-1"
+              />
+            </div>
 
-                <div className="col-span-2">
-                  <Label htmlFor="notes" className="text-foreground">
-                    Notas
-                  </Label>
-                  <Textarea
-                    id="notes"
-                    value={formData.notes}
-                    onChange={(e) => handleChange("notes", e.target.value)}
-                    placeholder="Información adicional sobre el camión..."
-                    rows={4}
-                    className="bg-ui-surface-elevated border-border text-foreground mt-1"
-                  />
-                </div>
-
-                <div className="col-span-2">
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="status"
-                      checked={formData.status}
-                      onChange={(e) => handleChange("status", e.target.checked)}
-                      className="rounded border-border bg-ui-surface-elevated text-primary focus:ring-blue-500"
-                    />
-                    <Label
-                      htmlFor="status"
-                      className="text-foreground cursor-pointer"
-                    >
-                      Camión Activo
-                    </Label>
-                  </div>
-                </div>
+            <div className="col-span-2">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="status"
+                  checked={formData.status}
+                  onChange={(e) => handleChange("status", e.target.checked)}
+                  className="rounded border-border bg-ui-surface-elevated text-primary focus:ring-blue-500"
+                />
+                <Label
+                  htmlFor="status"
+                  className="text-foreground cursor-pointer"
+                >
+                  Camión Activo
+                </Label>
               </div>
+            </div>
+          </div>
         </FormSection>
       </FormDialog>
     </main>

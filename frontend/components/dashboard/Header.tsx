@@ -1,12 +1,12 @@
 "use client";
 
-import type { AuthResponse } from "@/lib/api";
+import type { AuthResponseDto } from "@/lib/api-types";
 import { useState, useEffect, useRef } from "react";
 import { useTheme } from "@/lib/use-theme";
 import { useRouter } from "next/navigation";
 
 interface DashboardHeaderProps {
-  user: AuthResponse["user"];
+  user: AuthResponseDto["user"];
   onLogout: () => void;
 }
 
