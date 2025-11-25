@@ -30,14 +30,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -59,7 +51,15 @@ import {
   AlertTriangle,
   Filter,
   UserCheck,
+  FileText,
 } from "lucide-react";
+import {
+  DataTable,
+  type DataTableColumn,
+  type DataTableAction,
+  type DataTableFilter,
+} from "@/components/ui/data-table";
+import { useFilters } from "@/lib/hooks/use-filters";
 import { DeleteConfirmationDialog } from "@/components/ui/delete-confirmation-dialog";
 import { StatisticsCard } from "@/components/ui/statistics-card";
 import { PageHeader } from "@/components/ui/page-header";
@@ -99,6 +99,20 @@ export default function UsersPage() {
     setTotalPages,
     pagination,
   } = usePagination({ initialLimit: 10 });
+  const {
+    filters: filterState,
+    setFilter,
+    showFilters,
+    toggleFilters,
+    clearFilters: clearAllFilters,
+  } = useFilters({
+    initialFilters: {
+      status: "all",
+    },
+  });
+
+  // Last update timestamp
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -109,7 +123,7 @@ export default function UsersPage() {
     fetchUsers();
     fetchRoles();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, search]);
+  }, [page, search, filterState.status]);
 
   const fetchUsers = async () => {
     try {
@@ -127,11 +141,14 @@ export default function UsersPage() {
       };
 
       if (search) params.search = search;
+      if (filterState.status !== "all")
+        params.status = filterState.status === "active" ? true : false;
 
       const response = await api.users.list(params);
       setUsers(response.data);
       setTotalPages(response.pagination.totalPages);
       setTotal(response.pagination.total);
+      setLastUpdate(new Date());
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al cargar usuarios");
     } finally {
@@ -270,206 +287,170 @@ export default function UsersPage() {
           />
         </div>
 
-        <Card className="bg-card border-border">
-          <CardHeader>
-            <CardTitle className="text-foreground flex items-center gap-2">
-              <Filter className="w-5 h-5 text-primary" />
-              Búsqueda
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar por nombre, email, usuario..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && fetchUsers()}
-                  className="pl-10 bg-ui-surface-elevated border-border text-foreground"
-                />
-              </div>
-              <Button
-                onClick={fetchUsers}
-                className="bg-primary hover:bg-primary-dark"
-              >
-                Buscar
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-card border-border">
-          <CardHeader>
-            <CardTitle className="text-foreground">
-              Listado de Usuarios
-            </CardTitle>
-            <CardDescription className="text-muted-foreground">
-              Total de {total} usuarios registrados
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-                <p className="text-muted-foreground mt-4">
-                  Cargando usuarios...
-                </p>
-              </div>
-            ) : error ? (
-              <div className="text-center py-12">
-                <AlertTriangle className="w-12 h-12 text-destructive mx-auto mb-4" />
-                <p className="text-destructive">{error}</p>
-              </div>
-            ) : users.length === 0 ? (
-              <div className="text-center py-12">
-                <UsersIcon className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                <p className="text-muted-foreground">
-                  No se encontraron usuarios
-                </p>
-                <Button
-                  onClick={handleCreateClick}
-                  className="mt-4 bg-primary hover:bg-primary-dark"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Agregar Primer Usuario
-                </Button>
-              </div>
-            ) : (
-              <>
-                <Table>
-                  <TableHeader>
-                    <TableRow className="border-b border-border hover:bg-transparent">
-                      <TableHead className="text-muted-foreground">
-                        Nombre
-                      </TableHead>
-                      <TableHead className="text-muted-foreground">
-                        Usuario
-                      </TableHead>
-                      <TableHead className="text-muted-foreground">
-                        Email
-                      </TableHead>
-                      <TableHead className="text-muted-foreground">
-                        Rol
-                      </TableHead>
-                      <TableHead className="text-muted-foreground">
-                        Estado
-                      </TableHead>
-                      <TableHead className="text-right text-muted-foreground">
-                        Acciones
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {users.map((u) => (
-                      <TableRow
-                        key={u.id}
-                        className="border-b border-border hover:bg-ui-surface-elevated"
-                      >
-                        <TableCell>
-                          <div className="font-medium text-foreground">
-                            {u.firstName} {u.lastName}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            ID: {u.id}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-foreground">
-                          {u.username}
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {u.email}
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant="outline"
-                            className="border-primary/50 text-primary"
-                          >
-                            {u.role?.name || "Sin rol"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={u.status ? "default" : "outline"}
-                            className={
-                              u.status
-                                ? "bg-success/10 text-success border-success/50"
-                                : "border-slate-500/50 text-muted-foreground"
-                            }
-                          >
-                            {u.status ? "Activo" : "Inactivo"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() =>
-                                router.push(`/administration/users/${u.id}`)
-                              }
-                              className="text-muted-foreground hover:text-primary hover:bg-primary/10"
-                              title="Ver detalles"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleEditClick(u)}
-                              className="text-muted-foreground hover:text-secondary hover:bg-secondary/10"
-                              title="Editar"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDeleteClick(u)}
-                              className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                              title="Eliminar"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-
-                <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
-                  <p className="text-sm text-muted-foreground">
-                    Mostrando {(pagination.page - 1) * pagination.limit + 1} a{" "}
-                    {Math.min(
-                      pagination.page * pagination.limit,
-                      pagination.total
-                    )}{" "}
-                    de {pagination.total} usuarios
-                  </p>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => setPage(page - 1)}
-                      disabled={page === 1}
-                      className="border-border text-foreground hover:bg-ui-surface-elevated"
-                    >
-                      Anterior
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => setPage(page + 1)}
-                      disabled={pagination.page === pagination.totalPages}
-                      className="border-border text-foreground hover:bg-ui-surface-elevated"
-                    >
-                      Siguiente
-                    </Button>
+        {(() => {
+          // Define table columns
+          const columns: DataTableColumn<User>[] = [
+            {
+              key: "name",
+              header: "Nombre",
+              accessor: (user) => (
+                <div>
+                  <div className="font-medium text-foreground">
+                    {user.firstName} {user.lastName}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    ID: {user.id}
                   </div>
                 </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
+              ),
+            },
+            {
+              key: "username",
+              header: "Usuario",
+              accessor: (user) => (
+                <span className="text-foreground">{user.username}</span>
+              ),
+            },
+            {
+              key: "email",
+              header: "Email",
+              accessor: (user) => (
+                <span className="text-sm text-muted-foreground">
+                  {user.email}
+                </span>
+              ),
+            },
+            {
+              key: "role",
+              header: "Rol",
+              accessor: (user) => (
+                <Badge
+                  variant="outline"
+                  className="border-primary/50 text-primary"
+                >
+                  {user.role?.name || "Sin rol"}
+                </Badge>
+              ),
+            },
+            {
+              key: "status",
+              header: "Estado",
+              accessor: (user) => (
+                <Badge
+                  variant={user.status ? "default" : "outline"}
+                  className={
+                    user.status
+                      ? "bg-success/10 text-success border-success/50"
+                      : "border-slate-500/50 text-muted-foreground"
+                  }
+                >
+                  {user.status ? "Activo" : "Inactivo"}
+                </Badge>
+              ),
+            },
+          ];
+
+          // Define table actions
+          const actions: DataTableAction<User>[] = [
+            {
+              label: "Ver detalles",
+              icon: <Eye className="h-4 w-4" />,
+              onClick: (user) =>
+                router.push(`/administration/users/${user.id}`),
+              className:
+                "text-muted-foreground hover:text-primary hover:bg-primary/10",
+              title: "Ver detalles",
+            },
+            {
+              label: "Editar",
+              icon: <Edit className="h-4 w-4" />,
+              onClick: handleEditClick,
+              className:
+                "text-muted-foreground hover:text-secondary hover:bg-secondary/10",
+              title: "Editar",
+            },
+            {
+              label: "Eliminar",
+              icon: <Trash2 className="h-4 w-4" />,
+              onClick: handleDeleteClick,
+              className:
+                "text-muted-foreground hover:text-destructive hover:bg-destructive/10",
+              title: "Eliminar",
+            },
+          ];
+
+          const handleSearch = () => {
+            setPage(1);
+            fetchUsers();
+          };
+
+          const handleClearFilters = () => {
+            setSearch("");
+            clearAllFilters();
+            setPage(1);
+          };
+
+          // Define filters
+          const filters: DataTableFilter[] = [
+            {
+              id: "status-filter",
+              label: "Estado",
+              type: "select",
+              value: filterState.status,
+              onChange: (value) => setFilter("status", value),
+              options: [
+                { value: "all", label: "Todos los estados" },
+                { value: "active", label: "Activo" },
+                { value: "inactive", label: "Inactivo" },
+              ],
+              ariaLabel: "Filtrar por estado del usuario",
+            },
+          ];
+
+          return (
+            <DataTable
+              data={users}
+              columns={columns}
+              pagination={pagination}
+              onPageChange={setPage}
+              searchValue={search}
+              onSearchChange={setSearch}
+              searchPlaceholder="Buscar por nombre, email, usuario..."
+              onSearchSubmit={handleSearch}
+              filters={filters}
+              showFilters={showFilters}
+              onToggleFilters={toggleFilters}
+              onClearFilters={handleClearFilters}
+              actions={actions}
+              loading={loading}
+              error={error}
+              lastUpdate={lastUpdate}
+              onRefresh={fetchUsers}
+              onExport={() => {
+                /* TODO: Implement export functionality */
+              }}
+              title="Listado de Usuarios"
+              description={`Total de ${total} usuarios registrados`}
+              icon={<FileText className="w-5 h-5 text-primary" />}
+              getRowKey={(user) => user.id}
+              emptyState={
+                <div className="text-center py-12">
+                  <UsersIcon className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+                  <p className="text-muted-foreground">
+                    No se encontraron usuarios
+                  </p>
+                  <Button
+                    onClick={handleCreateClick}
+                    className="mt-4 bg-primary hover:bg-primary-dark"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Agregar Primer Usuario
+                  </Button>
+                </div>
+              }
+            />
+          );
+        })()}
       </div>
 
       {/* Delete Dialog */}

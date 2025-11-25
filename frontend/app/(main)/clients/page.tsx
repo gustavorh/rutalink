@@ -104,6 +104,9 @@ export default function ClientsPage() {
     pagination,
   } = usePagination({ initialLimit: 10 });
 
+  // Last update timestamp
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+
   useEffect(() => {
     if (!isAuthenticated()) {
       router.push("/login");
@@ -141,6 +144,7 @@ export default function ClientsPage() {
       setClients(response.data);
       setTotalPages(response.pagination.totalPages);
       setTotal(response.pagination.total);
+      setLastUpdate(new Date());
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al cargar clientes");
     } finally {
@@ -531,6 +535,11 @@ export default function ClientsPage() {
             </>
           }
           description={`Total de ${total} clientes registrados`}
+          lastUpdate={lastUpdate}
+          onRefresh={fetchClients}
+          onExport={() => {
+            /* TODO: Implement export functionality */
+          }}
           getRowKey={(client) => client.id}
         />
       </div>

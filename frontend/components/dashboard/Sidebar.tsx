@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { useState } from "react";
+import packageJson from "../../package.json";
 
 interface SidebarProps {
   currentPath?: string;
@@ -61,7 +62,7 @@ export function DashboardSidebar({
               RutaLink
             </span>
             <span className="text-muted-foreground text-xs">
-              Bilix Ingeniería
+              v{packageJson.version}
             </span>
           </div>
         )}

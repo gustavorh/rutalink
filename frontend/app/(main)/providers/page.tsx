@@ -112,6 +112,9 @@ export default function ProvidersPage() {
     pagination,
   } = usePagination({ initialLimit: 10 });
 
+  // Last update timestamp
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+
   useEffect(() => {
     if (!isAuthenticated()) {
       router.push("/login");
@@ -148,6 +151,7 @@ export default function ProvidersPage() {
       setProviders(response.data);
       setTotalPages(response.pagination.totalPages);
       setTotal(response.pagination.total);
+      setLastUpdate(new Date());
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Error al cargar proveedores"
@@ -493,7 +497,7 @@ export default function ProvidersPage() {
 
   return (
     <main className="flex-1 overflow-y-auto p-6">
-      <div className="w-full space-y-6">
+      <div className="max-w-[1400px] mx-auto space-y-6">
         {/* Page Header */}
         <PageHeader
           title="Mantenedor de Proveedores de Transporte"
@@ -585,6 +589,8 @@ export default function ProvidersPage() {
             </>
           }
           description={`Total de ${total} proveedores registrados`}
+          lastUpdate={lastUpdate}
+          onRefresh={fetchProviders}
           onExport={() => {
             /* TODO: Implement export functionality */
           }}

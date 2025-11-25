@@ -45,13 +45,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  DataTable,
+  type DataTableColumn,
+  type DataTableFilter,
+  type DataTableAction,
+} from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -1047,273 +1045,259 @@ export default function OperationsPage() {
         )}
 
         {/* Operations Table or Calendar */}
-        <Card className="bg-card border-border">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="text-foreground flex items-center gap-2">
-                <Package className="w-5 h-5 text-secondary" />
-                {viewMode === "list"
-                  ? "Listado de Operaciones"
-                  : "Calendario de Operaciones"}
-              </CardTitle>
-              <CardDescription className="text-muted-foreground">
-                {viewMode === "list"
-                  ? `Total de ${total} operaciones registradas`
-                  : "Vista mensual de operaciones programadas"}
-              </CardDescription>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-border text-foreground hover:bg-ui-surface-elevated"
-                onClick={() => {
+        {viewMode === "calendar" ? (
+          <Card className="bg-card border-border">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-foreground flex items-center gap-2">
+                  <Package className="w-5 h-5 text-secondary" />
+                  Calendario de Operaciones
+                </CardTitle>
+                <CardDescription className="text-muted-foreground">
+                  Vista mensual de operaciones programadas
+                </CardDescription>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto"></div>
+                  <p className="text-muted-foreground mt-4">
+                    Cargando operaciones...
+                  </p>
+                </div>
+              ) : error ? (
+                <div className="text-center py-12">
+                  <AlertTriangle className="w-12 h-12 text-destructive mx-auto mb-4" />
+                  <p className="text-destructive">{error}</p>
+                </div>
+              ) : (
+                renderCalendarView()
+              )}
+            </CardContent>
+          </Card>
+        ) : (
+          (() => {
+            // Define table columns
+            const columns: DataTableColumn<OperationWithDetails>[] = [
+              {
+                key: "operationNumber",
+                header: "Nº Operación",
+                accessor: (op) => (
+                  <div>
+                    <div className="font-medium text-foreground font-mono">
+                      {op.operation.operationNumber}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      ID: {op.operation.id}
+                    </div>
+                  </div>
+                ),
+              },
+              {
+                key: "type",
+                header: "Tipo",
+                accessor: (op) => (
+                  <Badge
+                    variant="outline"
+                    className="border-secondary/50 text-secondary"
+                  >
+                    {getOperationTypeLabel(op.operation.operationType)}
+                  </Badge>
+                ),
+              },
+              {
+                key: "route",
+                header: "Origen → Destino",
+                accessor: (op) => (
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1 text-sm text-foreground">
+                      <MapPin className="w-3 h-3 text-success" />
+                      {op.operation.origin}
+                    </div>
+                    <div className="flex items-center gap-1 text-sm text-foreground">
+                      <MapPin className="w-3 h-3 text-destructive" />
+                      {op.operation.destination}
+                    </div>
+                    {op.operation.distance && (
+                      <div className="text-xs text-muted-foreground">
+                        {op.operation.distance} km
+                      </div>
+                    )}
+                  </div>
+                ),
+              },
+              {
+                key: "client",
+                header: "Cliente",
+                accessor: (op) =>
+                  op.client ? (
+                    <div className="text-sm">
+                      <div className="text-foreground">
+                        {op.client.businessName}
+                      </div>
+                      {op.client.industry && (
+                        <div className="text-xs text-muted-foreground">
+                          {op.client.industry}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground text-xs">
+                      Sin cliente
+                    </span>
+                  ),
+              },
+              {
+                key: "assignments",
+                header: "Vehículo / Chofer",
+                accessor: (op) => (
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1 text-sm text-foreground">
+                      <Truck className="w-3 h-3" />
+                      {op.vehicle.plateNumber}
+                    </div>
+                    <div className="flex items-center gap-1 text-sm text-foreground">
+                      <Users className="w-3 h-3" />
+                      {op.driver.firstName} {op.driver.lastName}
+                    </div>
+                  </div>
+                ),
+              },
+              {
+                key: "scheduledDate",
+                header: "Fecha Programada",
+                accessor: (op) => (
+                  <div className="space-y-1">
+                    <div className="text-sm text-foreground">
+                      {formatDateTime(op.operation.scheduledStartDate)}
+                    </div>
+                    {op.operation.scheduledEndDate && (
+                      <div className="text-xs text-muted-foreground">
+                        Hasta: {formatDateTime(op.operation.scheduledEndDate)}
+                      </div>
+                    )}
+                  </div>
+                ),
+              },
+              {
+                key: "status",
+                header: "Estado",
+                accessor: (op) => getStatusBadge(op.operation.status),
+              },
+            ];
+
+            // Define table actions
+            const actions: DataTableAction<OperationWithDetails>[] = [
+              {
+                label: "Ver detalles",
+                icon: <Eye className="h-4 w-4" />,
+                onClick: (op) => router.push(`/operations/${op.operation.id}`),
+                className:
+                  "text-muted-foreground hover:text-primary hover:bg-primary/10",
+                title: "Ver detalles",
+              },
+              {
+                label: "Editar",
+                icon: <Edit className="h-4 w-4" />,
+                onClick: handleEditClick,
+                className:
+                  "text-muted-foreground hover:text-secondary hover:bg-secondary/10",
+                title: "Editar",
+              },
+              {
+                label: "Eliminar",
+                icon: <Trash2 className="h-4 w-4" />,
+                onClick: handleDeleteClick,
+                className:
+                  "text-muted-foreground hover:text-destructive hover:bg-destructive/10",
+                title: "Eliminar",
+              },
+            ];
+
+            // Define filters
+            const tableFilters: DataTableFilter[] = [
+              {
+                id: "filter-type",
+                label: "Tipo de Operación",
+                type: "select",
+                value: filterState.type,
+                onChange: (value) => setFilter("type", value),
+                options: [
+                  { value: "all", label: "Todos los tipos" },
+                  ...OperationTypes.map((type) => ({
+                    value: type.value,
+                    label: type.label,
+                  })),
+                ],
+                ariaLabel: "Filtrar por tipo de operación",
+              },
+              {
+                id: "filter-client",
+                label: "Cliente",
+                type: "select",
+                value: filterState.client,
+                onChange: (value) => setFilter("client", value),
+                options: [
+                  { value: "all", label: "Todos los clientes" },
+                  ...clients.map((client) => ({
+                    value: client.id.toString(),
+                    label: client.businessName,
+                  })),
+                ],
+                ariaLabel: "Filtrar por cliente",
+              },
+              {
+                id: "filter-provider",
+                label: "Proveedor",
+                type: "select",
+                value: filterState.provider,
+                onChange: (value) => setFilter("provider", value),
+                options: [
+                  { value: "all", label: "Todos los proveedores" },
+                  ...providers.map((provider) => ({
+                    value: provider.id.toString(),
+                    label: provider.businessName,
+                  })),
+                ],
+                ariaLabel: "Filtrar por proveedor",
+              },
+            ];
+
+            const handleClearFilters = () => {
+              setSearch("");
+              clearAllFilters();
+              setDateRangeFilter({ start: "", end: "" });
+              setPage(1);
+            };
+
+            return (
+              <DataTable
+                data={operations}
+                columns={columns}
+                pagination={pagination}
+                onPageChange={setPage}
+                searchValue={search}
+                onSearchChange={setSearch}
+                searchPlaceholder="Buscar por número de operación, origen, destino..."
+                onSearchSubmit={handleSearch}
+                filters={tableFilters}
+                showFilters={showFilters}
+                onToggleFilters={toggleFilters}
+                onClearFilters={handleClearFilters}
+                actions={actions}
+                loading={loading}
+                error={error}
+                lastUpdate={lastUpdate}
+                onRefresh={handleRefresh}
+                onExport={() => {
                   /* TODO: Implement export functionality */
                 }}
-              >
-                <Download className="mr-2 h-4 w-4" />
-                Exportar
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto"></div>
-                <p className="text-muted-foreground mt-4">
-                  Cargando operaciones...
-                </p>
-              </div>
-            ) : error ? (
-              <div className="text-center py-12">
-                <AlertTriangle className="w-12 h-12 text-destructive mx-auto mb-4" />
-                <p className="text-destructive">{error}</p>
-              </div>
-            ) : viewMode === "calendar" ? (
-              renderCalendarView()
-            ) : (
-              <>
-                {/* Integrated Filters for List View */}
-                <div className="space-y-4 mb-6">
-                  {/* Search Bar with Actions */}
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <div className="relative flex-1">
-                      <label htmlFor="search-operations" className="sr-only">
-                        Buscar operaciones
-                      </label>
-                      <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
-                      <Input
-                        id="search-operations"
-                        placeholder="Buscar por número de operación, origen, destino..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                        className="pl-10 bg-ui-surface-elevated border-border text-foreground placeholder-muted-foreground focus:border-purple-500"
-                        aria-label="Buscar operaciones por número, origen o destino"
-                      />
-                    </div>
-                    <Button
-                      onClick={handleSearch}
-                      className="bg-purple-600 hover:bg-purple-700 whitespace-nowrap"
-                      aria-label="Ejecutar búsqueda"
-                    >
-                      <Search className="mr-2 h-4 w-4" />
-                      Buscar
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={toggleFilters}
-                      className="border-border text-foreground hover:bg-ui-surface-elevated"
-                      aria-label={
-                        showFilters ? "Ocultar filtros" : "Mostrar filtros"
-                      }
-                      aria-expanded={showFilters}
-                    >
-                      <Filter className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={handleRefresh}
-                      disabled={loading || isRefreshing}
-                      className="border-border text-foreground hover:bg-ui-surface-elevated disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                      aria-label="Actualizar lista de operaciones"
-                    >
-                      <Clock
-                        className={`mr-2 h-4 w-4 ${
-                          isRefreshing ? "animate-spin" : ""
-                        }`}
-                      />
-                      <span className="hidden sm:inline">Actualizar</span>
-                    </Button>
-                  </div>
-
-                  {/* Additional Filters - Expandable */}
-                  {showFilters && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 p-4 bg-ui-surface-elevated/50 rounded-lg border border-border">
-                      <div>
-                        <Label
-                          htmlFor="filter-type"
-                          className="text-xs font-medium text-muted-foreground mb-1.5 block"
-                        >
-                          Tipo de Operación
-                        </Label>
-                        <Select
-                          value={filterState.type}
-                          onValueChange={(value) => setFilter("type", value)}
-                        >
-                          <SelectTrigger
-                            id="filter-type"
-                            className="bg-ui-surface-elevated border-border text-foreground h-9"
-                            aria-label="Filtrar por tipo de operación"
-                          >
-                            <SelectValue placeholder="Tipo" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">Todos los tipos</SelectItem>
-                            {OperationTypes.map((type) => (
-                              <SelectItem key={type.value} value={type.value}>
-                                {type.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div>
-                        <Label
-                          htmlFor="filter-client"
-                          className="text-xs font-medium text-muted-foreground mb-1.5 block"
-                        >
-                          Cliente
-                        </Label>
-                        <Select
-                          value={filterState.client}
-                          onValueChange={(value) => setFilter("client", value)}
-                        >
-                          <SelectTrigger
-                            id="filter-client"
-                            className="bg-ui-surface-elevated border-border text-foreground h-9"
-                            aria-label="Filtrar por cliente"
-                          >
-                            <SelectValue placeholder="Cliente" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">
-                              Todos los clientes
-                            </SelectItem>
-                            {clients.map((client) => (
-                              <SelectItem
-                                key={client.id}
-                                value={client.id.toString()}
-                              >
-                                {client.businessName}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div>
-                        <Label
-                          htmlFor="filter-provider"
-                          className="text-xs font-medium text-muted-foreground mb-1.5 block"
-                        >
-                          Proveedor
-                        </Label>
-                        <Select
-                          value={filterState.provider}
-                          onValueChange={(value) =>
-                            setFilter("provider", value)
-                          }
-                        >
-                          <SelectTrigger
-                            id="filter-provider"
-                            className="bg-ui-surface-elevated border-border text-foreground h-9"
-                            aria-label="Filtrar por proveedor"
-                          >
-                            <SelectValue placeholder="Proveedor" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">
-                              Todos los proveedores
-                            </SelectItem>
-                            {providers.map((provider) => (
-                              <SelectItem
-                                key={provider.id}
-                                value={provider.id.toString()}
-                              >
-                                {provider.businessName}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div>
-                        <Label
-                          htmlFor="filter-date-start"
-                          className="text-xs font-medium text-muted-foreground mb-1.5 block"
-                        >
-                          Fecha Inicio
-                        </Label>
-                        <Input
-                          id="filter-date-start"
-                          type="date"
-                          value={dateRangeFilter.start}
-                          onChange={(e) =>
-                            setDateRangeFilter({
-                              ...dateRangeFilter,
-                              start: e.target.value,
-                            })
-                          }
-                          className="bg-ui-surface-elevated border-border text-foreground h-9"
-                          aria-label="Filtrar por fecha de inicio"
-                        />
-                      </div>
-
-                      <div>
-                        <Label
-                          htmlFor="filter-date-end"
-                          className="text-xs font-medium text-muted-foreground mb-1.5 block"
-                        >
-                          Fecha Fin
-                        </Label>
-                        <Input
-                          id="filter-date-end"
-                          type="date"
-                          value={dateRangeFilter.end}
-                          onChange={(e) =>
-                            setDateRangeFilter({
-                              ...dateRangeFilter,
-                              end: e.target.value,
-                            })
-                          }
-                          className="bg-ui-surface-elevated border-border text-foreground h-9"
-                          aria-label="Filtrar por fecha de fin"
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Last Update Timestamp */}
-                  {lastUpdate && (
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground bg-ui-surface-elevated px-3 py-2 rounded-lg border border-border w-fit">
-                      <Clock className="h-3.5 w-3.5" />
-                      <span>
-                        Última actualización:{" "}
-                        {lastUpdate.toLocaleTimeString("es-CL", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          second: "2-digit",
-                        })}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Table */}
-                {operations.length === 0 ? (
+                title="Listado de Operaciones"
+                description={`Total de ${total} operaciones registradas`}
+                icon={<Package className="w-5 h-5 text-secondary" />}
+                getRowKey={(op) => op.operation.id}
+                emptyState={
                   <div className="text-center py-12">
                     <Calendar className="w-12 h-12 text-slate-600 mx-auto mb-4" />
                     <p className="text-muted-foreground">
@@ -1327,245 +1311,11 @@ export default function OperationsPage() {
                       Programar Primera Operación
                     </Button>
                   </div>
-                ) : (
-                  <>
-                    <div className="overflow-x-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow className="border-b border-border hover:bg-transparent">
-                            <TableHead className="text-muted-foreground">
-                              Nº Operación
-                            </TableHead>
-                            <TableHead className="text-muted-foreground">
-                              Tipo
-                            </TableHead>
-                            <TableHead className="text-muted-foreground">
-                              Origen → Destino
-                            </TableHead>
-                            <TableHead className="text-muted-foreground">
-                              Cliente
-                            </TableHead>
-                            <TableHead className="text-muted-foreground">
-                              Vehículo / Chofer
-                            </TableHead>
-                            <TableHead className="text-muted-foreground">
-                              Fecha Programada
-                            </TableHead>
-                            <TableHead className="text-muted-foreground">
-                              Estado
-                            </TableHead>
-                            <TableHead className="text-right text-muted-foreground">
-                              Acciones
-                            </TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {operations.map((op) => (
-                            <TableRow
-                              key={op.operation.id}
-                              onClick={() =>
-                                router.push(`/operations/${op.operation.id}`)
-                              }
-                              className="border-b border-border hover:bg-ui-surface-elevated cursor-pointer transition-colors"
-                            >
-                              <TableCell>
-                                <div>
-                                  <div className="font-medium text-foreground font-mono">
-                                    {op.operation.operationNumber}
-                                  </div>
-                                  <div className="text-xs text-muted-foreground">
-                                    ID: {op.operation.id}
-                                  </div>
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                <Badge
-                                  variant="outline"
-                                  className="border-secondary/50 text-secondary"
-                                >
-                                  {getOperationTypeLabel(
-                                    op.operation.operationType
-                                  )}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>
-                                <div className="space-y-1">
-                                  <div className="flex items-center gap-1 text-sm text-foreground">
-                                    <MapPin className="w-3 h-3 text-success" />
-                                    {op.operation.origin}
-                                  </div>
-                                  <div className="flex items-center gap-1 text-sm text-foreground">
-                                    <MapPin className="w-3 h-3 text-destructive" />
-                                    {op.operation.destination}
-                                  </div>
-                                  {op.operation.distance && (
-                                    <div className="text-xs text-muted-foreground">
-                                      {op.operation.distance} km
-                                    </div>
-                                  )}
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                {op.client ? (
-                                  <div className="text-sm">
-                                    <div className="text-foreground">
-                                      {op.client.businessName}
-                                    </div>
-                                    {op.client.industry && (
-                                      <div className="text-xs text-muted-foreground">
-                                        {op.client.industry}
-                                      </div>
-                                    )}
-                                  </div>
-                                ) : (
-                                  <span className="text-muted-foreground text-xs">
-                                    Sin cliente
-                                  </span>
-                                )}
-                              </TableCell>
-                              <TableCell>
-                                <div className="space-y-1">
-                                  <div className="flex items-center gap-1 text-sm text-foreground">
-                                    <Truck className="w-3 h-3" />
-                                    {op.vehicle.plateNumber}
-                                  </div>
-                                  <div className="flex items-center gap-1 text-sm text-foreground">
-                                    <Users className="w-3 h-3" />
-                                    {op.driver.firstName} {op.driver.lastName}
-                                  </div>
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                <div className="space-y-1">
-                                  <div className="text-sm text-foreground">
-                                    {formatDateTime(
-                                      op.operation.scheduledStartDate
-                                    )}
-                                  </div>
-                                  {op.operation.scheduledEndDate && (
-                                    <div className="text-xs text-muted-foreground">
-                                      Hasta:{" "}
-                                      {formatDateTime(
-                                        op.operation.scheduledEndDate
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                {getStatusBadge(op.operation.status)}
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <div className="flex justify-end gap-2">
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      router.push(
-                                        `/operations/${op.operation.id}`
-                                      );
-                                    }}
-                                    className="text-muted-foreground hover:text-primary hover:bg-primary/10"
-                                    title="Ver detalles"
-                                  >
-                                    <Eye className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleEditClick(op);
-                                    }}
-                                    className="text-muted-foreground hover:text-secondary hover:bg-secondary/10"
-                                    title="Editar"
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleDeleteClick(op);
-                                    }}
-                                    className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                                    title="Eliminar"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-
-                    {/* Pagination */}
-                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
-                      <p className="text-sm text-muted-foreground">
-                        Mostrando {(pagination.page - 1) * pagination.limit + 1}{" "}
-                        a{" "}
-                        {Math.min(
-                          pagination.page * pagination.limit,
-                          pagination.total
-                        )}{" "}
-                        de {pagination.total} operaciones
-                      </p>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          onClick={() => setPage(page - 1)}
-                          disabled={page === 1}
-                          className="border-border text-foreground hover:bg-ui-surface-elevated disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          Anterior
-                        </Button>
-                        {Array.from({ length: totalPages }, (_, i) => i + 1)
-                          .filter(
-                            (p) =>
-                              p === 1 ||
-                              p === totalPages ||
-                              (p >= page - 1 && p <= page + 1)
-                          )
-                          .map((p, index, array) => (
-                            <div key={p} className="flex items-center">
-                              {index > 0 && array[index - 1] !== p - 1 && (
-                                <span className="text-muted-foreground px-2">
-                                  ...
-                                </span>
-                              )}
-                              <Button
-                                variant={p === page ? "default" : "outline"}
-                                onClick={() => setPage(p)}
-                                className={
-                                  p === page
-                                    ? "bg-purple-600 hover:bg-purple-700 text-white"
-                                    : "border-border text-foreground hover:bg-ui-surface-elevated"
-                                }
-                              >
-                                {p}
-                              </Button>
-                            </div>
-                          ))}
-                        <Button
-                          variant="outline"
-                          onClick={() => setPage(page + 1)}
-                          disabled={pagination.page === pagination.totalPages}
-                          className="border-border text-foreground hover:bg-ui-surface-elevated disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          Siguiente
-                        </Button>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </>
-            )}
-          </CardContent>
-        </Card>
+                }
+              />
+            );
+          })()
+        )}
       </div>
 
       {/* Delete Confirmation Dialog */}

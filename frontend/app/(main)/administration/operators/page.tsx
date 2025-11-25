@@ -10,39 +10,28 @@ import type {
   UpdateOperatorDto,
   OperatorQueryDto,
 } from "@/lib/api-types";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import {
   Plus,
-  Search,
   Edit,
   Trash2,
   Eye,
   Building2,
-  AlertTriangle,
   CheckCircle,
-  Filter,
-  Download,
-  Users,
   Shield,
+  FileText,
 } from "lucide-react";
+import {
+  DataTable,
+  type DataTableColumn,
+  type DataTableFilter,
+  type DataTableAction,
+} from "@/components/ui/data-table";
+import { useFilters } from "@/lib/hooks/use-filters";
+import { EmptyState } from "@/components/ui/empty-state";
 import { DeleteConfirmationDialog } from "@/components/ui/delete-confirmation-dialog";
 import { StatisticsCard } from "@/components/ui/statistics-card";
 import { PageHeader } from "@/components/ui/page-header";
@@ -77,6 +66,18 @@ export default function OperatorsPage() {
 
   // Filters
   const [search, setSearch] = useState("");
+  const {
+    filters: filterState,
+    setFilter,
+    showFilters,
+    toggleFilters,
+    clearFilters: clearAllFilters,
+  } = useFilters({
+    initialFilters: {
+      status: "all",
+      super: "all",
+    },
+  });
 
   // Pagination
   const {
@@ -89,6 +90,9 @@ export default function OperatorsPage() {
     pagination,
   } = usePagination({ initialLimit: 10 });
 
+  // Last update timestamp
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+
   useEffect(() => {
     if (!isAuthenticated()) {
       router.push("/login");
@@ -97,7 +101,7 @@ export default function OperatorsPage() {
     setMounted(true);
     fetchOperators();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, search]);
+  }, [page, search, filterState.status, filterState.super]);
 
   const fetchOperators = async () => {
     try {
@@ -115,11 +119,16 @@ export default function OperatorsPage() {
       };
 
       if (search) params.search = search;
+      if (filterState.status !== "all")
+        params.status = filterState.status === "active" ? true : false;
+      if (filterState.super !== "all")
+        params.super = filterState.super === "super" ? true : false;
 
       const response = await api.operators.list(params);
       setOperators(response.data);
       setTotalPages(response.pagination.totalPages);
       setTotal(response.pagination.total);
+      setLastUpdate(new Date());
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Error al cargar organizaciones"
@@ -132,6 +141,12 @@ export default function OperatorsPage() {
   const handleSearch = () => {
     setPage(1);
     fetchOperators();
+  };
+
+  const handleClearFilters = () => {
+    setSearch("");
+    clearAllFilters();
+    setPage(1);
   };
 
   const handleDeleteClick = (operator: Operator) => {
@@ -263,296 +278,197 @@ export default function OperatorsPage() {
           />
         </div>
 
-        {/* Filters Card */}
-        <Card className="bg-card border-border">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="text-foreground flex items-center gap-2">
-                <Filter className="w-5 h-5 text-primary" />
-                Filtros de Búsqueda
-              </CardTitle>
-              <CardDescription className="text-muted-foreground">
-                Filtra y busca organizaciones
-              </CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {/* Search Bar - Always Visible */}
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Buscar por nombre, contacto, ciudad..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                    className="pl-10 bg-ui-surface-elevated border-border text-foreground placeholder-muted-foreground focus:border-primary"
-                  />
-                </div>
-                <Button
-                  onClick={handleSearch}
-                  className="bg-primary hover:bg-primary-dark"
-                >
-                  Buscar
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Operators Table */}
-        <Card className="bg-card border-border">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="text-foreground flex items-center gap-2">
-                <Users className="w-5 h-5 text-primary" />
-                Listado de Organizaciones
-              </CardTitle>
-              <CardDescription className="text-muted-foreground">
-                Total de {total} organizaciones registradas
-              </CardDescription>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-border text-foreground hover:bg-ui-surface-elevated"
-                onClick={() => {
-                  /* TODO: Implement export functionality */
-                }}
-              >
-                <Download className="mr-2 h-4 w-4" />
-                Exportar
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-                <p className="text-muted-foreground mt-4">
-                  Cargando organizaciones...
-                </p>
-              </div>
-            ) : error ? (
-              <div className="text-center py-12">
-                <AlertTriangle className="w-12 h-12 text-destructive mx-auto mb-4" />
-                <p className="text-destructive">{error}</p>
-              </div>
-            ) : operators.length === 0 ? (
-              <div className="text-center py-12">
-                <Building2 className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                <p className="text-muted-foreground">
-                  No se encontraron organizaciones
-                </p>
-                <Button
-                  onClick={handleCreateClick}
-                  className="mt-4 bg-primary hover:bg-primary-dark"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Agregar Primera Organización
-                </Button>
-              </div>
-            ) : (
-              <>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="border-b border-border hover:bg-transparent">
-                        <TableHead className="text-muted-foreground">
-                          Nombre
-                        </TableHead>
-                        <TableHead className="text-muted-foreground">
-                          RUT
-                        </TableHead>
-                        <TableHead className="text-muted-foreground">
-                          Expiración
-                        </TableHead>
-                        <TableHead className="text-muted-foreground">
-                          Tipo
-                        </TableHead>
-                        <TableHead className="text-muted-foreground">
-                          Estado
-                        </TableHead>
-                        <TableHead className="text-right text-muted-foreground">
-                          Acciones
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {operators.map((operator) => (
-                        <TableRow
-                          key={operator.id}
-                          className="border-b border-border hover:bg-ui-surface-elevated"
-                        >
-                          <TableCell>
-                            <div>
-                              <div className="font-medium text-foreground flex items-center gap-2">
-                                {operator.name}
-                                {operator.super && (
-                                  <Shield className="w-4 h-4 text-orange-400" />
-                                )}
-                              </div>
-                              <div className="text-xs text-muted-foreground mt-1">
-                                ID: {operator.id}
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="text-sm">
-                              {operator.rut || (
-                                <span className="text-muted-foreground text-xs">
-                                  Sin RUT
-                                </span>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="text-sm">
-                              {operator.expiration ? (
-                                <div>
-                                  {new Date(
-                                    operator.expiration
-                                  ).toLocaleDateString("es-ES")}
-                                </div>
-                              ) : (
-                                <span className="text-muted-foreground text-xs">
-                                  Sin expiración
-                                </span>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {operator.super ? (
-                              <Badge
-                                variant="outline"
-                                className="border-orange-500/50 text-orange-400"
-                              >
-                                Super Admin
-                              </Badge>
-                            ) : (
-                              <Badge
-                                variant="outline"
-                                className="border-primary/50 text-primary"
-                              >
-                                Estándar
-                              </Badge>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              variant={operator.status ? "default" : "outline"}
-                              className={
-                                operator.status
-                                  ? "bg-success/10 text-success border-success/50"
-                                  : "border-slate-500/50 text-muted-foreground"
-                              }
-                            >
-                              {operator.status ? "Activo" : "Inactivo"}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-2">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() =>
-                                  router.push(
-                                    `/administration/operators/${operator.id}`
-                                  )
-                                }
-                                className="text-muted-foreground hover:text-primary hover:bg-primary/10"
-                                title="Ver detalles"
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleEditClick(operator)}
-                                className="text-muted-foreground hover:text-secondary hover:bg-secondary/10"
-                                title="Editar"
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDeleteClick(operator)}
-                                className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                                title="Eliminar"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-
-                {/* Pagination */}
-                <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
-                  <p className="text-sm text-muted-foreground">
-                    Mostrando {(pagination.page - 1) * pagination.limit + 1} a{" "}
-                    {Math.min(
-                      pagination.page * pagination.limit,
-                      pagination.total
-                    )}{" "}
-                    de {pagination.total} organizaciones
-                  </p>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => setPage(page - 1)}
-                      disabled={page === 1}
-                      className="border-border text-foreground hover:bg-ui-surface-elevated disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Anterior
-                    </Button>
-                    {Array.from({ length: totalPages }, (_, i) => i + 1)
-                      .filter(
-                        (p) =>
-                          p === 1 ||
-                          p === totalPages ||
-                          (p >= page - 1 && p <= page + 1)
-                      )
-                      .map((p, index, array) => (
-                        <div key={p} className="flex items-center">
-                          {index > 0 && array[index - 1] !== p - 1 && (
-                            <span className="text-muted-foreground px-2">
-                              ...
-                            </span>
-                          )}
-                          <Button
-                            variant={p === page ? "default" : "outline"}
-                            onClick={() => setPage(p)}
-                            className={
-                              p === page
-                                ? "bg-primary hover:bg-primary-dark text-white"
-                                : "border-border text-foreground hover:bg-ui-surface-elevated"
-                            }
-                          >
-                            {p}
-                          </Button>
-                        </div>
-                      ))}
-                    <Button
-                      variant="outline"
-                      onClick={() => setPage(page + 1)}
-                      disabled={pagination.page === pagination.totalPages}
-                      className="border-border text-foreground hover:bg-ui-surface-elevated disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Siguiente
-                    </Button>
+        {/* Define table columns */}
+        {(() => {
+          const columns: DataTableColumn<Operator>[] = [
+            {
+              key: "name",
+              header: "Nombre",
+              accessor: (operator) => (
+                <div>
+                  <div className="font-medium text-foreground flex items-center gap-2">
+                    {operator.name}
+                    {operator.super && (
+                      <Shield className="w-4 h-4 text-orange-400" />
+                    )}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    ID: {operator.id}
                   </div>
                 </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
+              ),
+            },
+            {
+              key: "rut",
+              header: "RUT",
+              accessor: (operator) => (
+                <div className="text-sm">
+                  {operator.rut || (
+                    <span className="text-muted-foreground text-xs">
+                      Sin RUT
+                    </span>
+                  )}
+                </div>
+              ),
+            },
+            {
+              key: "expiration",
+              header: "Expiración",
+              accessor: (operator) => (
+                <div className="text-sm">
+                  {operator.expiration ? (
+                    <div>
+                      {new Date(operator.expiration).toLocaleDateString(
+                        "es-ES"
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground text-xs">
+                      Sin expiración
+                    </span>
+                  )}
+                </div>
+              ),
+            },
+            {
+              key: "type",
+              header: "Tipo",
+              accessor: (operator) =>
+                operator.super ? (
+                  <Badge
+                    variant="outline"
+                    className="border-orange-500/50 text-orange-400"
+                  >
+                    Super Admin
+                  </Badge>
+                ) : (
+                  <Badge
+                    variant="outline"
+                    className="border-primary/50 text-primary"
+                  >
+                    Estándar
+                  </Badge>
+                ),
+            },
+            {
+              key: "status",
+              header: "Estado",
+              accessor: (operator) => (
+                <Badge
+                  variant={operator.status ? "default" : "outline"}
+                  className={
+                    operator.status
+                      ? "bg-success/10 text-success border-success/50"
+                      : "border-slate-500/50 text-muted-foreground"
+                  }
+                >
+                  {operator.status ? "Activo" : "Inactivo"}
+                </Badge>
+              ),
+            },
+          ];
+
+          // Define table actions
+          const actions: DataTableAction<Operator>[] = [
+            {
+              label: "Ver detalles",
+              icon: <Eye className="h-4 w-4" />,
+              onClick: (operator) =>
+                router.push(`/administration/operators/${operator.id}`),
+              className:
+                "text-muted-foreground hover:text-primary hover:bg-primary/10",
+              title: "Ver detalles",
+            },
+            {
+              label: "Editar",
+              icon: <Edit className="h-4 w-4" />,
+              onClick: handleEditClick,
+              className:
+                "text-muted-foreground hover:text-secondary hover:bg-secondary/10",
+              title: "Editar",
+            },
+            {
+              label: "Eliminar",
+              icon: <Trash2 className="h-4 w-4" />,
+              onClick: handleDeleteClick,
+              className:
+                "text-muted-foreground hover:text-destructive hover:bg-destructive/10",
+              title: "Eliminar",
+            },
+          ];
+
+          // Define filters
+          const filters: DataTableFilter[] = [
+            {
+              id: "status-filter",
+              label: "Estado",
+              type: "select",
+              value: filterState.status,
+              onChange: (value) => setFilter("status", value),
+              options: [
+                { value: "all", label: "Todos los estados" },
+                { value: "active", label: "Activo" },
+                { value: "inactive", label: "Inactivo" },
+              ],
+              ariaLabel: "Filtrar por estado de la organización",
+            },
+            {
+              id: "super-filter",
+              label: "Tipo",
+              type: "select",
+              value: filterState.super,
+              onChange: (value) => setFilter("super", value),
+              options: [
+                { value: "all", label: "Todos los tipos" },
+                { value: "super", label: "Super Admin" },
+                { value: "standard", label: "Estándar" },
+              ],
+              ariaLabel: "Filtrar por tipo de organización",
+            },
+          ];
+
+          return (
+            <DataTable
+              data={operators}
+              columns={columns}
+              pagination={pagination}
+              onPageChange={setPage}
+              searchValue={search}
+              onSearchChange={setSearch}
+              searchPlaceholder="Buscar por nombre, contacto, ciudad..."
+              onSearchSubmit={handleSearch}
+              filters={filters}
+              showFilters={showFilters}
+              onToggleFilters={toggleFilters}
+              onClearFilters={handleClearFilters}
+              actions={actions}
+              loading={loading}
+              error={error}
+              lastUpdate={lastUpdate}
+              onRefresh={fetchOperators}
+              onExport={() => {
+                /* TODO: Implement export functionality */
+              }}
+              title="Listado de Organizaciones"
+              description={`Total de ${total} organizaciones registradas`}
+              icon={<FileText className="w-5 h-5 text-primary" />}
+              getRowKey={(operator) => operator.id}
+              emptyState={
+                <EmptyState
+                  icon={<Building2 className="w-12 h-12 text-slate-600" />}
+                  title="No se encontraron organizaciones"
+                  actionLabel={
+                    <>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Agregar Primera Organización
+                    </>
+                  }
+                  onAction={handleCreateClick}
+                />
+              }
+            />
+          );
+        })()}
       </div>
 
       {/* Delete Confirmation Dialog */}

@@ -12,6 +12,13 @@ import type {
   LiveOperation,
 } from "@/types/dashboard";
 import type { OperationWithDetails } from "@/types/operations";
+import {
+  DataTable,
+  type DataTableColumn,
+  type DataTableFilter,
+  type DataTableAction,
+} from "@/components/ui/data-table";
+import { Eye, Edit as EditIcon } from "lucide-react";
 
 // Status configuration
 const statusConfig: Record<
@@ -280,12 +287,14 @@ export default function DashboardPage() {
               label: c.businessName,
             })
           ),
-          providers: (providersRes.data || (providersRes as any).items || []).map(
-            (p: { id: number; businessName: string }) => ({
-              value: p.id,
-              label: p.businessName,
-            })
-          ),
+          providers: (
+            providersRes.data ||
+            (providersRes as any).items ||
+            []
+          ).map((p: { id: number; businessName: string }) => ({
+            value: p.id,
+            label: p.businessName,
+          })),
           vehicles: (vehiclesRes.data || (vehiclesRes as any).items || []).map(
             (v: { id: number; plateNumber: string }) => ({
               value: v.id,
@@ -631,284 +640,229 @@ export default function DashboardPage() {
         </div>
 
         {/* Operations Table with Integrated Filters */}
-        <Card className="bg-card border-border shadow-lg">
-          <CardHeader className="pb-4">
-            <div className="flex flex-col gap-4">
-              {/* Header Row */}
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <CardTitle className="text-foreground text-xl flex items-center gap-2">
-                    <svg
-                      className="w-6 h-6 text-primary"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                      />
-                    </svg>
-                    Operaciones
-                    <span className="text-sm font-normal text-muted-foreground">
-                      ({filteredOperations.length} resultados)
-                    </span>
-                    {activeFiltersCount > 0 && (
-                      <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-primary text-white">
-                        {activeFiltersCount} filtros
-                      </span>
-                    )}
-                  </CardTitle>
-                </div>
-
-                {/* Actions Row */}
-                <div className="flex items-center gap-3">
-                  {/* Last Update Timestamp */}
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground bg-ui-surface-elevated px-3 py-2 rounded-lg border border-border">
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    <span>
-                      Última actualización:{" "}
-                      {new Date(lastFetchTimeRef.current).toLocaleTimeString(
-                        "es-CL",
-                        {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          second: "2-digit",
-                        }
-                      )}
-                    </span>
-                  </div>
-
-                  {/* Clear Filters Button */}
-                  {activeFiltersCount > 0 && (
-                    <button
-                      onClick={clearFilters}
-                      className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground px-3 py-2 rounded-lg border border-border hover:border-primary transition-all duration-200"
-                      aria-label="Limpiar todos los filtros"
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                      Limpiar
-                    </button>
-                  )}
-
-                  {/* Refresh Button */}
-                  <button
-                    onClick={() => refreshOperations()}
-                    disabled={loading}
-                    className="flex items-center gap-2 text-sm text-primary hover:text-purple-300 px-4 py-2 rounded-lg border border-primary hover:border-purple-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                    aria-label="Actualizar lista de operaciones"
-                  >
-                    <svg
-                      className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                      />
-                    </svg>
-                    <span className="hidden sm:inline">Actualizar</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Filters Section */}
-              <div className="space-y-4">
-                {/* Search Bar */}
-                <div className="relative">
-                  <label htmlFor="search-operations" className="sr-only">
-                    Buscar operaciones
-                  </label>
-                  <svg
-                    className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    aria-hidden="true"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                    />
-                  </svg>
-                  <input
-                    id="search-operations"
-                    type="text"
-                    placeholder="Buscar por número, origen, destino, cliente, proveedor, vehículo..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 bg-ui-surface-elevated border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
-                    aria-describedby="search-help"
-                  />
-                  <span id="search-help" className="sr-only">
-                    Ingrese términos de búsqueda para filtrar operaciones en
-                    tiempo real
+        {(() => {
+          // Define table columns
+          const columns: DataTableColumn<LiveOperation>[] = [
+            {
+              key: "operation",
+              header: "Operación",
+              accessor: (operation) => (
+                <div className="flex flex-col">
+                  <span className="text-sm font-semibold text-foreground">
+                    {operation.operation.operationNumber}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(
+                      operation.operation.scheduledStartDate
+                    ).toLocaleDateString("es-CL", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })}
                   </span>
                 </div>
-
-                {/* Filter Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {/* Status Filter */}
-                  <div>
-                    <label
-                      htmlFor="filter-status"
-                      className="block text-sm font-medium text-muted-foreground mb-2"
+              ),
+            },
+            {
+              key: "client",
+              header: "Cliente",
+              accessor: (operation) => (
+                <span className="text-sm text-foreground">
+                  {operation.client?.businessName || "Sin cliente"}
+                </span>
+              ),
+            },
+            {
+              key: "provider",
+              header: "Proveedor",
+              accessor: (operation) => (
+                <span className="text-sm text-foreground">
+                  {operation.provider?.businessName || "Sin proveedor"}
+                </span>
+              ),
+            },
+            {
+              key: "route",
+              header: "Ruta",
+              accessor: (operation) => (
+                <div className="flex flex-col max-w-xs">
+                  <span className="text-sm text-foreground truncate">
+                    {operation.operation.origin}
+                  </span>
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <svg
+                      className="w-3 h-3"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
                     >
-                      Estado
-                    </label>
-                    <select
-                      id="filter-status"
-                      value={filters.status || ""}
-                      onChange={(e) =>
-                        handleFilterChange("status", e.target.value)
-                      }
-                      className="w-full px-4 py-3 bg-ui-surface-elevated border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
-                      disabled={loading}
-                      aria-label="Filtrar por estado de operación"
-                    >
-                      <option value="">Todos los estados</option>
-                      {filterOptions.statuses.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Client Filter */}
-                  <div>
-                    <label
-                      htmlFor="filter-client"
-                      className="block text-sm font-medium text-muted-foreground mb-2"
-                    >
-                      Cliente
-                    </label>
-                    <select
-                      id="filter-client"
-                      value={filters.clientId || ""}
-                      onChange={(e) =>
-                        handleFilterChange(
-                          "clientId",
-                          e.target.value ? Number(e.target.value) : null
-                        )
-                      }
-                      className="w-full px-4 py-3 bg-ui-surface-elevated border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
-                      disabled={loading}
-                      aria-label="Filtrar por cliente"
-                    >
-                      <option value="">Todos los clientes</option>
-                      {filterOptions.clients.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Provider Filter */}
-                  <div>
-                    <label
-                      htmlFor="filter-provider"
-                      className="block text-sm font-medium text-muted-foreground mb-2"
-                    >
-                      Proveedor
-                    </label>
-                    <select
-                      id="filter-provider"
-                      value={filters.providerId || ""}
-                      onChange={(e) =>
-                        handleFilterChange(
-                          "providerId",
-                          e.target.value ? Number(e.target.value) : null
-                        )
-                      }
-                      className="w-full px-4 py-3 bg-ui-surface-elevated border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
-                      disabled={loading}
-                      aria-label="Filtrar por proveedor"
-                    >
-                      <option value="">Todos los proveedores</option>
-                      {filterOptions.providers.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Vehicle Filter */}
-                  <div>
-                    <label
-                      htmlFor="filter-vehicle"
-                      className="block text-sm font-medium text-muted-foreground mb-2"
-                    >
-                      Maquinaria / Vehículo
-                    </label>
-                    <select
-                      id="filter-vehicle"
-                      value={filters.vehicleId || ""}
-                      onChange={(e) =>
-                        handleFilterChange(
-                          "vehicleId",
-                          e.target.value ? Number(e.target.value) : null
-                        )
-                      }
-                      className="w-full px-4 py-3 bg-ui-surface-elevated border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
-                      disabled={loading}
-                      aria-label="Filtrar por vehículo o maquinaria"
-                    >
-                      <option value="">Todos los vehículos</option>
-                      {filterOptions.vehicles.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 14l-7 7m0 0l-7-7m7 7V3"
+                      />
+                    </svg>
+                    <span className="truncate">
+                      {operation.operation.destination}
+                    </span>
                   </div>
                 </div>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="flex items-center justify-center py-16">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-              </div>
-            ) : filteredOperations.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+              ),
+            },
+            {
+              key: "vehicle",
+              header: "Vehículo",
+              accessor: (operation) => (
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium text-foreground">
+                    {operation.vehicle.plateNumber}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {operation.vehicle.brand} {operation.vehicle.model}
+                  </span>
+                </div>
+              ),
+            },
+            {
+              key: "status",
+              header: "Estado",
+              accessor: (operation) => {
+                const status =
+                  statusConfig[operation.operation.status] ||
+                  statusConfig.scheduled;
+                return (
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold ${status.className}`}
+                  >
+                    <span>{status.icon}</span>
+                    {status.label}
+                  </span>
+                );
+              },
+            },
+          ];
+
+          // Define table actions
+          const actions: DataTableAction<LiveOperation>[] = [
+            {
+              label: "Ver detalles",
+              icon: <Eye className="h-5 w-5" />,
+              onClick: (operation) => handleOperationClick(operation),
+              className:
+                "text-muted-foreground hover:text-primary hover:bg-primary/10",
+              title: "Ver detalles",
+            },
+            {
+              label: "Editar asignaciones",
+              icon: <EditIcon className="h-5 w-5" />,
+              onClick: (operation) => {
+                const syntheticEvent = {
+                  stopPropagation: () => {},
+                } as React.MouseEvent;
+                handleEditClick(operation, syntheticEvent);
+              },
+              className:
+                "text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10",
+              title: "Editar asignaciones",
+            },
+          ];
+
+          // Define filters
+          const tableFilters: DataTableFilter[] = [
+            {
+              id: "filter-status",
+              label: "Estado",
+              type: "select",
+              value: filters.status || "all",
+              onChange: (value) =>
+                handleFilterChange("status", value === "all" ? null : value),
+              options: [
+                { value: "all", label: "Todos los estados" },
+                ...filterOptions.statuses.map((option) => ({
+                  value: String(option.value),
+                  label: option.label,
+                })),
+              ],
+              ariaLabel: "Filtrar por estado de operación",
+            },
+            {
+              id: "filter-client",
+              label: "Cliente",
+              type: "select",
+              value: filters.clientId?.toString() || "all",
+              onChange: (value) =>
+                handleFilterChange(
+                  "clientId",
+                  value === "all" ? null : Number(value)
+                ),
+              options: [
+                { value: "all", label: "Todos los clientes" },
+                ...filterOptions.clients.map((option) => ({
+                  value: String(option.value),
+                  label: option.label,
+                })),
+              ],
+              ariaLabel: "Filtrar por cliente",
+            },
+            {
+              id: "filter-provider",
+              label: "Proveedor",
+              type: "select",
+              value: filters.providerId?.toString() || "all",
+              onChange: (value) =>
+                handleFilterChange(
+                  "providerId",
+                  value === "all" ? null : Number(value)
+                ),
+              options: [
+                { value: "all", label: "Todos los proveedores" },
+                ...filterOptions.providers.map((option) => ({
+                  value: option.value.toString(),
+                  label: option.label,
+                })),
+              ],
+              ariaLabel: "Filtrar por proveedor",
+            },
+            {
+              id: "filter-vehicle",
+              label: "Maquinaria / Vehículo",
+              type: "select",
+              value: filters.vehicleId?.toString() || "all",
+              onChange: (value) =>
+                handleFilterChange(
+                  "vehicleId",
+                  value === "all" ? null : Number(value)
+                ),
+              options: [
+                { value: "all", label: "Todos los vehículos" },
+                ...filterOptions.vehicles.map((option) => ({
+                  value: option.value.toString(),
+                  label: option.label,
+                })),
+              ],
+              ariaLabel: "Filtrar por vehículo o maquinaria",
+            },
+          ];
+
+          return (
+            <DataTable
+              data={filteredOperations}
+              columns={columns}
+              searchValue={searchQuery}
+              onSearchChange={setSearchQuery}
+              searchPlaceholder="Buscar por número, origen, destino, cliente, proveedor, vehículo..."
+              filters={tableFilters}
+              showFilters={true}
+              onClearFilters={clearFilters}
+              actions={actions}
+              loading={loading}
+              error={null}
+              title="Operaciones"
+              description={`${filteredOperations.length} resultados`}
+              icon={
                 <svg
-                  className="w-20 h-20 mb-4 opacity-50"
+                  className="w-6 h-6 text-primary"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -916,201 +870,43 @@ export default function DashboardPage() {
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    strokeWidth={2}
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
                   />
                 </svg>
-                <p className="text-xl font-medium mb-2">
-                  No se encontraron operaciones
-                </p>
-                <p className="text-sm">
-                  Intenta ajustar los filtros de búsqueda
-                </p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-border">
-                      <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider pb-4 pr-4">
-                        Operación
-                      </th>
-                      <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider pb-4 pr-4">
-                        Cliente
-                      </th>
-                      <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider pb-4 pr-4">
-                        Proveedor
-                      </th>
-                      <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider pb-4 pr-4">
-                        Ruta
-                      </th>
-                      <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider pb-4 pr-4">
-                        Vehículo
-                      </th>
-                      <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider pb-4 pr-4">
-                        Estado
-                      </th>
-                      <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider pb-4">
-                        Acciones
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {filteredOperations.map((operation) => {
-                      const status =
-                        statusConfig[operation.operation.status] ||
-                        statusConfig.scheduled;
-
-                      return (
-                        <tr
-                          key={operation.operation.id}
-                          className="hover:bg-ui-surface-elevated/50 transition-colors cursor-pointer"
-                          onClick={() => handleOperationClick(operation)}
-                        >
-                          {/* Operation */}
-                          <td className="py-4 pr-4">
-                            <div className="flex flex-col">
-                              <span className="text-sm font-semibold text-foreground">
-                                {operation.operation.operationNumber}
-                              </span>
-                              <span className="text-xs text-muted-foreground">
-                                {new Date(
-                                  operation.operation.scheduledStartDate
-                                ).toLocaleDateString("es-CL", {
-                                  day: "2-digit",
-                                  month: "short",
-                                  year: "numeric",
-                                })}
-                              </span>
-                            </div>
-                          </td>
-
-                          {/* Client */}
-                          <td className="py-4 pr-4">
-                            <span className="text-sm text-foreground">
-                              {operation.client?.businessName || "Sin cliente"}
-                            </span>
-                          </td>
-
-                          {/* Provider */}
-                          <td className="py-4 pr-4">
-                            <span className="text-sm text-foreground">
-                              {operation.provider?.businessName ||
-                                "Sin proveedor"}
-                            </span>
-                          </td>
-
-                          {/* Route */}
-                          <td className="py-4 pr-4">
-                            <div className="flex flex-col max-w-xs">
-                              <span className="text-sm text-foreground truncate">
-                                {operation.operation.origin}
-                              </span>
-                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                <svg
-                                  className="w-3 h-3"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  stroke="currentColor"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M19 14l-7 7m0 0l-7-7m7 7V3"
-                                  />
-                                </svg>
-                                <span className="truncate">
-                                  {operation.operation.destination}
-                                </span>
-                              </div>
-                            </div>
-                          </td>
-
-                          {/* Vehicle */}
-                          <td className="py-4 pr-4">
-                            <div className="flex flex-col">
-                              <span className="text-sm font-medium text-foreground">
-                                {operation.vehicle.plateNumber}
-                              </span>
-                              <span className="text-xs text-muted-foreground">
-                                {operation.vehicle.brand}{" "}
-                                {operation.vehicle.model}
-                              </span>
-                            </div>
-                          </td>
-
-                          {/* Status */}
-                          <td className="py-4 pr-4">
-                            <span
-                              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold ${status.className}`}
-                            >
-                              <span>{status.icon}</span>
-                              {status.label}
-                            </span>
-                          </td>
-
-                          {/* Actions */}
-                          <td className="py-4">
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleOperationClick(operation);
-                                }}
-                                className="p-2 hover:bg-ui-surface-elevated rounded-lg text-muted-foreground hover:text-primary transition-colors"
-                                title="Ver detalles"
-                              >
-                                <svg
-                                  className="w-5 h-5"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  stroke="currentColor"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                                  />
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                                  />
-                                </svg>
-                              </button>
-                              <button
-                                onClick={(e) => handleEditClick(operation, e)}
-                                className="p-2 hover:bg-ui-surface-elevated rounded-lg text-muted-foreground hover:text-blue-500 transition-colors"
-                                title="Editar asignaciones"
-                              >
-                                <svg
-                                  className="w-5 h-5"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  stroke="currentColor"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                                  />
-                                </svg>
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              }
+              lastUpdate={new Date(lastFetchTimeRef.current)}
+              onRefresh={refreshOperations}
+              onExport={() => {
+                /* TODO: Implement export functionality */
+              }}
+              getRowKey={(operation) => operation.operation.id}
+              emptyState={
+                <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+                  <svg
+                    className="w-20 h-20 mb-4 opacity-50"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                  <p className="text-xl font-medium mb-2">
+                    No se encontraron operaciones
+                  </p>
+                  <p className="text-sm">
+                    Intenta ajustar los filtros de búsqueda
+                  </p>
+                </div>
+              }
+            />
+          );
+        })()}
       </div>
 
       {/* Edit Operation Modal */}
