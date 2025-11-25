@@ -141,14 +141,14 @@ export function DashboardSidebar({
                 Programación de Operaciones
               </div>
               <div
-                onClick={() => onNavigate("/dashboard")}
+                onClick={() => onNavigate("/bulk-upload")}
                 className={`px-3 py-2 text-xs cursor-pointer rounded transition-colors ${
-                  isActive("/dashboard/reports")
+                  isActive("/bulk-upload")
                     ? "bg-primary/20 text-primary border-l-2 border-primary font-medium"
                     : "text-muted-foreground hover:text-foreground hover:bg-ui-surface-hover"
                 }`}
               >
-                Reportes Automáticos
+                Carga Masiva (XLSX)
               </div>
             </div>
           )}

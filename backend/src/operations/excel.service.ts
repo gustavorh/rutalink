@@ -1,5 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import * as ExcelJS from 'exceljs';
+import { DriversRepository } from '../drivers/repositories/drivers.repository';
+import { VehiclesRepository } from '../vehicles/repositories/vehicles.repository';
+import { RoutesRepository } from '../routes/repositories/routes.repository';
+import { ClientsRepository } from '../clients/repositories/clients.repository';
+import { ProvidersRepository } from '../providers/repositories/providers.repository';
 
 export interface OperationExcelRow {
   row: number;
@@ -29,10 +34,104 @@ export interface ValidationError {
 
 @Injectable()
 export class ExcelService {
+  constructor(
+    private readonly driversRepository: DriversRepository,
+    private readonly vehiclesRepository: VehiclesRepository,
+    private readonly routesRepository: RoutesRepository,
+    private readonly clientsRepository: ClientsRepository,
+    private readonly providersRepository: ProvidersRepository,
+  ) {}
+
+  /**
+   * Helper function to format a list of values for Excel data validation
+   * Escapes quotes and handles special characters
+   */
+  private formatListForExcel(values: string[]): string {
+    // Escape quotes in values and join with commas
+    const escapedValues = values.map((v) => {
+      // Replace double quotes with escaped double quotes
+      return v.replace(/"/g, '""');
+    });
+    return escapedValues.join(',');
+  }
+
+  /**
+   * Fetches all active drivers for an operator
+   */
+  private async getActiveDrivers(operatorId: number) {
+    const result = await this.driversRepository.findPaginated({
+      operatorId,
+      status: true,
+      page: 1,
+      limit: 10000, // Large limit to get all active drivers
+    });
+    return result.data.map((driver) => ({
+      rut: driver.rut,
+      display: `${driver.rut} - ${driver.firstName} ${driver.lastName}`,
+    }));
+  }
+
+  /**
+   * Fetches all active vehicles for an operator
+   */
+  private async getActiveVehicles(operatorId: number) {
+    const result = await this.vehiclesRepository.findPaginated(
+      operatorId,
+      undefined,
+      undefined,
+      true, // status = true
+      1,
+      10000, // Large limit to get all active vehicles
+    );
+    return result.data.map((vehicle) => vehicle.plateNumber);
+  }
+
+  /**
+   * Fetches all active routes for an operator
+   */
+  private async getActiveRoutes(operatorId: number) {
+    const result = await this.routesRepository.findPaginated({
+      operatorId,
+      status: true,
+      page: 1,
+      limit: 10000, // Large limit to get all active routes
+    });
+    return result.data.map((route) => route.name);
+  }
+
+  /**
+   * Fetches all active clients for an operator
+   */
+  private async getActiveClients(operatorId: number) {
+    return await this.clientsRepository.findActiveByOperatorId(operatorId);
+  }
+
+  /**
+   * Fetches all active providers for an operator
+   */
+  private async getActiveProviders(operatorId: number) {
+    const result = await this.providersRepository.findPaginated({
+      operatorId,
+      status: true,
+      page: 1,
+      limit: 10000, // Large limit to get all active providers
+    });
+    return result.data.map((provider) => provider.businessName);
+  }
+
   /**
    * Generates an Excel template for batch upload of operations
    */
-  async generateOperationsTemplate(): Promise<Buffer> {
+  async generateOperationsTemplate(operatorId: number): Promise<Buffer> {
+    // Fetch all active options for dropdowns
+    const [drivers, vehicles, routes, clients, providers] = await Promise.all([
+      this.getActiveDrivers(operatorId),
+      this.getActiveVehicles(operatorId),
+      this.getActiveRoutes(operatorId),
+      this.getActiveClients(operatorId),
+      this.getActiveProviders(operatorId),
+    ]);
+
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Operaciones', {
       properties: { tabColor: { argb: 'FF0070C0' } },
@@ -134,17 +233,29 @@ export class ExcelService {
       right: { style: 'thin' },
     };
 
-    // Add example rows
+    // Add example rows using actual values from the system (if available)
+    // Use first available driver/vehicle or placeholder text
+    const exampleDriverRut =
+      drivers.length > 0 ? drivers[0].rut : '[SELECCIONE UN CHOFER]';
+    const exampleVehiclePlate =
+      vehicles.length > 0 ? vehicles[0] : '[SELECCIONE UN VEHÍCULO]';
+    const exampleClientName =
+      clients.length > 0 ? clients[0].businessName : '[SELECCIONE UN CLIENTE]';
+    const exampleProviderName =
+      providers.length > 0 ? providers[0] : '[SELECCIONE UN PROVEEDOR]';
+    const exampleRouteName =
+      routes.length > 0 ? routes[0] : '[SELECCIONE UNA RUTA]';
+
     const exampleRows = [
       {
         operationNumber: 'OP-001',
         scheduledStartDate: '2025-11-20 08:00',
         scheduledEndDate: '2025-11-20 18:00',
-        clientName: 'Minera del Norte',
+        clientName: exampleClientName,
         providerName: '',
-        routeName: 'Santiago - Calama',
-        driverRut: '12.345.678-9',
-        vehiclePlateNumber: 'ABCD12',
+        routeName: exampleRouteName,
+        driverRut: exampleDriverRut,
+        vehiclePlateNumber: exampleVehiclePlate,
         operationType: 'delivery',
         origin: 'Santiago, Región Metropolitana',
         destination: 'Calama, Región de Antofagasta',
@@ -158,10 +269,10 @@ export class ExcelService {
         scheduledStartDate: '2025-11-21 09:00',
         scheduledEndDate: '2025-11-21 15:00',
         clientName: '',
-        providerName: 'Transportes del Sur',
+        providerName: exampleProviderName,
         routeName: '',
-        driverRut: '98.765.432-1',
-        vehiclePlateNumber: 'EFGH34',
+        driverRut: exampleDriverRut,
+        vehiclePlateNumber: exampleVehiclePlate,
         operationType: 'pickup',
         origin: 'Valparaíso, Región de Valparaíso',
         destination: 'Santiago, Región Metropolitana',
@@ -172,7 +283,7 @@ export class ExcelService {
       },
     ];
 
-    // Add example rows to worksheet
+    // Add example rows to worksheet FIRST
     exampleRows.forEach((row, index) => {
       const excelRow = worksheet.addRow(row);
       excelRow.height = 18;
@@ -197,6 +308,98 @@ export class ExcelService {
         };
       });
     });
+
+    // Add data validation dropdowns AFTER adding example rows
+    // Helper function to apply validation to a column range
+    const applyColumnValidation = (
+      columnNumber: number,
+      values: string[],
+      allowBlank: boolean,
+      errorMessage: string,
+      maxRows: number = 10000,
+    ) => {
+      if (values.length === 0) return;
+      const listFormula = this.formatListForExcel(values);
+      for (let row = 2; row <= maxRows; row++) {
+        const cell = worksheet.getCell(row, columnNumber);
+        cell.dataValidation = {
+          type: 'list',
+          allowBlank,
+          formulae: [`"${listFormula}"`],
+          showErrorMessage: true,
+          errorStyle: 'error',
+          errorTitle: 'Valor inválido',
+          error: errorMessage,
+        };
+      }
+    };
+
+    // Column 4: Cliente (Client Name)
+    if (clients.length > 0) {
+      const clientNames = clients.map((c) => c.businessName);
+      applyColumnValidation(
+        4,
+        clientNames,
+        true,
+        'Por favor seleccione un cliente de la lista.',
+      );
+    }
+
+    // Column 5: Proveedor (Provider Name)
+    if (providers.length > 0) {
+      applyColumnValidation(
+        5,
+        providers,
+        true,
+        'Por favor seleccione un proveedor de la lista.',
+      );
+    }
+
+    // Column 6: Tramo/Ruta (Route Name)
+    if (routes.length > 0) {
+      applyColumnValidation(
+        6,
+        routes,
+        true,
+        'Por favor seleccione una ruta de la lista.',
+      );
+    }
+
+    // Column 7: RUT Chofer (Driver RUT)
+    if (drivers.length > 0) {
+      const driverRuts = drivers.map((d) => d.rut);
+      applyColumnValidation(
+        7,
+        driverRuts,
+        false,
+        'Por favor seleccione un chofer de la lista.',
+      );
+    }
+
+    // Column 8: Patente Camión (Vehicle Plate Number)
+    if (vehicles.length > 0) {
+      applyColumnValidation(
+        8,
+        vehicles,
+        false,
+        'Por favor seleccione un vehículo de la lista.',
+      );
+    }
+
+    // Column 9: Tipo Operación (Operation Type)
+    const operationTypes = [
+      'delivery',
+      'pickup',
+      'transfer',
+      'transport',
+      'service',
+    ];
+    applyColumnValidation(
+      9,
+      operationTypes,
+      false,
+      'Por favor seleccione un tipo de operación de la lista.',
+    );
 
     // Add instructions worksheet
     const instructionsSheet = workbook.addWorksheet('Instrucciones', {
@@ -312,7 +515,8 @@ export class ExcelService {
         style: {},
       },
       {
-        title: '  • Eliminar las filas de ejemplo antes de cargar el archivo',
+        title:
+          '  • Eliminar las filas de ejemplo antes de cargar el archivo (las filas con valores de ejemplo serán ignoradas automáticamente)',
         style: {},
       },
       {
@@ -384,16 +588,34 @@ export class ExcelService {
         continue;
       }
 
+      const operationNumber = this.getCellValue(row, 1);
+      const driverRut = this.getCellValue(row, 7);
+      const vehiclePlateNumber = this.getCellValue(row, 8);
+
+      // Skip example rows - check for example operation numbers or placeholder text
+      if (
+        operationNumber === 'OP-001' ||
+        operationNumber === 'OP-002' ||
+        driverRut.includes('[SELECCIONE') ||
+        vehiclePlateNumber.includes('[SELECCIONE') ||
+        driverRut === '12.345.678-9' ||
+        driverRut === '98.765.432-1' ||
+        vehiclePlateNumber === 'ABCD12' ||
+        vehiclePlateNumber === 'EFGH34'
+      ) {
+        continue;
+      }
+
       const rowData: OperationExcelRow = {
         row: rowNumber,
-        operationNumber: this.getCellValue(row, 1),
+        operationNumber,
         scheduledStartDate: this.getCellValue(row, 2),
         scheduledEndDate: this.getCellValue(row, 3) || undefined,
         clientName: this.getCellValue(row, 4) || undefined,
         providerName: this.getCellValue(row, 5) || undefined,
         routeName: this.getCellValue(row, 6) || undefined,
-        driverRut: this.getCellValue(row, 7),
-        vehiclePlateNumber: this.getCellValue(row, 8),
+        driverRut,
+        vehiclePlateNumber,
         operationType: this.getCellValue(row, 9),
         origin: this.getCellValue(row, 10),
         destination: this.getCellValue(row, 11),

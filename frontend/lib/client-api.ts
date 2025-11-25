@@ -388,6 +388,124 @@ class ClientApi {
 
       return response.blob();
     },
+    downloadExcelTemplate: async (): Promise<Blob> => {
+      const response = await fetch(`/api/operations/excel-template`, {
+        method: "GET",
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        const apiError = new ApiError(
+          response.status,
+          error.message || "Error downloading template",
+          error
+        );
+        
+        if (typeof window !== "undefined") {
+          const errorMessage = extractErrorMessage(apiError);
+          toast.error("Error", {
+            description: errorMessage,
+            duration: 5000,
+          });
+        }
+        
+        throw apiError;
+      }
+
+      return response.blob();
+    },
+    parseExcelFile: async (file: File): Promise<{
+      success: boolean;
+      totalRows: number;
+      validRows: number;
+      errors: any[];
+      data: any[];
+    }> => {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch(`/api/operations/batch-upload/parse`, {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        const apiError = new ApiError(
+          response.status,
+          error.message || "Error parsing Excel file",
+          error
+        );
+        
+        if (typeof window !== "undefined") {
+          const errorMessage = extractErrorMessage(apiError);
+          toast.error("Error", {
+            description: errorMessage,
+            duration: 5000,
+          });
+        }
+        
+        throw apiError;
+      }
+
+      return response.json();
+    },
+    batchUploadFromFile: async (
+      file: File,
+      operatorId: number
+    ): Promise<{
+      success: boolean;
+      totalRows: number;
+      successCount: number;
+      errorCount: number;
+      errors: any[];
+      duplicates: string[];
+      createdOperations: number[];
+      message?: string;
+    }> => {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("operatorId", operatorId.toString());
+
+      const response = await fetch(`/api/operations/batch-upload/file`, {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        const apiError = new ApiError(
+          response.status,
+          error.message || "Error uploading operations",
+          error
+        );
+        
+        if (typeof window !== "undefined") {
+          const errorMessage = extractErrorMessage(apiError);
+          toast.error("Error", {
+            description: errorMessage,
+            duration: 5000,
+          });
+        }
+        
+        throw apiError;
+      }
+
+      const data = await response.json();
+      
+      // Show success notification
+      if (data.success && typeof window !== "undefined") {
+        toast.success("Éxito", {
+          description: `Se crearon ${data.successCount} operaciones exitosamente`,
+          duration: 5000,
+        });
+      }
+
+      return data;
+    },
   };
 
   // Routes

@@ -665,8 +665,8 @@ export class OperationsService {
     }
   }
 
-  async generateExcelTemplate(): Promise<Buffer> {
-    return this.excelService.generateOperationsTemplate();
+  async generateExcelTemplate(operatorId: number): Promise<Buffer> {
+    return this.excelService.generateOperationsTemplate(operatorId);
   }
 
   async processExcelFile(fileBuffer: Buffer): Promise<{

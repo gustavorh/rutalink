@@ -9,6 +9,7 @@ const protectedRoutes = [
   "/providers",
   "/routes",
   "/operations",
+  "/bulk-upload",
   "/administration",
   "/profile",
 ];

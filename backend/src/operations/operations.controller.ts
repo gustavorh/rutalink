@@ -67,8 +67,13 @@ export class OperationsController {
 
   @Get('excel-template')
   @RequirePermission('operations', 'read')
-  async downloadExcelTemplate(@Res() res: Response) {
-    const buffer = await this.operationsService.generateExcelTemplate();
+  async downloadExcelTemplate(
+    @Request() req: RequestWithUser,
+    @Res() res: Response,
+  ) {
+    const buffer = await this.operationsService.generateExcelTemplate(
+      req.user.operatorId,
+    );
     const filename = `plantilla-operaciones-${new Date().toISOString().split('T')[0]}.xlsx`;
 
     res.set({
@@ -214,10 +219,7 @@ export class OperationsController {
     @Body() assignDto: AssignDriverToVehicleDto,
     @Request() req: RequestWithUser,
   ) {
-    return this.operationsService.assignDriverToVehicle(
-      assignDto,
-      req.user.id,
-    );
+    return this.operationsService.assignDriverToVehicle(assignDto, req.user.id);
   }
 
   @Put('assignments/:assignmentId/unassign')
