@@ -167,7 +167,7 @@ Contraseña: A12345678
 
 Para información técnica detallada sobre cada componente del sistema:
 
-- **[Documentación Backend](./backend/docs/documentation.md)**: Arquitectura, patrones de diseño, flujos de datos, autenticación y más
+- **[Documentación Backend](./backend/docs/documentacion.md)**: Arquitectura, patrones de diseño, flujos de datos, autenticación y más
 - **[Documentación Frontend](./frontend/docs/documentacion.md)**: Arquitectura de la aplicación, comunicación con backend, middleware y patrones utilizados
 
 ## 🎨 Características Destacadas
