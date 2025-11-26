@@ -18,6 +18,7 @@ import { PdfService } from './pdf.service';
 import { ExcelService, ValidationError } from './excel.service';
 import { OperationsRepository } from './repositories/operations.repository';
 import { DriverVehiclesRepository } from './repositories/driver-vehicles.repository';
+import { Operation } from '../database/schema';
 
 export interface BatchUploadResult {
   success: boolean;
@@ -106,9 +107,8 @@ export class OperationsService {
     );
 
     // Create operation using repository
-
     const operationId = await this.operationsRepository.createOperation(
-      createOperationDto as any,
+      createOperationDto as unknown as Partial<Operation>,
       userId,
     );
 
@@ -245,10 +245,9 @@ export class OperationsService {
     }
 
     // Update operation using repository
-
     await this.operationsRepository.updateOperation(
       id,
-      updateOperationDto as any,
+      updateOperationDto as unknown as Partial<Operation>,
       userId,
     );
 
