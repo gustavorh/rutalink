@@ -47,6 +47,13 @@ import {
   type DataTableFilter,
   type DataTableAction,
 } from "@/components/ui/data-table";
+import { toast } from "sonner";
+import {
+  exportClientsToXLSX,
+  exportClientsToPDF,
+  type ClientExportData,
+} from "@/lib/export-utils";
+import type { ExportFormat } from "@/components/ui/export-dropdown";
 
 export default function ClientsPage() {
   const router = useRouter();
@@ -97,6 +104,9 @@ export default function ClientsPage() {
 
   // Last update timestamp
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+
+  // Export loading state
+  const [exportLoading, setExportLoading] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -254,6 +264,48 @@ export default function ClientsPage() {
     setSearch("");
     clearAllFilters();
     setPage(1);
+  };
+
+  // Handle export
+  const handleExport = async (format: ExportFormat) => {
+    if (clients.length === 0) {
+      toast.error("No hay datos para exportar");
+      return;
+    }
+
+    setExportLoading(true);
+
+    try {
+      // Transform clients to export format
+      const exportData: ClientExportData[] = clients.map((client) => ({
+        id: client.id,
+        businessName: client.businessName,
+        taxId: client.taxId,
+        contactName: client.contactName,
+        contactEmail: client.contactEmail,
+        contactPhone: client.contactPhone,
+        address: client.address,
+        city: client.city,
+        region: client.region,
+        country: client.country,
+        industry: client.industry,
+        status: client.status,
+        observations: client.observations,
+      }));
+
+      if (format === "xlsx") {
+        exportClientsToXLSX(exportData, "clientes");
+        toast.success("Archivo Excel exportado correctamente");
+      } else if (format === "pdf") {
+        exportClientsToPDF(exportData, "clientes");
+        toast.success("Archivo PDF exportado correctamente");
+      }
+    } catch (error) {
+      console.error("Error exporting data:", error);
+      toast.error("Error al exportar los datos");
+    } finally {
+      setExportLoading(false);
+    }
   };
 
   // Define table columns
@@ -526,9 +578,8 @@ export default function ClientsPage() {
           description={`Total de ${total} clientes registrados`}
           lastUpdate={lastUpdate}
           onRefresh={fetchClients}
-          onExport={() => {
-            /* TODO: Implement export functionality */
-          }}
+          onExport={handleExport}
+          exportLoading={exportLoading}
           getRowKey={(client) => client.id}
         />
       </div>

@@ -18,19 +18,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Filter, XCircle, RefreshCw, AlertTriangle } from "lucide-react";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Filter,
-  XCircle,
-  RefreshCw,
-  Download,
-  AlertTriangle,
-} from "lucide-react";
+  ExportDropdown,
+  type ExportFormat,
+} from "@/components/ui/export-dropdown";
 
 // ============================================================================
 // TYPES
@@ -110,7 +103,8 @@ export interface DataTableProps<T> {
   // Additional
   lastUpdate?: Date | null;
   onRefresh?: () => void;
-  onExport?: () => void;
+  onExport?: (format: ExportFormat) => void;
+  exportLoading?: boolean;
   className?: string;
   getRowKey?: (row: T) => string | number;
 }
@@ -359,6 +353,7 @@ export function DataTable<T>({
   lastUpdate,
   onRefresh,
   onExport,
+  exportLoading = false,
   className,
   getRowKey,
 }: DataTableProps<T>) {
@@ -457,18 +452,13 @@ export function DataTable<T>({
                 </button>
               )}
 
-              {/* Export Button */}
+              {/* Export Dropdown */}
               {onExport && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onExport}
-                  className="border-border text-foreground hover:bg-ui-surface-elevated"
-                  aria-label="Exportar datos"
-                >
-                  <Download className="mr-2 h-4 w-4" />
-                  Exportar
-                </Button>
+                <ExportDropdown
+                  onExport={onExport}
+                  loading={exportLoading}
+                  disabled={loading || data.length === 0}
+                />
               )}
 
               {headerActions}
@@ -555,7 +545,10 @@ export function DataTable<T>({
                         </TableCell>
                       ))}
                       {actions && actions.length > 0 && (
-                        <TableCell className="py-4" onClick={(e) => e.stopPropagation()}>
+                        <TableCell
+                          className="py-4"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <div className="flex items-center gap-2">
                             {actions.map((action, actionIndex) => (
                               <button

@@ -48,6 +48,13 @@ import { FormDialog } from "@/components/ui/form-dialog";
 import { FormSection } from "@/components/ui/form-section";
 import { usePagination } from "@/lib/hooks/use-pagination";
 import { useFilters } from "@/lib/hooks/use-filters";
+import { toast } from "sonner";
+import {
+  exportDriversToXLSX,
+  exportDriversToPDF,
+  type DriverExportData,
+} from "@/lib/export-utils";
+import type { ExportFormat } from "@/components/ui/export-dropdown";
 
 export default function DriversPage() {
   const router = useRouter();
@@ -105,6 +112,9 @@ export default function DriversPage() {
 
   // Last update timestamp
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+
+  // Export loading state
+  const [exportLoading, setExportLoading] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -279,6 +289,49 @@ export default function DriversPage() {
     value: string | boolean
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  // Handle export
+  const handleExport = async (format: ExportFormat) => {
+    if (drivers.length === 0) {
+      toast.error("No hay datos para exportar");
+      return;
+    }
+
+    setExportLoading(true);
+
+    try {
+      // Transform drivers to export format
+      const exportData: DriverExportData[] = drivers.map((driver) => ({
+        id: driver.id,
+        rut: driver.rut,
+        firstName: driver.firstName,
+        lastName: driver.lastName,
+        email: driver.email,
+        phone: driver.phone,
+        licenseType: driver.licenseType,
+        licenseNumber: driver.licenseNumber,
+        licenseExpirationDate: driver.licenseExpirationDate,
+        isExternal: driver.isExternal,
+        externalCompany: driver.externalCompany,
+        status: driver.status,
+        city: driver.city,
+        region: driver.region,
+      }));
+
+      if (format === "xlsx") {
+        exportDriversToXLSX(exportData, "choferes");
+        toast.success("Archivo Excel exportado correctamente");
+      } else if (format === "pdf") {
+        exportDriversToPDF(exportData, "choferes");
+        toast.success("Archivo PDF exportado correctamente");
+      }
+    } catch (error) {
+      console.error("Error exporting data:", error);
+      toast.error("Error al exportar los datos");
+    } finally {
+      setExportLoading(false);
+    }
   };
 
   const formatDate = (dateString?: string) => {
@@ -592,9 +645,8 @@ export default function DriversPage() {
           icon={<FileText className="w-5 h-5 text-primary" />}
           lastUpdate={lastUpdate}
           onRefresh={fetchDrivers}
-          onExport={() => {
-            /* TODO: Implement export functionality */
-          }}
+          onExport={handleExport}
+          exportLoading={exportLoading}
           getRowKey={(driver) => driver.id}
           emptyState={
             <EmptyState

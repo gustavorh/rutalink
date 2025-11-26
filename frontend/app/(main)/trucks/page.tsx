@@ -54,6 +54,13 @@ import { FormDialog } from "@/components/ui/form-dialog";
 import { FormSection } from "@/components/ui/form-section";
 import { usePagination } from "@/lib/hooks/use-pagination";
 import { useFilters } from "@/lib/hooks/use-filters";
+import { toast } from "sonner";
+import {
+  exportTrucksToXLSX,
+  exportTrucksToPDF,
+  type TruckExportData,
+} from "@/lib/export-utils";
+import type { ExportFormat } from "@/components/ui/export-dropdown";
 
 export default function TrucksPage() {
   const router = useRouter();
@@ -105,6 +112,9 @@ export default function TrucksPage() {
 
   // Last update timestamp
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+
+  // Export loading state
+  const [exportLoading, setExportLoading] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -249,6 +259,49 @@ export default function TrucksPage() {
     value: string | number | boolean | undefined
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  // Handle export
+  const handleExport = async (format: ExportFormat) => {
+    if (trucks.length === 0) {
+      toast.error("No hay datos para exportar");
+      return;
+    }
+
+    setExportLoading(true);
+
+    try {
+      // Transform trucks to export format
+      const exportData: TruckExportData[] = trucks.map((truck) => ({
+        id: truck.id,
+        plateNumber: truck.plateNumber,
+        brand: truck.brand,
+        model: truck.model,
+        year: truck.year,
+        vehicleType: truck.vehicleType,
+        capacity: truck.capacity,
+        capacityUnit: truck.capacityUnit,
+        vin: truck.vin,
+        color: truck.color,
+        operationalStatus: truck.operationalStatus,
+        status: truck.status,
+        totalOperations: truck.totalOperations,
+        upcomingOperations: truck.upcomingOperations,
+      }));
+
+      if (format === "xlsx") {
+        exportTrucksToXLSX(exportData, "vehiculos");
+        toast.success("Archivo Excel exportado correctamente");
+      } else if (format === "pdf") {
+        exportTrucksToPDF(exportData, "vehiculos");
+        toast.success("Archivo PDF exportado correctamente");
+      }
+    } catch (error) {
+      console.error("Error exporting data:", error);
+      toast.error("Error al exportar los datos");
+    } finally {
+      setExportLoading(false);
+    }
   };
 
   const getVehicleTypeLabel = (type: string) => {
@@ -543,9 +596,8 @@ export default function TrucksPage() {
           icon={<FileText className="w-5 h-5 text-primary" />}
           lastUpdate={lastUpdate}
           onRefresh={fetchTrucks}
-          onExport={() => {
-            /* TODO: Implement export functionality */
-          }}
+          onExport={handleExport}
+          exportLoading={exportLoading}
           getRowKey={(truck) => truck.id}
           emptyState={
             <EmptyState

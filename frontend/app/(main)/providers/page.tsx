@@ -48,6 +48,13 @@ import {
   DataTableFilter,
   DataTableAction,
 } from "@/components/ui/data-table";
+import { toast } from "sonner";
+import {
+  exportProvidersToXLSX,
+  exportProvidersToPDF,
+  type ProviderExportData,
+} from "@/lib/export-utils";
+import type { ExportFormat } from "@/components/ui/export-dropdown";
 
 export default function ProvidersPage() {
   const router = useRouter();
@@ -105,6 +112,9 @@ export default function ProvidersPage() {
 
   // Last update timestamp
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+
+  // Export loading state
+  const [exportLoading, setExportLoading] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -268,6 +278,49 @@ export default function ProvidersPage() {
     if (!businessType) return "N/A";
     const found = BUSINESS_TYPES.find((t) => t.value === businessType);
     return found ? found.label : businessType;
+  };
+
+  // Handle export
+  const handleExport = async (format: ExportFormat) => {
+    if (providers.length === 0) {
+      toast.error("No hay datos para exportar");
+      return;
+    }
+
+    setExportLoading(true);
+
+    try {
+      // Transform providers to export format
+      const exportData: ProviderExportData[] = providers.map((provider) => ({
+        id: provider.id,
+        businessName: provider.businessName,
+        taxId: provider.taxId,
+        contactName: provider.contactName,
+        contactEmail: provider.contactEmail,
+        contactPhone: provider.contactPhone,
+        address: provider.address,
+        city: provider.city,
+        region: provider.region,
+        businessType: provider.businessType,
+        serviceTypes: provider.serviceTypes,
+        fleetSize: provider.fleetSize,
+        rating: provider.rating,
+        status: provider.status,
+      }));
+
+      if (format === "xlsx") {
+        exportProvidersToXLSX(exportData, "proveedores");
+        toast.success("Archivo Excel exportado correctamente");
+      } else if (format === "pdf") {
+        exportProvidersToPDF(exportData, "proveedores");
+        toast.success("Archivo PDF exportado correctamente");
+      }
+    } catch (error) {
+      console.error("Error exporting data:", error);
+      toast.error("Error al exportar los datos");
+    } finally {
+      setExportLoading(false);
+    }
   };
 
   // Table Columns Configuration
@@ -579,9 +632,8 @@ export default function ProvidersPage() {
           description={`Total de ${total} proveedores registrados`}
           lastUpdate={lastUpdate}
           onRefresh={fetchProviders}
-          onExport={() => {
-            /* TODO: Implement export functionality */
-          }}
+          onExport={handleExport}
+          exportLoading={exportLoading}
           getRowKey={(provider) => provider.id}
         />
       </div>

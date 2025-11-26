@@ -47,6 +47,13 @@ import {
   DataTableFilter,
   DataTableAction,
 } from "@/components/ui/data-table";
+import { toast } from "sonner";
+import {
+  exportRoutesToXLSX,
+  exportRoutesToPDF,
+  type RouteExportData,
+} from "@/lib/export-utils";
+import type { ExportFormat } from "@/components/ui/export-dropdown";
 
 export default function RoutesPage() {
   const router = useRouter();
@@ -98,6 +105,9 @@ export default function RoutesPage() {
 
   // Last update timestamp
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+
+  // Export loading state
+  const [exportLoading, setExportLoading] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -277,6 +287,48 @@ export default function RoutesPage() {
       return `${hours}h ${mins > 0 ? `${mins}m` : ""}`;
     }
     return `${mins}m`;
+  };
+
+  // Handle export
+  const handleExport = async (format: ExportFormat) => {
+    if (routes.length === 0) {
+      toast.error("No hay datos para exportar");
+      return;
+    }
+
+    setExportLoading(true);
+
+    try {
+      // Transform routes to export format
+      const exportData: RouteExportData[] = routes.map((route) => ({
+        id: route.id,
+        name: route.name,
+        code: route.code,
+        origin: route.origin,
+        destination: route.destination,
+        distance: route.distance,
+        estimatedDuration: route.estimatedDuration,
+        routeType: route.routeType,
+        difficulty: route.difficulty,
+        roadConditions: route.roadConditions,
+        tollsRequired: route.tollsRequired,
+        estimatedTollCost: route.estimatedTollCost,
+        status: route.status,
+      }));
+
+      if (format === "xlsx") {
+        exportRoutesToXLSX(exportData, "rutas");
+        toast.success("Archivo Excel exportado correctamente");
+      } else if (format === "pdf") {
+        exportRoutesToPDF(exportData, "rutas");
+        toast.success("Archivo PDF exportado correctamente");
+      }
+    } catch (error) {
+      console.error("Error exporting data:", error);
+      toast.error("Error al exportar los datos");
+    } finally {
+      setExportLoading(false);
+    }
   };
 
   // Table Columns Configuration
@@ -581,9 +633,8 @@ export default function RoutesPage() {
           description={`Total de ${total} rutas registradas`}
           lastUpdate={lastUpdate}
           onRefresh={fetchRoutes}
-          onExport={() => {
-            /* TODO: Implement export functionality */
-          }}
+          onExport={handleExport}
+          exportLoading={exportLoading}
           getRowKey={(route) => route.id}
         />
       </div>

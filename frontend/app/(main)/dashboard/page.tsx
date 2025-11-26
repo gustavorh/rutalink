@@ -20,6 +20,13 @@ import {
   type DataTableAction,
 } from "@/components/ui/data-table";
 import { Edit as EditIcon } from "lucide-react";
+import { toast } from "sonner";
+import {
+  exportOperationsToXLSX,
+  exportOperationsToPDF,
+  type OperationExportData,
+} from "@/lib/export-utils";
+import type { ExportFormat } from "@/components/ui/export-dropdown";
 
 // Status configuration
 const statusConfig: Record<
@@ -65,6 +72,7 @@ export default function DashboardPage() {
   const lastFetchTimeRef = useRef<number>(Date.now());
   const [filterOptionsLoaded, setFilterOptionsLoaded] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [exportLoading, setExportLoading] = useState(false);
   const [filters, setFilters] = useState<DashboardFilters>({
     search: null,
     status: null,
@@ -415,6 +423,61 @@ export default function DashboardPage() {
         op.vehicle.plateNumber.toLowerCase().includes(search)
     );
   }, [operations, searchQuery]);
+
+  // Handle export
+  const handleExport = useCallback(
+    async (format: ExportFormat) => {
+      if (filteredOperations.length === 0) {
+        toast.error("No hay datos para exportar");
+        return;
+      }
+
+      setExportLoading(true);
+
+      try {
+        // Transform operations to export format
+        const exportData: OperationExportData[] = filteredOperations.map(
+          (op) => ({
+            operation: {
+              id: op.operation.id,
+              operationNumber: op.operation.operationNumber,
+              status: op.operation.status,
+              operationType: op.operation.operationType,
+              origin: op.operation.origin,
+              destination: op.operation.destination,
+              scheduledStartDate: op.operation.scheduledStartDate,
+              scheduledEndDate: op.operation.scheduledEndDate,
+            },
+            client: op.client
+              ? { businessName: op.client.businessName }
+              : undefined,
+            provider: op.provider
+              ? { businessName: op.provider.businessName }
+              : undefined,
+            vehicle: {
+              plateNumber: op.vehicle.plateNumber,
+              brand: op.vehicle.brand,
+              model: op.vehicle.model,
+            },
+          })
+        );
+
+        if (format === "xlsx") {
+          exportOperationsToXLSX(exportData, "operaciones");
+          toast.success("Archivo Excel exportado correctamente");
+        } else if (format === "pdf") {
+          exportOperationsToPDF(exportData, "operaciones");
+          toast.success("Archivo PDF exportado correctamente");
+        }
+      } catch (error) {
+        console.error("Error exporting data:", error);
+        toast.error("Error al exportar los datos");
+      } finally {
+        setExportLoading(false);
+      }
+    },
+    [filteredOperations]
+  );
 
   const _activeFiltersCount = useMemo(
     () =>
@@ -882,9 +945,8 @@ export default function DashboardPage() {
               }
               lastUpdate={new Date(lastFetchTimeRef.current)}
               onRefresh={refreshOperations}
-              onExport={() => {
-                /* TODO: Implement export functionality */
-              }}
+              onExport={handleExport}
+              exportLoading={exportLoading}
               getRowKey={(operation) => operation.operation.id}
               emptyState={
                 <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">

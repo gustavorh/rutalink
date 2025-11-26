@@ -93,6 +93,13 @@ import {
   OPERATION_TYPES as OperationTypes,
   OPERATION_STATUS as OperationStatuses,
 } from "@/types/operations";
+import { toast } from "sonner";
+import {
+  exportOperationsToXLSX,
+  exportOperationsToPDF,
+  type OperationExportData,
+} from "@/lib/export-utils";
+import type { ExportFormat } from "@/components/ui/export-dropdown";
 
 export default function OperationsPage() {
   const router = useRouter();
@@ -155,6 +162,9 @@ export default function OperationsPage() {
 
   // Last update timestamp
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+
+  // Export loading state
+  const [exportLoading, setExportLoading] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -305,6 +315,56 @@ export default function OperationsPage() {
 
   const handleRefresh = async () => {
     await fetchOperations();
+  };
+
+  // Handle export
+  const handleExport = async (format: ExportFormat) => {
+    if (operations.length === 0) {
+      toast.error("No hay datos para exportar");
+      return;
+    }
+
+    setExportLoading(true);
+
+    try {
+      // Transform operations to export format
+      const exportData: OperationExportData[] = operations.map((op) => ({
+        operation: {
+          id: op.operation.id,
+          operationNumber: op.operation.operationNumber,
+          status: op.operation.status,
+          operationType: op.operation.operationType,
+          origin: op.operation.origin,
+          destination: op.operation.destination,
+          scheduledStartDate: op.operation.scheduledStartDate,
+          scheduledEndDate: op.operation.scheduledEndDate,
+        },
+        client: op.client
+          ? { businessName: op.client.businessName }
+          : undefined,
+        provider: op.provider
+          ? { businessName: op.provider.businessName }
+          : undefined,
+        vehicle: {
+          plateNumber: op.vehicle.plateNumber,
+          brand: op.vehicle.brand,
+          model: op.vehicle.model,
+        },
+      }));
+
+      if (format === "xlsx") {
+        exportOperationsToXLSX(exportData, "operaciones_programadas");
+        toast.success("Archivo Excel exportado correctamente");
+      } else if (format === "pdf") {
+        exportOperationsToPDF(exportData, "operaciones_programadas");
+        toast.success("Archivo PDF exportado correctamente");
+      }
+    } catch (error) {
+      console.error("Error exporting data:", error);
+      toast.error("Error al exportar los datos");
+    } finally {
+      setExportLoading(false);
+    }
   };
 
   const handleDeleteClick = (operation: OperationWithDetails) => {
@@ -1288,9 +1348,8 @@ export default function OperationsPage() {
                   error={error}
                   lastUpdate={lastUpdate}
                   onRefresh={handleRefresh}
-                  onExport={() => {
-                    /* TODO: Implement export functionality */
-                  }}
+                  onExport={handleExport}
+                  exportLoading={exportLoading}
                   title="Listado de Operaciones"
                   description={`Total de ${total} operaciones registradas`}
                   icon={<Package className="w-5 h-5 text-secondary" />}
