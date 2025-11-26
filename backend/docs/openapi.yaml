@@ -12,7 +12,7 @@ info:
 servers:
   - url: http://localhost:3030/api
     description: Local development server
-  - url: https://srv.rutalink.gustavorh.com/api
+  - url: https://api.rutalink.gustavorh.com/api
     description: Production server
 
 tags:
@@ -57,9 +57,25 @@ components:
         statusCode:
           type: integer
         message:
-          type: string | array
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: string
         error:
           type: string
+
+    PaginationMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        totalPages:
+          type: integer
 
     # Auth Schemas
     RegisterDto:
@@ -78,6 +94,7 @@ components:
           minLength: 3
           maxLength: 50
           pattern: '^[a-zA-Z0-9_]+$'
+          description: Username can only contain letters, numbers, and underscores
         email:
           type: string
           format: email
@@ -85,6 +102,7 @@ components:
           type: string
           minLength: 8
           maxLength: 100
+          description: Must contain at least one uppercase letter, one lowercase letter, and one number
         firstName:
           type: string
           minLength: 1
@@ -225,12 +243,14 @@ components:
           type: string
           maxLength: 12
           pattern: '^\d{1,2}\.\d{3}\.\d{3}-[\dkK]$'
+          description: RUT must be in format XX.XXX.XXX-X
         super:
           type: boolean
           default: false
         expiration:
           type: string
           format: date-time
+          nullable: true
         status:
           type: boolean
           default: true
@@ -244,11 +264,13 @@ components:
         rut:
           type: string
           maxLength: 12
+          pattern: '^\d{1,2}\.\d{3}\.\d{3}-[\dkK]$'
         super:
           type: boolean
         expiration:
           type: string
           format: date-time
+          nullable: true
         status:
           type: boolean
 
@@ -322,6 +344,7 @@ components:
           default: Chile
         industry:
           type: string
+          maxLength: 100
           enum:
             - minería
             - construcción
@@ -361,6 +384,7 @@ components:
         contactEmail:
           type: string
           format: email
+          maxLength: 255
         contactPhone:
           type: string
           maxLength: 20
@@ -378,6 +402,7 @@ components:
           maxLength: 100
         industry:
           type: string
+          maxLength: 100
           enum:
             - minería
             - construcción
@@ -484,6 +509,7 @@ components:
         email:
           type: string
           format: email
+          maxLength: 255
         phone:
           type: string
           maxLength: 20
@@ -524,6 +550,72 @@ components:
         notes:
           type: string
           maxLength: 1000
+
+    # Driver Document Schemas
+    CreateDriverDocumentDto:
+      type: object
+      required:
+        - driverId
+        - documentType
+        - documentName
+        - fileName
+        - filePath
+      properties:
+        driverId:
+          type: integer
+          minimum: 1
+        documentType:
+          type: string
+          maxLength: 50
+          enum:
+            [
+              license,
+              certificate,
+              medical,
+              psychotechnical,
+              training,
+              insurance,
+              other,
+            ]
+        documentName:
+          type: string
+          maxLength: 255
+        fileName:
+          type: string
+          maxLength: 255
+        filePath:
+          type: string
+          maxLength: 500
+        fileSize:
+          type: integer
+        mimeType:
+          type: string
+          maxLength: 100
+        issueDate:
+          type: string
+          format: date-time
+        expirationDate:
+          type: string
+          format: date-time
+        notes:
+          type: string
+          maxLength: 500
+
+    UpdateDriverDocumentDto:
+      type: object
+      properties:
+        documentName:
+          type: string
+          maxLength: 255
+        issueDate:
+          type: string
+          format: date-time
+        expirationDate:
+          type: string
+          format: date-time
+        notes:
+          type: string
+          maxLength: 500
 
     # Vehicle Schemas
     CreateVehicleDto:
@@ -618,6 +710,108 @@ components:
           type: string
           maxLength: 1000
 
+    # Vehicle Document Schemas
+    CreateVehicleDocumentDto:
+      type: object
+      required:
+        - vehicleId
+        - documentType
+        - documentName
+      properties:
+        vehicleId:
+          type: integer
+          minimum: 1
+        documentType:
+          type: string
+          enum:
+            [
+              circulation_permit,
+              technical_review,
+              insurance,
+              ownership,
+              gas_certification,
+              other,
+            ]
+        documentName:
+          type: string
+          maxLength: 255
+        fileName:
+          type: string
+          maxLength: 255
+        filePath:
+          type: string
+          maxLength: 500
+        fileSize:
+          type: integer
+        mimeType:
+          type: string
+          maxLength: 100
+        issueDate:
+          type: string
+          format: date-time
+        expirationDate:
+          type: string
+          format: date-time
+        insuranceCompany:
+          type: string
+          maxLength: 255
+        policyNumber:
+          type: string
+          maxLength: 100
+        coverageAmount:
+          type: integer
+          minimum: 0
+        notes:
+          type: string
+          maxLength: 500
+
+    UpdateVehicleDocumentDto:
+      type: object
+      properties:
+        documentType:
+          type: string
+          enum:
+            [
+              circulation_permit,
+              technical_review,
+              insurance,
+              ownership,
+              gas_certification,
+              other,
+            ]
+        documentName:
+          type: string
+          maxLength: 255
+        fileName:
+          type: string
+          maxLength: 255
+        filePath:
+          type: string
+          maxLength: 500
+        fileSize:
+          type: integer
+        mimeType:
+          type: string
+          maxLength: 100
+        issueDate:
+          type: string
+          format: date-time
+        expirationDate:
+          type: string
+          format: date-time
+        insuranceCompany:
+          type: string
+          maxLength: 255
+        policyNumber:
+          type: string
+          maxLength: 100
+        coverageAmount:
+          type: integer
+          minimum: 0
+        notes:
+          type: string
+          maxLength: 500
+
     # Route Schemas
     CreateRouteDto:
       type: object
@@ -641,11 +835,14 @@ components:
         distance:
           type: integer
           minimum: 0
+          description: Distance in kilometers
         estimatedDuration:
           type: integer
           minimum: 0
+          description: Duration in minutes
         routeType:
           type: string
+          maxLength: 50
           enum:
             - urbana
             - interurbana
@@ -656,6 +853,7 @@ components:
             - otra
         difficulty:
           type: string
+          maxLength: 20
           enum: [fácil, moderada, difícil]
         roadConditions:
           type: string
@@ -696,6 +894,7 @@ components:
           minimum: 0
         routeType:
           type: string
+          maxLength: 50
           enum:
             - urbana
             - interurbana
@@ -706,6 +905,7 @@ components:
             - otra
         difficulty:
           type: string
+          maxLength: 20
           enum: [fácil, moderada, difícil]
         roadConditions:
           type: string
@@ -801,6 +1001,7 @@ components:
         contactEmail:
           type: string
           format: email
+          maxLength: 255
         contactPhone:
           type: string
           maxLength: 20
@@ -943,7 +1144,7 @@ components:
           type: string
           maxLength: 1000
 
-    # Driver-Vehicle Assignment DTOs
+    # Driver-Vehicle Assignment Schemas
     AssignDriverToVehicleDto:
       type: object
       required:
@@ -967,7 +1168,98 @@ components:
           type: string
           maxLength: 500
 
-    # PDF Report DTOs
+    # Batch Upload Schemas
+    OperationExcelRowDto:
+      type: object
+      required:
+        - operationNumber
+        - scheduledStartDate
+        - driverRut
+        - vehiclePlateNumber
+        - operationType
+        - origin
+        - destination
+      properties:
+        operationNumber:
+          type: string
+          maxLength: 50
+        scheduledStartDate:
+          type: string
+          format: date-time
+        scheduledEndDate:
+          type: string
+          format: date-time
+        clientName:
+          type: string
+        providerName:
+          type: string
+        routeName:
+          type: string
+        driverRut:
+          type: string
+        vehiclePlateNumber:
+          type: string
+        operationType:
+          type: string
+          maxLength: 50
+        origin:
+          type: string
+          maxLength: 500
+        destination:
+          type: string
+          maxLength: 500
+        distance:
+          type: integer
+        cargoDescription:
+          type: string
+          maxLength: 1000
+        cargoWeight:
+          type: integer
+        notes:
+          type: string
+          maxLength: 1000
+
+    BatchUploadOperationsDto:
+      type: object
+      required:
+        - operatorId
+        - operations
+      properties:
+        operatorId:
+          type: integer
+          minimum: 1
+        operations:
+          type: array
+          items:
+            $ref: '#/components/schemas/OperationExcelRowDto'
+
+    BatchUploadResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        totalRows:
+          type: integer
+        successCount:
+          type: integer
+        errorCount:
+          type: integer
+        errors:
+          type: array
+          items:
+            type: object
+        duplicates:
+          type: array
+          items:
+            type: object
+        createdOperations:
+          type: array
+          items:
+            type: object
+
+    # PDF Report Schemas
     GenerateReportDto:
       type: object
       properties:
@@ -985,172 +1277,10 @@ components:
           enum: [es, en]
           default: es
 
-    # Driver Document DTOs
-    CreateDriverDocumentDto:
-      type: object
-      required:
-        - driverId
-        - documentType
-        - documentName
-        - fileName
-        - filePath
-      properties:
-        driverId:
-          type: integer
-          minimum: 1
-        documentType:
-          type: string
-          enum: [license, certificate, medical, psychotechnical, training, insurance, other]
-        documentName:
-          type: string
-          maxLength: 255
-        fileName:
-          type: string
-          maxLength: 255
-        filePath:
-          type: string
-          maxLength: 500
-        fileSize:
-          type: integer
-        mimeType:
-          type: string
-          maxLength: 100
-        issueDate:
-          type: string
-          format: date-time
-        expirationDate:
-          type: string
-          format: date-time
-        notes:
-          type: string
-          maxLength: 500
-
-    UpdateDriverDocumentDto:
-      type: object
-      properties:
-        documentName:
-          type: string
-          maxLength: 255
-        issueDate:
-          type: string
-          format: date-time
-        expirationDate:
-          type: string
-          format: date-time
-        notes:
-          type: string
-          maxLength: 500
-
-    # Vehicle Document DTOs
-    CreateVehicleDocumentDto:
-      type: object
-      required:
-        - vehicleId
-        - documentType
-        - documentName
-      properties:
-        vehicleId:
-          type: integer
-          minimum: 1
-        documentType:
-          type: string
-          enum: [circulation_permit, technical_review, insurance, ownership, gas_certification, other]
-        documentName:
-          type: string
-          maxLength: 255
-        fileName:
-          type: string
-          maxLength: 255
-        filePath:
-          type: string
-          maxLength: 500
-        fileSize:
-          type: integer
-        mimeType:
-          type: string
-          maxLength: 100
-        issueDate:
-          type: string
-          format: date-time
-        expirationDate:
-          type: string
-          format: date-time
-        insuranceCompany:
-          type: string
-          maxLength: 255
-        policyNumber:
-          type: string
-          maxLength: 100
-        coverageAmount:
-          type: integer
-          minimum: 0
-        notes:
-          type: string
-          maxLength: 500
-
-    UpdateVehicleDocumentDto:
-      type: object
-      properties:
-        documentType:
-          type: string
-          enum: [circulation_permit, technical_review, insurance, ownership, gas_certification, other]
-        documentName:
-          type: string
-          maxLength: 255
-        fileName:
-          type: string
-          maxLength: 255
-        filePath:
-          type: string
-          maxLength: 500
-        fileSize:
-          type: integer
-        mimeType:
-          type: string
-          maxLength: 100
-        issueDate:
-          type: string
-          format: date-time
-        expirationDate:
-          type: string
-          format: date-time
-        insuranceCompany:
-          type: string
-          maxLength: 255
-        policyNumber:
-          type: string
-          maxLength: 100
-        coverageAmount:
-          type: integer
-          minimum: 0
-        notes:
-          type: string
-          maxLength: 500
-
-    # Client Operations Query DTO
-    ClientOperationsQueryDto:
-      type: object
-      properties:
-        status:
-          type: string
-        operationType:
-          type: string
-        startDate:
-          type: string
-          format: date-time
-        endDate:
-          type: string
-          format: date-time
-        page:
-          type: integer
-          minimum: 1
-          default: 1
-        limit:
-          type: integer
-          minimum: 1
-          default: 10
-
 paths:
+  # ============================================================================
+  # AUTH ENDPOINTS
+  # ============================================================================
   /auth/register:
     post:
       tags: [Auth]
@@ -1203,11 +1333,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+  # ============================================================================
+  # USERS ENDPOINTS
+  # ============================================================================
   /users:
     get:
       tags: [Users]
       summary: Get all users
-      description: Retrieve a list of users with optional filters
+      description: Retrieve a list of users with optional filters. Non-super users can only see users from their own operator.
       parameters:
         - name: search
           in: query
@@ -1236,9 +1369,11 @@ paths:
           description: List of users
         '401':
           description: Unauthorized
+
     post:
       tags: [Users]
       summary: Create a new user
+      description: Create a new user. Non-super users can only create users for their own operator.
       requestBody:
         required: true
         content:
@@ -1250,11 +1385,14 @@ paths:
           description: User created successfully
         '400':
           description: Bad request
+        '403':
+          description: Forbidden - Cannot create users for other operators
 
   /users/{id}:
     get:
       tags: [Users]
       summary: Get user by ID
+      description: Get user details. Non-super users can only view users from their own operator.
       parameters:
         - name: id
           in: path
@@ -1266,9 +1404,11 @@ paths:
           description: User details
         '404':
           description: User not found
+
     put:
       tags: [Users]
       summary: Update user
+      description: Update user details. Non-super users can only update users from their own operator.
       parameters:
         - name: id
           in: path
@@ -1284,9 +1424,13 @@ paths:
       responses:
         '200':
           description: User updated successfully
+        '404':
+          description: User not found
+
     delete:
       tags: [Users]
       summary: Delete user
+      description: Delete a user. Non-super users can only delete users from their own operator.
       parameters:
         - name: id
           in: path
@@ -1296,11 +1440,17 @@ paths:
       responses:
         '204':
           description: User deleted successfully
+        '404':
+          description: User not found
 
+  # ============================================================================
+  # OPERATORS ENDPOINTS
+  # ============================================================================
   /operators:
     get:
       tags: [Operators]
       summary: Get all operators
+      description: Get list of operators. Super operators can see all, regular operators can only see their own.
       parameters:
         - name: search
           in: query
@@ -1325,9 +1475,11 @@ paths:
       responses:
         '200':
           description: List of operators
+
     post:
       tags: [Operators]
       summary: Create a new operator
+      description: Create a new operator. Only super operators can create new operators.
       requestBody:
         required: true
         content:
@@ -1337,11 +1489,14 @@ paths:
       responses:
         '201':
           description: Operator created successfully
+        '403':
+          description: Forbidden - Only super operators can create new operators
 
   /operators/{id}:
     get:
       tags: [Operators]
       summary: Get operator by ID
+      description: Get operator details. Non-super users can only view their own operator.
       parameters:
         - name: id
           in: path
@@ -1351,9 +1506,15 @@ paths:
       responses:
         '200':
           description: Operator details
+        '403':
+          description: Forbidden - Cannot view other operators
+        '404':
+          description: Operator not found
+
     put:
       tags: [Operators]
       summary: Update operator
+      description: Update operator. Regular operators can only update their own operator and cannot change the super flag.
       parameters:
         - name: id
           in: path
@@ -1369,9 +1530,13 @@ paths:
       responses:
         '200':
           description: Operator updated successfully
+        '403':
+          description: Forbidden
+
     delete:
       tags: [Operators]
       summary: Delete operator
+      description: Delete an operator. Only super operators can delete operators. Cannot delete own operator.
       parameters:
         - name: id
           in: path
@@ -1381,11 +1546,14 @@ paths:
       responses:
         '204':
           description: Operator deleted successfully
+        '403':
+          description: Forbidden
 
   /operators/{id}/statistics:
     get:
       tags: [Operators]
       summary: Get operator statistics
+      description: Get statistics for an operator. Non-super users can only view their own operator statistics.
       parameters:
         - name: id
           in: path
@@ -1395,11 +1563,17 @@ paths:
       responses:
         '200':
           description: Operator statistics
+        '403':
+          description: Forbidden
 
+  # ============================================================================
+  # ROLES ENDPOINTS
+  # ============================================================================
   /roles:
     get:
       tags: [Roles]
       summary: Get all roles
+      description: Get list of roles. Non-super users can only see roles from their own operator.
       parameters:
         - name: search
           in: query
@@ -1420,9 +1594,11 @@ paths:
       responses:
         '200':
           description: List of roles
+
     post:
       tags: [Roles]
       summary: Create a new role
+      description: Create a new role. Non-super users can only create roles for their own operator.
       requestBody:
         required: true
         content:
@@ -1432,11 +1608,14 @@ paths:
       responses:
         '201':
           description: Role created successfully
+        '403':
+          description: Forbidden - Cannot create roles for other operators
 
   /roles/{id}:
     get:
       tags: [Roles]
       summary: Get role by ID
+      description: Get role details. Non-super users can only view roles from their own operator.
       parameters:
         - name: id
           in: path
@@ -1446,9 +1625,13 @@ paths:
       responses:
         '200':
           description: Role details
+        '404':
+          description: Role not found
+
     put:
       tags: [Roles]
       summary: Update role
+      description: Update role. Non-super users can only update roles from their own operator.
       parameters:
         - name: id
           in: path
@@ -1464,9 +1647,13 @@ paths:
       responses:
         '200':
           description: Role updated successfully
+        '404':
+          description: Role not found
+
     delete:
       tags: [Roles]
       summary: Delete role
+      description: Delete a role. Non-super users can only delete roles from their own operator.
       parameters:
         - name: id
           in: path
@@ -1476,11 +1663,17 @@ paths:
       responses:
         '204':
           description: Role deleted successfully
+        '404':
+          description: Role not found
 
+  # ============================================================================
+  # CLIENTS ENDPOINTS
+  # ============================================================================
   /clients:
     get:
       tags: [Clients]
       summary: Get all clients
+      description: Get list of clients with optional filters.
       parameters:
         - name: operatorId
           in: query
@@ -1488,6 +1681,7 @@ paths:
             type: integer
         - name: search
           in: query
+          description: Search by business name, contact, etc.
           schema:
             type: string
         - name: status
@@ -1519,6 +1713,7 @@ paths:
       responses:
         '200':
           description: List of clients
+
     post:
       tags: [Clients]
       summary: Create a new client
@@ -1531,6 +1726,39 @@ paths:
       responses:
         '201':
           description: Client created successfully
+
+  /clients/analytics/by-industry:
+    get:
+      tags: [Clients]
+      summary: Get clients by industry analytics
+      description: Get analytics grouped by industry
+      parameters:
+        - name: operatorId
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Clients analytics by industry
+
+  /clients/analytics/top-clients:
+    get:
+      tags: [Clients]
+      summary: Get top clients by operations
+      description: Get top clients ranked by number of operations
+      parameters:
+        - name: operatorId
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Top clients by operations
 
   /clients/{id}:
     get:
@@ -1545,6 +1773,9 @@ paths:
       responses:
         '200':
           description: Client details
+        '404':
+          description: Client not found
+
     put:
       tags: [Clients]
       summary: Update client
@@ -1563,9 +1794,13 @@ paths:
       responses:
         '200':
           description: Client updated successfully
+        '404':
+          description: Client not found
+
     delete:
       tags: [Clients]
-      summary: Delete client
+      summary: Soft delete client
+      description: Deactivate a client (soft delete)
       parameters:
         - name: id
           in: path
@@ -1573,13 +1808,33 @@ paths:
           schema:
             type: integer
       responses:
-        '204':
-          description: Client deleted successfully
+        '200':
+          description: Client deactivated successfully
+        '404':
+          description: Client not found
+
+  /clients/{id}/permanent:
+    delete:
+      tags: [Clients]
+      summary: Permanently delete client
+      description: Permanently delete a client (hard delete)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Client permanently deleted
+        '404':
+          description: Client not found
 
   /clients/{id}/operations:
     get:
       tags: [Clients]
       summary: Get client operations
+      description: Get operation history for a client
       parameters:
         - name: id
           in: path
@@ -1615,6 +1870,8 @@ paths:
       responses:
         '200':
           description: Client operations
+        '404':
+          description: Client not found
 
   /clients/{id}/statistics:
     get:
@@ -1629,21 +1886,6 @@ paths:
       responses:
         '200':
           description: Client statistics
-
-  /clients/{id}/permanent:
-    delete:
-      tags: [Clients]
-      summary: Permanently delete client
-      description: Permanently delete a client (hard delete)
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '204':
-          description: Client permanently deleted
         '404':
           description: Client not found
 
@@ -1669,39 +1911,9 @@ paths:
         '404':
           description: Client not found
 
-  /clients/analytics/by-industry:
-    get:
-      tags: [Clients]
-      summary: Get clients by industry analytics
-      description: Get analytics grouped by industry
-      parameters:
-        - name: operatorId
-          in: query
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Clients analytics by industry
-
-  /clients/analytics/top-clients:
-    get:
-      tags: [Clients]
-      summary: Get top clients by operations
-      description: Get top clients ranked by number of operations
-      parameters:
-        - name: operatorId
-          in: query
-          schema:
-            type: integer
-        - name: limit
-          in: query
-          schema:
-            type: integer
-            default: 10
-      responses:
-        '200':
-          description: Top clients by operations
-
+  # ============================================================================
+  # DRIVERS ENDPOINTS
+  # ============================================================================
   /drivers:
     get:
       tags: [Drivers]
@@ -1713,6 +1925,7 @@ paths:
             type: integer
         - name: search
           in: query
+          description: Search by name, RUT, email
           schema:
             type: string
         - name: status
@@ -1740,6 +1953,7 @@ paths:
       responses:
         '200':
           description: List of drivers
+
     post:
       tags: [Drivers]
       summary: Create a new driver
@@ -1766,6 +1980,9 @@ paths:
       responses:
         '200':
           description: Driver details
+        '404':
+          description: Driver not found
+
     put:
       tags: [Drivers]
       summary: Update driver
@@ -1784,6 +2001,9 @@ paths:
       responses:
         '200':
           description: Driver updated successfully
+        '404':
+          description: Driver not found
+
     delete:
       tags: [Drivers]
       summary: Delete driver
@@ -1796,8 +2016,26 @@ paths:
       responses:
         '204':
           description: Driver deleted successfully
+        '404':
+          description: Driver not found
 
   /drivers/{id}/documents:
+    get:
+      tags: [Drivers]
+      summary: Get driver documents
+      description: Get all documents for a driver
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of driver documents
+        '404':
+          description: Driver not found
+
     post:
       tags: [Drivers]
       summary: Create driver document
@@ -1819,21 +2057,6 @@ paths:
           description: Driver document created successfully
         '404':
           description: Driver not found
-    get:
-      tags: [Drivers]
-      summary: Get driver documents
-      description: Get all documents for a driver
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: List of driver documents
-        '404':
-          description: Driver not found
 
   /drivers/documents/{documentId}:
     get:
@@ -1850,6 +2073,7 @@ paths:
           description: Driver document details
         '404':
           description: Document not found
+
     put:
       tags: [Drivers]
       summary: Update driver document
@@ -1870,6 +2094,7 @@ paths:
           description: Driver document updated successfully
         '404':
           description: Document not found
+
     delete:
       tags: [Drivers]
       summary: Delete driver document
@@ -1885,10 +2110,14 @@ paths:
         '404':
           description: Document not found
 
+  # ============================================================================
+  # VEHICLES ENDPOINTS
+  # ============================================================================
   /vehicles:
     get:
       tags: [Vehicles]
       summary: Get all vehicles
+      description: Get vehicles for the authenticated user's operator
       parameters:
         - name: page
           in: query
@@ -1902,16 +2131,33 @@ paths:
             default: 10
         - name: search
           in: query
+          description: Search by plate number, brand, model
           schema:
             type: string
         - name: vehicleType
           in: query
           schema:
             type: string
+            enum:
+              [
+                truck,
+                van,
+                pickup,
+                flatbed,
+                trailer,
+                dump_truck,
+                crane_truck,
+                other,
+              ]
         - name: status
           in: query
           schema:
             type: boolean
+        - name: operationalStatus
+          in: query
+          schema:
+            type: string
+            enum: [active, maintenance, out_of_service, reserved]
         - name: includeDocuments
           in: query
           schema:
@@ -1923,9 +2169,11 @@ paths:
       responses:
         '200':
           description: List of vehicles
+
     post:
       tags: [Vehicles]
       summary: Create a new vehicle
+      description: Create a vehicle for the authenticated user's operator
       requestBody:
         required: true
         content:
@@ -1960,6 +2208,60 @@ paths:
         '200':
           description: List of expiring documents
 
+  /vehicles/documents:
+    post:
+      tags: [Vehicles]
+      summary: Create vehicle document
+      description: Add a new document to a vehicle
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateVehicleDocumentDto'
+      responses:
+        '201':
+          description: Vehicle document created successfully
+        '400':
+          description: Bad request
+
+  /vehicles/documents/{documentId}:
+    put:
+      tags: [Vehicles]
+      summary: Update vehicle document
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateVehicleDocumentDto'
+      responses:
+        '200':
+          description: Vehicle document updated successfully
+        '404':
+          description: Document not found
+
+    delete:
+      tags: [Vehicles]
+      summary: Delete vehicle document
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Vehicle document deleted successfully
+        '404':
+          description: Document not found
+
   /vehicles/{id}:
     get:
       tags: [Vehicles]
@@ -1972,11 +2274,15 @@ paths:
             type: integer
         - name: includeRelations
           in: query
+          description: Include related data (documents, driver, etc.)
           schema:
-            type: string
+            type: boolean
       responses:
         '200':
           description: Vehicle details
+        '404':
+          description: Vehicle not found
+
     put:
       tags: [Vehicles]
       summary: Update vehicle
@@ -1995,6 +2301,9 @@ paths:
       responses:
         '200':
           description: Vehicle updated successfully
+        '404':
+          description: Vehicle not found
+
     delete:
       tags: [Vehicles]
       summary: Delete vehicle
@@ -2007,6 +2316,8 @@ paths:
       responses:
         '204':
           description: Vehicle deleted successfully
+        '404':
+          description: Vehicle not found
 
   /vehicles/{id}/documents:
     get:
@@ -2081,76 +2392,30 @@ paths:
         '404':
           description: Vehicle not found
 
-  /vehicles/documents:
-    post:
-      tags: [Vehicles]
-      summary: Create vehicle document
-      description: Add a new document to a vehicle
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateVehicleDocumentDto'
-      responses:
-        '201':
-          description: Vehicle document created successfully
-        '400':
-          description: Bad request
-
-  /vehicles/documents/{documentId}:
-    put:
-      tags: [Vehicles]
-      summary: Update vehicle document
-      parameters:
-        - name: documentId
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateVehicleDocumentDto'
-      responses:
-        '200':
-          description: Vehicle document updated successfully
-        '404':
-          description: Document not found
-    delete:
-      tags: [Vehicles]
-      summary: Delete vehicle document
-      parameters:
-        - name: documentId
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '204':
-          description: Vehicle document deleted successfully
-        '404':
-          description: Document not found
-
+  # ============================================================================
+  # ROUTES ENDPOINTS
+  # ============================================================================
   /routes:
     get:
       tags: [Routes]
       summary: Get all routes
+      description: Get routes for the authenticated user's operator
       parameters:
         - name: search
           in: query
+          description: Search by name, code, origin, destination
           schema:
             type: string
         - name: routeType
           in: query
           schema:
             type: string
+            enum: [urbana, interurbana, minera, rural, carretera, montaña, otra]
         - name: difficulty
           in: query
           schema:
             type: string
+            enum: [fácil, moderada, difícil]
         - name: status
           in: query
           schema:
@@ -2170,9 +2435,11 @@ paths:
       responses:
         '200':
           description: List of routes
+
     post:
       tags: [Routes]
       summary: Create a new route
+      description: Create a route for the authenticated user's operator
       requestBody:
         required: true
         content:
@@ -2196,6 +2463,9 @@ paths:
       responses:
         '200':
           description: Route details
+        '404':
+          description: Route not found
+
     put:
       tags: [Routes]
       summary: Update route
@@ -2214,6 +2484,9 @@ paths:
       responses:
         '200':
           description: Route updated successfully
+        '404':
+          description: Route not found
+
     delete:
       tags: [Routes]
       summary: Delete route
@@ -2224,8 +2497,10 @@ paths:
           schema:
             type: integer
       responses:
-        '204':
+        '200':
           description: Route deleted successfully
+        '404':
+          description: Route not found
 
   /routes/{id}/statistics:
     get:
@@ -2240,7 +2515,12 @@ paths:
       responses:
         '200':
           description: Route statistics
+        '404':
+          description: Route not found
 
+  # ============================================================================
+  # PROVIDERS ENDPOINTS
+  # ============================================================================
   /providers:
     get:
       tags: [Providers]
@@ -2252,6 +2532,7 @@ paths:
             type: integer
         - name: search
           in: query
+          description: Search by name, tax ID, contact
           schema:
             type: string
         - name: status
@@ -2266,6 +2547,8 @@ paths:
           in: query
           schema:
             type: integer
+            minimum: 1
+            maximum: 5
         - name: page
           in: query
           schema:
@@ -2279,6 +2562,7 @@ paths:
       responses:
         '200':
           description: List of providers
+
     post:
       tags: [Providers]
       summary: Create a new provider
@@ -2305,6 +2589,9 @@ paths:
       responses:
         '200':
           description: Provider details
+        '404':
+          description: Provider not found
+
     put:
       tags: [Providers]
       summary: Update provider
@@ -2323,6 +2610,9 @@ paths:
       responses:
         '200':
           description: Provider updated successfully
+        '404':
+          description: Provider not found
+
     delete:
       tags: [Providers]
       summary: Delete provider
@@ -2333,8 +2623,10 @@ paths:
           schema:
             type: integer
       responses:
-        '204':
+        '200':
           description: Provider deleted successfully
+        '404':
+          description: Provider not found
 
   /providers/{id}/statistics:
     get:
@@ -2349,11 +2641,14 @@ paths:
       responses:
         '200':
           description: Provider statistics
+        '404':
+          description: Provider not found
 
   /providers/{id}/operations:
     get:
       tags: [Providers]
       summary: Get provider operations
+      description: Get operations associated with a provider
       parameters:
         - name: id
           in: path
@@ -2373,7 +2668,12 @@ paths:
       responses:
         '200':
           description: Provider operations
+        '404':
+          description: Provider not found
 
+  # ============================================================================
+  # OPERATIONS ENDPOINTS
+  # ============================================================================
   /operations:
     get:
       tags: [Operations]
@@ -2403,6 +2703,7 @@ paths:
           in: query
           schema:
             type: string
+            enum: [scheduled, in-progress, completed, cancelled]
         - name: operationType
           in: query
           schema:
@@ -2430,6 +2731,7 @@ paths:
       responses:
         '200':
           description: List of operations
+
     post:
       tags: [Operations]
       summary: Create a new operation
@@ -2442,6 +2744,109 @@ paths:
       responses:
         '201':
           description: Operation created successfully
+
+  /operations/excel-template:
+    get:
+      tags: [Operations]
+      summary: Download Excel template for batch upload
+      description: Download an Excel template with headers for batch uploading operations
+      responses:
+        '200':
+          description: Excel template file
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+
+  /operations/batch-upload/parse:
+    post:
+      tags: [Operations]
+      summary: Parse Excel file for batch upload
+      description: Parse an Excel file and return validation results without creating operations
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Parse results with validation status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  totalRows:
+                    type: integer
+                  validRows:
+                    type: integer
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                  data:
+                    type: array
+                    items:
+                      type: object
+        '400':
+          description: Bad request - No file or invalid file type
+
+  /operations/batch-upload:
+    post:
+      tags: [Operations]
+      summary: Batch upload operations
+      description: Create multiple operations from parsed data
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchUploadOperationsDto'
+      responses:
+        '201':
+          description: Batch upload result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchUploadResult'
+
+  /operations/batch-upload/file:
+    post:
+      tags: [Operations]
+      summary: Batch upload operations from file
+      description: Parse and create operations from an Excel file in a single step
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+                - operatorId
+              properties:
+                file:
+                  type: string
+                  format: binary
+                operatorId:
+                  type: integer
+      responses:
+        '200':
+          description: Batch upload result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchUploadResult'
+        '400':
+          description: Bad request - No file or validation errors
 
   /operations/{id}:
     get:
@@ -2456,6 +2861,9 @@ paths:
       responses:
         '200':
           description: Operation details
+        '404':
+          description: Operation not found
+
     put:
       tags: [Operations]
       summary: Update operation
@@ -2474,6 +2882,9 @@ paths:
       responses:
         '200':
           description: Operation updated successfully
+        '404':
+          description: Operation not found
+
     delete:
       tags: [Operations]
       summary: Delete operation
@@ -2484,8 +2895,10 @@ paths:
           schema:
             type: integer
       responses:
-        '204':
+        '200':
           description: Operation deleted successfully
+        '404':
+          description: Operation not found
 
   /operations/{id}/generate-report:
     post:
@@ -2536,7 +2949,7 @@ paths:
     put:
       tags: [Operations]
       summary: Unassign driver from vehicle
-      description: Unassign a driver from a vehicle assignment
+      description: End a driver-vehicle assignment
       parameters:
         - name: assignmentId
           in: path
@@ -2667,6 +3080,9 @@ paths:
         '404':
           description: Driver not found
 
+  # ============================================================================
+  # AUDIT ENDPOINTS
+  # ============================================================================
   /audit:
     get:
       tags: [Audit]
@@ -2712,22 +3128,6 @@ paths:
         '200':
           description: List of audit logs
 
-  /audit/{id}:
-    get:
-      tags: [Audit]
-      summary: Get audit log by ID
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Audit log details
-        '404':
-          description: Audit log not found
-
   /audit/user/{userId}:
     get:
       tags: [Audit]
@@ -2749,3 +3149,19 @@ paths:
           description: User activity logs
         '404':
           description: User not found
+
+  /audit/{id}:
+    get:
+      tags: [Audit]
+      summary: Get audit log by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Audit log details
+        '404':
+          description: Audit log not found
