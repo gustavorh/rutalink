@@ -11,14 +11,6 @@ import type {
   RoleQueryDto,
 } from "@/lib/api-types";
 import { PERMISSIONS } from "@/types/roles";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -64,15 +56,8 @@ export default function RolesPage() {
   });
   const [formLoading, setFormLoading] = useState(false);
   const [search, setSearch] = useState("");
-  const {
-    page,
-    setPage,
-    total,
-    setTotal,
-    totalPages,
-    setTotalPages,
-    pagination,
-  } = usePagination({ initialLimit: 10 });
+  const { page, setPage, total, setTotal, setTotalPages, pagination } =
+    usePagination({ initialLimit: 10 });
   const {
     filters: filterState,
     setFilter,

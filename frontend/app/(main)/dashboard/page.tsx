@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { getUser, isAuthenticated } from "@/lib/auth";
 import { EditOperationModal } from "@/components/dashboard/EditOperationModal";
 import { api } from "@/lib/client-api";
@@ -12,13 +12,14 @@ import type {
   LiveOperation,
 } from "@/types/dashboard";
 import type { OperationWithDetails } from "@/types/operations";
+import type { OperationQueryDto } from "@/lib/api-types";
 import {
   DataTable,
   type DataTableColumn,
   type DataTableFilter,
   type DataTableAction,
 } from "@/components/ui/data-table";
-import { Eye, Edit as EditIcon } from "lucide-react";
+import { Edit as EditIcon } from "lucide-react";
 
 // Status configuration
 const statusConfig: Record<
@@ -174,11 +175,14 @@ export default function DashboardPage() {
       if (currentFilters.startDate) params.startDate = currentFilters.startDate;
       if (currentFilters.endDate) params.endDate = currentFilters.endDate;
 
-      const response = await api.operations.list(params as any);
+      const response = await api.operations.list(params as OperationQueryDto);
 
       // Convert to LiveOperation format
       // Handle both old format (items) and new format (data)
-      const items = (response as any).items || response.data || [];
+      const items =
+        (response as { items?: typeof response.data }).items ||
+        response.data ||
+        [];
       const liveOps: LiveOperation[] = items.map(
         (op: OperationWithDetails) => ({
           ...op,
@@ -281,27 +285,35 @@ export default function DashboardPage() {
 
         setFilterOptions((prev) => ({
           ...prev,
-          clients: (clientsRes.data || (clientsRes as any).items || []).map(
-            (c: { id: number; businessName: string }) => ({
-              value: c.id,
-              label: c.businessName,
-            })
-          ),
+          clients: (
+            clientsRes.data ||
+            (clientsRes as { items?: typeof clientsRes.data }).items ||
+            []
+          ).map((c: { id: number; businessName: string }) => ({
+            value: c.id,
+            label: c.businessName,
+          })),
           providers: (
             providersRes.data ||
-            (providersRes as any).items ||
+            (providersRes as { items?: typeof providersRes.data }).items ||
             []
           ).map((p: { id: number; businessName: string }) => ({
             value: p.id,
             label: p.businessName,
           })),
-          vehicles: (vehiclesRes.data || (vehiclesRes as any).items || []).map(
-            (v: { id: number; plateNumber: string }) => ({
-              value: v.id,
-              label: v.plateNumber,
-            })
-          ),
-          routes: (routesRes.data || (routesRes as any).items || []).map(
+          vehicles: (
+            vehiclesRes.data ||
+            (vehiclesRes as { items?: typeof vehiclesRes.data }).items ||
+            []
+          ).map((v: { id: number; plateNumber: string }) => ({
+            value: v.id,
+            label: v.plateNumber,
+          })),
+          routes: (
+            routesRes.data ||
+            (routesRes as { items?: typeof routesRes.data }).items ||
+            []
+          ).map(
             (r: {
               id: number;
               name: string;
@@ -404,7 +416,7 @@ export default function DashboardPage() {
     );
   }, [operations, searchQuery]);
 
-  const activeFiltersCount = useMemo(
+  const _activeFiltersCount = useMemo(
     () =>
       Object.values(filters).filter(
         (value) => value !== null && value !== undefined && value !== ""
@@ -746,14 +758,6 @@ export default function DashboardPage() {
           // Define table actions
           const actions: DataTableAction<LiveOperation>[] = [
             {
-              label: "Ver detalles",
-              icon: <Eye className="h-5 w-5" />,
-              onClick: (operation) => handleOperationClick(operation),
-              className:
-                "text-muted-foreground hover:text-primary hover:bg-primary/10",
-              title: "Ver detalles",
-            },
-            {
               label: "Editar asignaciones",
               icon: <EditIcon className="h-5 w-5" />,
               onClick: (operation) => {
@@ -856,6 +860,7 @@ export default function DashboardPage() {
               showFilters={true}
               onClearFilters={clearFilters}
               actions={actions}
+              onRowClick={handleOperationClick}
               loading={loading}
               error={null}
               title="Operaciones"

@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -22,12 +21,10 @@ import {
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import {
-  Search,
   Filter,
   XCircle,
   RefreshCw,
@@ -97,6 +94,9 @@ export interface DataTableProps<T> {
   actions?: DataTableAction<T>[];
   headerActions?: React.ReactNode;
 
+  // Row interaction
+  onRowClick?: (row: T) => void;
+
   // Loading & Error States
   loading?: boolean;
   error?: string | null;
@@ -127,7 +127,6 @@ interface DataTableToolbarProps {
   filters?: DataTableFilter[];
   showFilters?: boolean;
   onToggleFilters?: () => void;
-  onClearFilters?: () => void;
 }
 
 function DataTableToolbar({
@@ -138,7 +137,6 @@ function DataTableToolbar({
   filters = [],
   showFilters = false,
   onToggleFilters,
-  onClearFilters,
 }: DataTableToolbarProps) {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && onSearchSubmit) {
@@ -351,6 +349,7 @@ export function DataTable<T>({
   onClearFilters,
   actions,
   headerActions,
+  onRowClick,
   loading = false,
   error = null,
   emptyState,
@@ -487,7 +486,6 @@ export function DataTable<T>({
                 filters={filters}
                 showFilters={showFilters}
                 onToggleFilters={onToggleFilters}
-                onClearFilters={onClearFilters}
               />
             </div>
           )}
@@ -538,7 +536,10 @@ export function DataTable<T>({
                   {data.map((row, index) => (
                     <TableRow
                       key={defaultGetRowKey(row, index)}
-                      className="border-b border-border hover:bg-ui-surface-elevated"
+                      className={`border-b border-border hover:bg-ui-surface-elevated ${
+                        onRowClick ? "cursor-pointer" : ""
+                      }`}
+                      onClick={() => onRowClick?.(row)}
                     >
                       {columns.map((column) => (
                         <TableCell
@@ -554,7 +555,7 @@ export function DataTable<T>({
                         </TableCell>
                       ))}
                       {actions && actions.length > 0 && (
-                        <TableCell className="py-4">
+                        <TableCell className="py-4" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center gap-2">
                             {actions.map((action, actionIndex) => (
                               <button

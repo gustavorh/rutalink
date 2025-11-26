@@ -11,7 +11,6 @@ import type {
   RouteQueryDto,
 } from "@/lib/api-types";
 import { ROUTE_TYPES, DIFFICULTY_LEVELS } from "@/types/routes";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -27,7 +26,6 @@ import {
   Plus,
   Edit,
   Trash2,
-  Eye,
   Route as RouteIcon,
   CheckCircle,
   MapPin,
@@ -95,15 +93,8 @@ export default function RoutesPage() {
   });
 
   // Pagination
-  const {
-    page,
-    setPage,
-    total,
-    setTotal,
-    totalPages,
-    setTotalPages,
-    pagination,
-  } = usePagination({ initialLimit: 10 });
+  const { page, setPage, total, setTotal, setTotalPages, pagination } =
+    usePagination({ initialLimit: 10 });
 
   // Last update timestamp
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
@@ -452,15 +443,6 @@ export default function RoutesPage() {
   // Table Actions Configuration
   const tableActions: DataTableAction<Route>[] = [
     {
-      label: "Ver Detalles",
-      icon: <Eye className="h-4 w-4" />,
-      onClick: () => {
-        /* TODO: Implement view details */
-      },
-      variant: "ghost",
-      className: "text-muted-foreground hover:text-foreground",
-    },
-    {
       label: "Editar",
       icon: <Edit className="h-4 w-4" />,
       onClick: handleEditClick,
@@ -475,6 +457,11 @@ export default function RoutesPage() {
       className: "text-destructive hover:text-red-700",
     },
   ];
+
+  // Row click handler
+  const handleRowClick = (route: Route) => {
+    router.push(`/routes/${route.id}`);
+  };
 
   if (!mounted) {
     return <LoadingState />;
@@ -573,6 +560,7 @@ export default function RoutesPage() {
             setPage(1);
           }}
           actions={tableActions}
+          onRowClick={handleRowClick}
           loading={loading}
           error={error}
           emptyState={

@@ -355,7 +355,6 @@ export class VehicleResponseDto {
 // QUERY DTOs
 // ============================================================================
 export class VehicleQueryDto extends PaginationQueryDto {
-
   @IsOptional()
   @IsString()
   search?: string; // Buscar por patente, marca, modelo

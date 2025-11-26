@@ -58,7 +58,7 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      const response = await api.auth.login(data);
+      await api.auth.login(data);
 
       // Authentication is now handled via HTTP-only cookies
       // User info is stored in a non-HTTP-only cookie for UI access

@@ -11,7 +11,6 @@ import type {
   ClientQueryDto,
 } from "@/lib/api-types";
 import { INDUSTRIES } from "@/types/clients";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -27,7 +26,6 @@ import {
   Plus,
   Edit,
   Trash2,
-  Eye,
   Building2,
   CheckCircle,
   TrendingUp,
@@ -94,15 +92,8 @@ export default function ClientsPage() {
   });
 
   // Pagination
-  const {
-    page,
-    setPage,
-    total,
-    setTotal,
-    totalPages,
-    setTotalPages,
-    pagination,
-  } = usePagination({ initialLimit: 10 });
+  const { page, setPage, total, setTotal, setTotalPages, pagination } =
+    usePagination({ initialLimit: 10 });
 
   // Last update timestamp
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
@@ -398,14 +389,6 @@ export default function ClientsPage() {
   // Define row actions
   const actions: DataTableAction<Client>[] = [
     {
-      label: "Ver detalles",
-      icon: <Eye className="h-4 w-4" />,
-      onClick: (client) => router.push(`/clients/${client.id}`),
-      variant: "ghost",
-      className: "text-muted-foreground hover:text-primary hover:bg-primary/10",
-      title: "Ver detalles",
-    },
-    {
       label: "Editar",
       icon: <Edit className="h-4 w-4" />,
       onClick: handleEditClick,
@@ -424,6 +407,11 @@ export default function ClientsPage() {
       title: "Eliminar",
     },
   ];
+
+  // Row click handler
+  const handleRowClick = (client: Client) => {
+    router.push(`/clients/${client.id}`);
+  };
 
   if (!mounted) {
     return <LoadingState />;
@@ -513,6 +501,7 @@ export default function ClientsPage() {
           onToggleFilters={toggleFilters}
           onClearFilters={handleClearFilters}
           actions={actions}
+          onRowClick={handleRowClick}
           loading={loading}
           error={error}
           emptyState={

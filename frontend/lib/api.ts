@@ -25,7 +25,6 @@ import type {
   VehicleQueryDto,
   CreateVehicleDocumentDto,
   UpdateVehicleDocumentDto,
-  UpdateOperationalStatusDto,
   CreateOperationDto,
   UpdateOperationDto,
   OperationQueryDto,
@@ -47,7 +46,6 @@ import type {
   AssignTransportProviderDto,
   ConfirmTransportAssignmentDto,
   CreateTransportOrderDto,
-  PaginatedResponse,
   DeleteResponse,
   DeleteRouteResponse,
   UserActivityResponse,
@@ -59,7 +57,6 @@ import type {
   PaginatedClients,
   ClientStatistics,
   PaginatedClientOperations,
-  ClientOperation,
   IndustryAnalytics,
   TopClient,
 } from "@/types/clients";
@@ -75,7 +72,6 @@ import type {
 } from "@/types/drivers";
 
 import type {
-  Operation,
   OperationWithDetails,
   PaginatedOperations,
   OperationStatistics,
@@ -113,7 +109,6 @@ import type {
   User,
   PaginatedUsers,
   UserWithStats,
-  UserActivity,
 } from "@/types/users";
 
 import type { Role, PaginatedRoles } from "@/types/roles";

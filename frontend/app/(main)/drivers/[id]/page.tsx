@@ -84,10 +84,10 @@ export default function DriverDetailPage() {
         api.drivers.get(driverId),
         // Note: These endpoints may need to be added to client-api if they exist
         // For now, using placeholder - adjust based on actual API structure
-        Promise.resolve([] as any[]), // getDriverDocuments
-        Promise.resolve([] as any[]), // getDriverVehicleAssignments
+        Promise.resolve([] as DriverDocument[]), // getDriverDocuments
+        Promise.resolve([] as DriverVehicleAssignmentWithVehicle[]), // getDriverVehicleAssignments
         api.operations.list({ driverId, limit: 10 }), // getDriverOperations
-        Promise.resolve(null as any), // getDriverStatistics
+        Promise.resolve(null as Stats | null), // getDriverStatistics
       ]);
 
       setDriver(driverData);

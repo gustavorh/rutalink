@@ -9,7 +9,6 @@ import {
   getCreateSuccessMessage,
   getUpdateSuccessMessage,
   getDeleteSuccessMessage,
-  type ResourceType,
 } from "./success-messages";
 
 import type {
@@ -49,29 +48,28 @@ import type {
   ClientStatistics,
   PaginatedClientOperations,
 } from "@/types/clients";
+import type { Driver, PaginatedDrivers } from "@/types/drivers";
 import type {
-  Driver,
-  PaginatedDrivers,
-  DriverDocument,
-} from "@/types/drivers";
-import type {
-  Operation,
   OperationWithDetails,
   PaginatedOperations,
 } from "@/types/operations";
-import type { Route, PaginatedRoutes } from "@/types/routes";
-import type { Provider, PaginatedProviders } from "@/types/providers";
+import type { Route, PaginatedRoutes, RouteStatistics } from "@/types/routes";
+import type {
+  Provider,
+  PaginatedProviders,
+  ProviderStatistics,
+} from "@/types/providers";
 import type { Truck, PaginatedTrucks } from "@/types/trucks";
-import type { Operator, PaginatedOperators } from "@/types/operators";
+import type {
+  Operator,
+  PaginatedOperators,
+  OperatorStatistics,
+} from "@/types/operators";
 import type { User, PaginatedUsers } from "@/types/users";
 import type { Role, PaginatedRoles } from "@/types/roles";
 
 export class ApiError extends Error {
-  constructor(
-    public status: number,
-    message: string,
-    public data?: unknown
-  ) {
+  constructor(public status: number, message: string, public data?: unknown) {
     super(message);
     this.name = "ApiError";
   }
@@ -94,7 +92,7 @@ class ClientApi {
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
-      
+
       // Handle 401 - redirect to login (don't show toast for auth errors)
       if (response.status === 401) {
         if (typeof window !== "undefined") {
@@ -106,14 +104,14 @@ class ClientApi {
           error
         );
       }
-      
+
       // Create ApiError instance
       const apiError = new ApiError(
         response.status,
         error.message || `HTTP ${response.status}: ${response.statusText}`,
         error
       );
-      
+
       // Show toast notification for all other errors
       if (typeof window !== "undefined") {
         const errorMessage = extractErrorMessage(apiError);
@@ -122,12 +120,12 @@ class ClientApi {
           duration: 5000,
         });
       }
-      
+
       throw apiError;
     }
 
     const data = await response.json();
-    
+
     // Show success notification if provided
     if (successMessage && typeof window !== "undefined") {
       toast.success("Éxito", {
@@ -142,12 +140,20 @@ class ClientApi {
   // Auth
   auth = {
     login: (data: LoginDto) =>
-      this.request<{ user: any; message: string }>("/auth/login", {
+      this.request<{ user: User; message: string }>("/auth/login", {
         method: "POST",
         body: JSON.stringify(data),
       }),
-    register: (data: any) =>
-      this.request<{ user: any; message: string }>("/auth/register", {
+    register: (data: {
+      username: string;
+      email: string;
+      password: string;
+      firstName: string;
+      lastName: string;
+      operatorId: number;
+      roleId: number;
+    }) =>
+      this.request<{ user: User; message: string }>("/auth/register", {
         method: "POST",
         body: JSON.stringify(data),
       }),
@@ -155,7 +161,7 @@ class ClientApi {
       this.request<{ message: string }>("/auth/logout", {
         method: "POST",
       }),
-    me: () => this.request<{ user: any }>("/auth/me"),
+    me: () => this.request<{ user: User }>("/auth/me"),
   };
 
   // Clients
@@ -174,8 +180,7 @@ class ClientApi {
         `/clients${queryString ? `?${queryString}` : ""}`
       );
     },
-    get: (id: number) =>
-      this.request<Client>(`/clients/${id}`),
+    get: (id: number) => this.request<Client>(`/clients/${id}`),
     create: (data: CreateClientDto) =>
       this.request<Client>(
         "/clients",
@@ -202,7 +207,7 @@ class ClientApi {
         },
         getDeleteSuccessMessage("client")
       ),
-    getOperations: (id: number, params?: any) => {
+    getOperations: (id: number, params?: { page?: number; limit?: number }) => {
       const queryParams = new URLSearchParams();
       if (params) {
         Object.entries(params).forEach(([key, value]) => {
@@ -236,8 +241,7 @@ class ClientApi {
         `/drivers${queryString ? `?${queryString}` : ""}`
       );
     },
-    get: (id: number) =>
-      this.request<Driver>(`/drivers/${id}`),
+    get: (id: number) => this.request<Driver>(`/drivers/${id}`),
     create: (data: CreateDriverDto) =>
       this.request<Driver>(
         "/drivers",
@@ -282,8 +286,7 @@ class ClientApi {
         `/vehicles${queryString ? `?${queryString}` : ""}`
       );
     },
-    get: (id: number) =>
-      this.request<Truck>(`/vehicles/${id}`),
+    get: (id: number) => this.request<Truck>(`/vehicles/${id}`),
     create: (data: CreateVehicleDto) =>
       this.request<Truck>(
         "/vehicles",
@@ -356,7 +359,10 @@ class ClientApi {
         },
         getDeleteSuccessMessage("operation")
       ),
-    generateReport: async (id: number, options?: any): Promise<Blob> => {
+    generateReport: async (
+      id: number,
+      options?: Record<string, unknown>
+    ): Promise<Blob> => {
       const response = await fetch(`/api/operations/${id}/generate-report`, {
         method: "POST",
         headers: {
@@ -373,7 +379,7 @@ class ClientApi {
           error.message || "Error generating report",
           error
         );
-        
+
         // Show toast notification
         if (typeof window !== "undefined") {
           const errorMessage = extractErrorMessage(apiError);
@@ -382,7 +388,7 @@ class ClientApi {
             duration: 5000,
           });
         }
-        
+
         throw apiError;
       }
 
@@ -401,7 +407,7 @@ class ClientApi {
           error.message || "Error downloading template",
           error
         );
-        
+
         if (typeof window !== "undefined") {
           const errorMessage = extractErrorMessage(apiError);
           toast.error("Error", {
@@ -409,18 +415,20 @@ class ClientApi {
             duration: 5000,
           });
         }
-        
+
         throw apiError;
       }
 
       return response.blob();
     },
-    parseExcelFile: async (file: File): Promise<{
+    parseExcelFile: async (
+      file: File
+    ): Promise<{
       success: boolean;
       totalRows: number;
       validRows: number;
-      errors: any[];
-      data: any[];
+      errors: Array<{ row: number; message: string }>;
+      data: Array<Record<string, unknown>>;
     }> => {
       const formData = new FormData();
       formData.append("file", file);
@@ -438,7 +446,7 @@ class ClientApi {
           error.message || "Error parsing Excel file",
           error
         );
-        
+
         if (typeof window !== "undefined") {
           const errorMessage = extractErrorMessage(apiError);
           toast.error("Error", {
@@ -446,7 +454,7 @@ class ClientApi {
             duration: 5000,
           });
         }
-        
+
         throw apiError;
       }
 
@@ -460,7 +468,7 @@ class ClientApi {
       totalRows: number;
       successCount: number;
       errorCount: number;
-      errors: any[];
+      errors: Array<{ row: number; message: string }>;
       duplicates: string[];
       createdOperations: number[];
       message?: string;
@@ -482,7 +490,7 @@ class ClientApi {
           error.message || "Error uploading operations",
           error
         );
-        
+
         if (typeof window !== "undefined") {
           const errorMessage = extractErrorMessage(apiError);
           toast.error("Error", {
@@ -490,12 +498,12 @@ class ClientApi {
             duration: 5000,
           });
         }
-        
+
         throw apiError;
       }
 
       const data = await response.json();
-      
+
       // Show success notification
       if (data.success && typeof window !== "undefined") {
         toast.success("Éxito", {
@@ -524,8 +532,7 @@ class ClientApi {
         `/routes${queryString ? `?${queryString}` : ""}`
       );
     },
-    get: (id: number) =>
-      this.request<Route>(`/routes/${id}`),
+    get: (id: number) => this.request<Route>(`/routes/${id}`),
     create: (data: CreateRouteDto) =>
       this.request<Route>(
         "/routes",
@@ -553,7 +560,7 @@ class ClientApi {
         getDeleteSuccessMessage("route")
       ),
     getStatistics: (id: number) =>
-      this.request<any>(`/routes/${id}/statistics`),
+      this.request<RouteStatistics>(`/routes/${id}/statistics`),
   };
 
   // Providers
@@ -572,8 +579,7 @@ class ClientApi {
         `/providers${queryString ? `?${queryString}` : ""}`
       );
     },
-    get: (id: number) =>
-      this.request<Provider>(`/providers/${id}`),
+    get: (id: number) => this.request<Provider>(`/providers/${id}`),
     create: (data: CreateProviderDto) =>
       this.request<Provider>(
         "/providers",
@@ -601,7 +607,7 @@ class ClientApi {
         getDeleteSuccessMessage("provider")
       ),
     getStatistics: (id: number) =>
-      this.request<any>(`/providers/${id}/statistics`),
+      this.request<ProviderStatistics>(`/providers/${id}/statistics`),
   };
 
   // Operators
@@ -620,8 +626,7 @@ class ClientApi {
         `/operators${queryString ? `?${queryString}` : ""}`
       );
     },
-    get: (id: number) =>
-      this.request<Operator>(`/operators/${id}`),
+    get: (id: number) => this.request<Operator>(`/operators/${id}`),
     create: (data: CreateOperatorDto) =>
       this.request<Operator>(
         "/operators",
@@ -649,7 +654,7 @@ class ClientApi {
         getDeleteSuccessMessage("operator")
       ),
     getStatistics: (id: number) =>
-      this.request<any>(`/operators/${id}/statistics`),
+      this.request<OperatorStatistics>(`/operators/${id}/statistics`),
   };
 
   // Roles
@@ -668,8 +673,7 @@ class ClientApi {
         `/roles${queryString ? `?${queryString}` : ""}`
       );
     },
-    get: (id: number) =>
-      this.request<Role>(`/roles/${id}`),
+    get: (id: number) => this.request<Role>(`/roles/${id}`),
     create: (data: RoleCreateDto) =>
       this.request<Role>(
         "/roles",
@@ -714,8 +718,7 @@ class ClientApi {
         `/users${queryString ? `?${queryString}` : ""}`
       );
     },
-    get: (id: number) =>
-      this.request<User>(`/users/${id}`),
+    get: (id: number) => this.request<User>(`/users/${id}`),
     create: (data: CreateUserDto) =>
       this.request<User>(
         "/users",
@@ -746,4 +749,3 @@ class ClientApi {
 }
 
 export const api = new ClientApi();
-

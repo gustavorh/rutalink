@@ -10,7 +10,6 @@ import type {
   UpdateOperatorDto,
   OperatorQueryDto,
 } from "@/lib/api-types";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -18,7 +17,6 @@ import {
   Plus,
   Edit,
   Trash2,
-  Eye,
   Building2,
   CheckCircle,
   Shield,
@@ -80,15 +78,8 @@ export default function OperatorsPage() {
   });
 
   // Pagination
-  const {
-    page,
-    setPage,
-    total,
-    setTotal,
-    totalPages,
-    setTotalPages,
-    pagination,
-  } = usePagination({ initialLimit: 10 });
+  const { page, setPage, total, setTotal, setTotalPages, pagination } =
+    usePagination({ initialLimit: 10 });
 
   // Last update timestamp
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
@@ -371,15 +362,6 @@ export default function OperatorsPage() {
           // Define table actions
           const actions: DataTableAction<Operator>[] = [
             {
-              label: "Ver detalles",
-              icon: <Eye className="h-4 w-4" />,
-              onClick: (operator) =>
-                router.push(`/administration/operators/${operator.id}`),
-              className:
-                "text-muted-foreground hover:text-primary hover:bg-primary/10",
-              title: "Ver detalles",
-            },
-            {
               label: "Editar",
               icon: <Edit className="h-4 w-4" />,
               onClick: handleEditClick,
@@ -396,6 +378,11 @@ export default function OperatorsPage() {
               title: "Eliminar",
             },
           ];
+
+          // Row click handler
+          const handleRowClick = (operator: Operator) => {
+            router.push(`/administration/operators/${operator.id}`);
+          };
 
           // Define filters
           const filters: DataTableFilter[] = [
@@ -442,6 +429,7 @@ export default function OperatorsPage() {
               onToggleFilters={toggleFilters}
               onClearFilters={handleClearFilters}
               actions={actions}
+              onRowClick={handleRowClick}
               loading={loading}
               error={error}
               lastUpdate={lastUpdate}

@@ -15,7 +15,10 @@ export const INTERNAL_API_URL =
 /**
  * Get authentication headers from cookies
  */
-export async function getAuthHeaders(): Promise<HeadersInit> {
+export async function getAuthHeaders(): Promise<{
+  Authorization: string;
+  "Content-Type": string;
+}> {
   const cookieStore = await cookies();
   const token = cookieStore.get("auth_token")?.value;
 
@@ -38,10 +41,7 @@ export function handleApiError(error: unknown): NextResponse {
   }
 
   console.error("API error:", error);
-  return NextResponse.json(
-    { error: "Internal server error" },
-    { status: 500 }
-  );
+  return NextResponse.json({ error: "Internal server error" }, { status: 500 });
 }
 
 /**
@@ -62,4 +62,3 @@ export async function proxyRequest(
     },
   });
 }
-

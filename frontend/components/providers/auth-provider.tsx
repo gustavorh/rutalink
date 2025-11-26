@@ -1,6 +1,12 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/client-api";
 
@@ -12,7 +18,7 @@ interface User {
   lastName: string;
   operatorId: number;
   roleId: number;
-  operator?: { id: number; name: string; super: boolean };
+  operator?: { id: number; name: string; super?: boolean };
   role?: { id: number; name: string };
 }
 
@@ -63,7 +69,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout, refreshUser }}>
+    <AuthContext.Provider
+      value={{ user, isLoading, login, logout, refreshUser }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -76,4 +84,3 @@ export function useAuth() {
   }
   return context;
 }
-

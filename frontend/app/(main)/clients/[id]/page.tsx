@@ -100,7 +100,9 @@ export default function ClientDetailPage() {
 
       setClient(clientData);
       setStatistics(statsData);
-      setOperations(opsData.data || (opsData as any).items || []);
+      setOperations(
+        opsData.data || (opsData as { items?: typeof opsData.data }).items || []
+      );
       setTotalPages(opsData.pagination.totalPages);
       setTotal(opsData.pagination.total);
     } catch (err) {

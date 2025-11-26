@@ -22,9 +22,7 @@ import {
   type DataTableColumn,
   type DataTableFilter,
   type DataTableAction,
-  type PaginationInfo,
 } from "@/components/ui/data-table";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -40,14 +38,12 @@ import {
   Plus,
   Edit,
   Trash2,
-  Eye,
   FileText,
   Truck as TruckIcon,
   CheckCircle,
   Clock,
   Wrench,
   XCircle,
-  Save,
 } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/ui/delete-confirmation-dialog";
 import { StatisticsCard } from "@/components/ui/statistics-card";
@@ -104,15 +100,8 @@ export default function TrucksPage() {
   });
 
   // Pagination
-  const {
-    page,
-    setPage,
-    total,
-    setTotal,
-    totalPages,
-    setTotalPages,
-    pagination,
-  } = usePagination({ initialLimit: 10 });
+  const { page, setPage, total, setTotal, setTotalPages, pagination } =
+    usePagination({ initialLimit: 10 });
 
   // Last update timestamp
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
@@ -407,13 +396,6 @@ export default function TrucksPage() {
   // Define table actions
   const actions: DataTableAction<Truck>[] = [
     {
-      label: "Ver detalles",
-      icon: <Eye className="h-4 w-4" />,
-      onClick: (truck) => router.push(`/trucks/${truck.id}`),
-      className: "text-muted-foreground hover:text-primary hover:bg-primary/10",
-      title: "Ver detalles",
-    },
-    {
       label: "Editar",
       icon: <Edit className="h-4 w-4" />,
       onClick: handleEditClick,
@@ -429,6 +411,11 @@ export default function TrucksPage() {
       title: "Eliminar",
     },
   ];
+
+  // Row click handler
+  const handleRowClick = (truck: Truck) => {
+    router.push(`/trucks/${truck.id}`);
+  };
 
   // Define filters
   const filters: DataTableFilter[] = [
@@ -538,6 +525,7 @@ export default function TrucksPage() {
           data={trucks}
           columns={columns}
           actions={actions}
+          onRowClick={handleRowClick}
           pagination={pagination}
           onPageChange={setPage}
           searchValue={search}

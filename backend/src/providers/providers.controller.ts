@@ -41,10 +41,7 @@ export class ProvidersController {
     @Body() createProviderDto: CreateProviderDto,
     @Request() req: RequestWithUser,
   ) {
-    return this.providersService.createProvider(
-      createProviderDto,
-      req.user.id,
-    );
+    return this.providersService.createProvider(createProviderDto, req.user.id);
   }
 
   /**

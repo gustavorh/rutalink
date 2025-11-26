@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { proxyRequest, handleApiError, getAuthHeaders, INTERNAL_API_URL } from "@/lib/server-api-utils";
+import { handleApiError, getAuthHeaders, INTERNAL_API_URL } from "@/lib/server-api-utils";
 
 export async function POST(
   request: NextRequest,

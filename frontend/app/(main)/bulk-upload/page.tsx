@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { isAuthenticated, getUser } from "@/lib/auth";
+import { isAuthenticated, getUser, type AuthUser } from "@/lib/auth";
 import { api } from "@/lib/client-api";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardContent } from "@/components/ui/card";
@@ -22,11 +22,9 @@ interface ParseResult {
   validRows: number;
   errors: Array<{
     row: number;
-    field: string;
     message: string;
-    value: unknown;
   }>;
-  data: unknown[];
+  data: Array<Record<string, unknown>>;
 }
 
 interface UploadResult {
@@ -36,9 +34,7 @@ interface UploadResult {
   errorCount: number;
   errors: Array<{
     row: number;
-    field: string;
     message: string;
-    value: unknown;
   }>;
   duplicates: string[];
   createdOperations: number[];
@@ -76,7 +72,7 @@ export default function BulkUploadPage() {
   const [isDownloadingTemplate, setIsDownloadingTemplate] = useState(false);
   const [parseResult, setParseResult] = useState<ParseResult | null>(null);
   const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
-  const [user, setUser] = useState<{ operatorId: string } | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -171,7 +167,7 @@ export default function BulkUploadPage() {
       setIsUploading(true);
       const result = await api.operations.batchUploadFromFile(
         selectedFile,
-        parseInt(user.operatorId, 10)
+        user.operatorId
       );
       setUploadResult(result);
     } catch (error) {
@@ -641,7 +637,7 @@ export default function BulkUploadPage() {
                           className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg"
                         >
                           <p className="text-sm font-medium text-foreground">
-                            Fila {error.row} - Campo: {error.field}
+                            Fila {error.row}
                           </p>
                           <p className="text-sm text-muted-foreground mt-1">
                             {error.message}

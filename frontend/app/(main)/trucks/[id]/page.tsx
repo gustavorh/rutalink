@@ -83,9 +83,9 @@ export default function TruckDetailPage() {
           api.vehicles.get(truckId),
           // Note: These endpoints may need to be added to client-api if they exist
           // For now, using placeholder - adjust based on actual API structure
-          Promise.resolve([] as any[]), // getTruckDocuments
-          Promise.resolve([] as any[]), // getTruckOperationHistory
-          Promise.resolve([] as any[]), // getTruckUpcomingOperations
+          Promise.resolve([] as TruckDocument[]), // getTruckDocuments
+          Promise.resolve([] as TruckOperation[]), // getTruckOperationHistory
+          Promise.resolve([] as TruckOperation[]), // getTruckUpcomingOperations
         ]);
 
       setTruck(truckData);

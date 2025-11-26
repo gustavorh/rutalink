@@ -23,13 +23,6 @@ interface UserFormData {
   roleId?: number;
   status?: boolean;
 }
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -43,13 +36,9 @@ import {
 } from "@/components/ui/select";
 import {
   Plus,
-  Search,
   Edit,
   Trash2,
-  Eye,
   Users as UsersIcon,
-  AlertTriangle,
-  Filter,
   UserCheck,
   FileText,
 } from "lucide-react";
@@ -90,15 +79,8 @@ export default function UsersPage() {
   });
   const [formLoading, setFormLoading] = useState(false);
   const [search, setSearch] = useState("");
-  const {
-    page,
-    setPage,
-    total,
-    setTotal,
-    totalPages,
-    setTotalPages,
-    pagination,
-  } = usePagination({ initialLimit: 10 });
+  const { page, setPage, total, setTotal, setTotalPages, pagination } =
+    usePagination({ initialLimit: 10 });
   const {
     filters: filterState,
     setFilter,
@@ -353,15 +335,6 @@ export default function UsersPage() {
           // Define table actions
           const actions: DataTableAction<User>[] = [
             {
-              label: "Ver detalles",
-              icon: <Eye className="h-4 w-4" />,
-              onClick: (user) =>
-                router.push(`/administration/users/${user.id}`),
-              className:
-                "text-muted-foreground hover:text-primary hover:bg-primary/10",
-              title: "Ver detalles",
-            },
-            {
               label: "Editar",
               icon: <Edit className="h-4 w-4" />,
               onClick: handleEditClick,
@@ -378,6 +351,11 @@ export default function UsersPage() {
               title: "Eliminar",
             },
           ];
+
+          // Row click handler
+          const handleRowClick = (user: User) => {
+            router.push(`/administration/users/${user.id}`);
+          };
 
           const handleSearch = () => {
             setPage(1);
@@ -422,6 +400,7 @@ export default function UsersPage() {
               onToggleFilters={toggleFilters}
               onClearFilters={handleClearFilters}
               actions={actions}
+              onRowClick={handleRowClick}
               loading={loading}
               error={error}
               lastUpdate={lastUpdate}

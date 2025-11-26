@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -175,10 +176,13 @@ export function OperationDocumentsTab({
           <CardContent>
             <div className="space-y-4">
               <div className="border border-border rounded-lg p-4 bg-white">
-                <img
+                <Image
                   src={trackingData.signature.signatureData}
                   alt="Firma de entrega"
-                  className="max-h-32 mx-auto"
+                  width={200}
+                  height={128}
+                  className="max-h-32 mx-auto object-contain"
+                  unoptimized
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -392,12 +396,14 @@ function DocumentCard({ document }: DocumentCardProps) {
 
   return (
     <div className="border border-border rounded-lg p-3 hover:border-primary transition-colors cursor-pointer">
-      <div className="aspect-square bg-muted rounded flex items-center justify-center mb-2">
+      <div className="aspect-square bg-muted rounded flex items-center justify-center mb-2 relative overflow-hidden">
         {isImage ? (
-          <img
+          <Image
             src={document.fileUrl}
             alt={document.fileName}
-            className="w-full h-full object-cover rounded"
+            fill
+            className="object-cover rounded"
+            unoptimized
           />
         ) : (
           <svg

@@ -64,19 +64,13 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import {
   Plus,
-  Search,
   Edit,
   Trash2,
-  Eye,
   AlertTriangle,
-  Filter,
-  Download,
   TrendingUp,
   Calendar,
   Truck,
-  MapPin,
   Clock,
-  Users,
   Package,
   CheckCircle,
   ChevronLeft,
@@ -156,19 +150,11 @@ export default function OperationsPage() {
   }>({ start: "", end: "" });
 
   // Pagination
-  const {
-    page,
-    setPage,
-    total,
-    setTotal,
-    totalPages,
-    setTotalPages,
-    pagination,
-  } = usePagination({ initialLimit: 10 });
+  const { page, setPage, total, setTotal, setTotalPages, pagination } =
+    usePagination({ initialLimit: 10 });
 
   // Last update timestamp
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -219,11 +205,31 @@ export default function OperationsPage() {
           api.routes.list({ status: true, limit: 100 }),
         ]);
 
-      setClients(clientsRes.data || (clientsRes as any).items || []);
-      setProviders(providersRes.data || (providersRes as any).items || []);
-      setDrivers(driversRes.data || (driversRes as any).items || []);
-      setVehicles(vehiclesRes.data || (vehiclesRes as any).items || []);
-      setRoutes(routesRes.data || (routesRes as any).items || []);
+      setClients(
+        clientsRes.data ||
+          (clientsRes as { items?: typeof clientsRes.data }).items ||
+          []
+      );
+      setProviders(
+        providersRes.data ||
+          (providersRes as { items?: typeof providersRes.data }).items ||
+          []
+      );
+      setDrivers(
+        driversRes.data ||
+          (driversRes as { items?: typeof driversRes.data }).items ||
+          []
+      );
+      setVehicles(
+        vehiclesRes.data ||
+          (vehiclesRes as { items?: typeof vehiclesRes.data }).items ||
+          []
+      );
+      setRoutes(
+        routesRes.data ||
+          (routesRes as { items?: typeof routesRes.data }).items ||
+          []
+      );
     } catch (err) {
       console.error("Error loading catalogs:", err);
     }
@@ -275,7 +281,10 @@ export default function OperationsPage() {
       }
 
       const response = await api.operations.list(params);
-      const items = response.data || (response as any).items || [];
+      const items =
+        response.data ||
+        (response as { items?: typeof response.data }).items ||
+        [];
       setOperations(items);
       setTotalPages(response.pagination.totalPages);
       setTotal(response.pagination.total);
@@ -295,9 +304,7 @@ export default function OperationsPage() {
   };
 
   const handleRefresh = async () => {
-    setIsRefreshing(true);
     await fetchOperations();
-    setIsRefreshing(false);
   };
 
   const handleDeleteClick = (operation: OperationWithDetails) => {
@@ -494,15 +501,6 @@ export default function OperationsPage() {
   const getOperationTypeLabel = (type: string) => {
     const typeConfig = OperationTypes.find((t) => t.value === type);
     return typeConfig?.label || type;
-  };
-
-  const formatDateTime = (dateString?: string | null) => {
-    if (!dateString) return "N/A";
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat("es-CL", {
-      dateStyle: "short",
-      timeStyle: "short",
-    }).format(date);
   };
 
   if (!mounted) {
@@ -963,32 +961,23 @@ export default function OperationsPage() {
                 key: "type",
                 header: "Tipo",
                 accessor: (op) => (
-                  <Badge
-                    variant="outline"
-                    className="border-secondary/50 text-secondary"
-                  >
+                  <span className="text-sm text-foreground">
                     {getOperationTypeLabel(op.operation.operationType)}
-                  </Badge>
+                  </span>
                 ),
               },
               {
                 key: "route",
                 header: "Origen → Destino",
                 accessor: (op) => (
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-1 text-sm text-foreground">
-                      <MapPin className="w-3 h-3 text-success" />
+                  <div className="space-y-0.5">
+                    <div className="text-sm text-foreground">
                       {op.operation.origin}
                     </div>
-                    <div className="flex items-center gap-1 text-sm text-foreground">
-                      <MapPin className="w-3 h-3 text-destructive" />
-                      {op.operation.destination}
+                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                      <span className="text-muted-foreground/70">↓</span>
+                      <span>{op.operation.destination}</span>
                     </div>
-                    {op.operation.distance && (
-                      <div className="text-xs text-muted-foreground">
-                        {op.operation.distance} km
-                      </div>
-                    )}
                   </div>
                 ),
               },
@@ -1017,13 +1006,11 @@ export default function OperationsPage() {
                 key: "assignments",
                 header: "Vehículo / Chofer",
                 accessor: (op) => (
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-1 text-sm text-foreground">
-                      <Truck className="w-3 h-3" />
+                  <div className="space-y-0.5">
+                    <div className="text-sm font-semibold text-foreground">
                       {op.vehicle.plateNumber}
                     </div>
-                    <div className="flex items-center gap-1 text-sm text-foreground">
-                      <Users className="w-3 h-3" />
+                    <div className="text-sm text-muted-foreground">
                       {op.driver.firstName} {op.driver.lastName}
                     </div>
                   </div>
@@ -1032,18 +1019,61 @@ export default function OperationsPage() {
               {
                 key: "scheduledDate",
                 header: "Fecha Programada",
-                accessor: (op) => (
-                  <div className="space-y-1">
-                    <div className="text-sm text-foreground">
-                      {formatDateTime(op.operation.scheduledStartDate)}
+                accessor: (op) => {
+                  const formatDateParts = (dateString?: string | null) => {
+                    if (!dateString) return null;
+                    const date = new Date(dateString);
+                    const day = String(date.getDate()).padStart(2, "0");
+                    const month = String(date.getMonth() + 1).padStart(2, "0");
+                    const year = date.getFullYear();
+                    const hours = date.getHours();
+                    const minutes = String(date.getMinutes()).padStart(2, "0");
+                    const ampm = hours >= 12 ? "p.m." : "a.m.";
+                    const formattedHours = hours % 12 || 12;
+                    return {
+                      date: `${day}-${month}-${year}`,
+                      time: `${formattedHours}:${minutes} ${ampm}`,
+                    };
+                  };
+
+                  const startParts = formatDateParts(
+                    op.operation.scheduledStartDate
+                  );
+                  const endParts = formatDateParts(
+                    op.operation.scheduledEndDate
+                  );
+
+                  return (
+                    <div className="space-y-2">
+                      {startParts && (
+                        <div>
+                          <div className="text-xs text-muted-foreground">
+                            Desde:
+                          </div>
+                          <div className="text-sm text-foreground">
+                            {startParts.date}
+                          </div>
+                          <div className="text-sm text-foreground">
+                            {startParts.time}
+                          </div>
+                        </div>
+                      )}
+                      {endParts && (
+                        <div>
+                          <div className="text-xs text-muted-foreground">
+                            Hasta:
+                          </div>
+                          <div className="text-sm text-foreground">
+                            {endParts.date}
+                          </div>
+                          <div className="text-sm text-foreground">
+                            {endParts.time}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    {op.operation.scheduledEndDate && (
-                      <div className="text-xs text-muted-foreground">
-                        Hasta: {formatDateTime(op.operation.scheduledEndDate)}
-                      </div>
-                    )}
-                  </div>
-                ),
+                  );
+                },
               },
               {
                 key: "status",
@@ -1054,14 +1084,6 @@ export default function OperationsPage() {
 
             // Define table actions
             const actions: DataTableAction<OperationWithDetails>[] = [
-              {
-                label: "Ver detalles",
-                icon: <Eye className="h-4 w-4" />,
-                onClick: (op) => router.push(`/operations/${op.operation.id}`),
-                className:
-                  "text-muted-foreground hover:text-primary hover:bg-primary/10",
-                title: "Ver detalles",
-              },
               {
                 label: "Editar",
                 icon: <Edit className="h-4 w-4" />,
@@ -1079,6 +1101,11 @@ export default function OperationsPage() {
                 title: "Eliminar",
               },
             ];
+
+            // Row click handler
+            const handleRowClick = (op: OperationWithDetails) => {
+              router.push(`/operations/${op.operation.id}`);
+            };
 
             // Define filters
             const tableFilters: DataTableFilter[] = [
@@ -1256,6 +1283,7 @@ export default function OperationsPage() {
                   onToggleFilters={toggleFilters}
                   onClearFilters={handleClearFilters}
                   actions={actions}
+                  onRowClick={handleRowClick}
                   loading={loading}
                   error={error}
                   lastUpdate={lastUpdate}

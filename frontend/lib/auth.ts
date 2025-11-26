@@ -3,10 +3,22 @@
  * Now uses HTTP-only cookies instead of localStorage for security
  */
 
+export interface AuthUser {
+  id: number;
+  username: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  operatorId: number;
+  roleId: number;
+  roleName?: string;
+  permissions?: string[];
+}
+
 /**
  * Get stored user data from cookie (non-sensitive info)
  */
-export function getUser(): any | null {
+export function getUser(): AuthUser | null {
   if (typeof window === "undefined") return null;
 
   // Try to get user info from cookie

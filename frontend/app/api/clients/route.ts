@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { proxyRequest, handleApiError, INTERNAL_API_URL } from "@/lib/server-api-utils";
+import { proxyRequest, handleApiError } from "@/lib/server-api-utils";
 
 export async function GET(request: NextRequest) {
   try {
