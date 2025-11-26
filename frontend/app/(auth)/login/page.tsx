@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { api, ApiError } from "@/lib/client-api";
 import Link from "next/dist/client/link";
+import { toast } from "sonner";
 
 // Form validation schema
 const loginSchema = z.object({
@@ -58,10 +59,15 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      await api.auth.login(data);
+      const response = await api.auth.login(data);
 
       // Authentication is now handled via HTTP-only cookies
       // User info is stored in a non-HTTP-only cookie for UI access
+
+      // Show welcome toast
+      toast.success(
+        `Bienvenido de vuelta, ${response.user.firstName} ${response.user.lastName}`
+      );
 
       // Check if there's a redirect path stored from session expiration
       const redirectPath = sessionStorage.getItem("redirectAfterLogin");
